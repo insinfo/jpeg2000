@@ -1,24 +1,14 @@
 name: jpeg2000
 description: Pure dart jpeg 2000
 version: 1.0.0
-homepage: https://github.com/insinfo/pdfbox_dart
+homepage: https://github.com/insinfo/jpeg2000
 publish_to: none
 
 environment:
   sdk: ^3.6.0
 
 dependencies:
-  pointycastle: ^4.0.0
   meta: ^1.3.0
-  collection: ^1.14.13
-  archive: ^4.0.7
-  crypto: ^3.0.7
-  unorm_dart: ^0.3.2
-  petitparser: '>=5.1.0 <8.0.0'
-  image: ^4.5.4
-  logging: any
-  unicode: ^1.1.8
-  bidi: ^2.0.13
 
   
 dev_dependencies:
