@@ -1,0 +1,21 @@
+{
+  "name": "rainbowbars",
+  "description": "Imagem sintética com barras RGB horizontais para testar mapeamento de cores e decodificação básica.",
+  "width": 32,
+  "height": 32,
+  "bitDepth": 8,
+  "components": 3,
+  "colorspace": "sRGB",
+  "files": {
+    "sourceBmp": "barras_rgb.bmp",
+    "losslessJp2": "barras_rgb_lossless.jp2",
+    "lossyJp2": "barras_rgb_lossy.jp2",
+    "referenceLosslessPpm": "barras_rgb_lossless_reference.ppm",
+    "referenceLossyPpm": "barras_rgb_lossy_reference.ppm"
+  },
+  "tolerances": {
+    "losslessMaxAbsError": 0,
+    "lossyMaxAbsError": 1,
+    "lossyMinPsnrDb": 80.0
+  }
+}

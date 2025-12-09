@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JPEG2000 Decoder Visual Comparison</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        h1 { color: #333; }
+        .test-group { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-name { font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #0066cc; }
+        .images { display: flex; gap: 20px; flex-wrap: wrap; }
+        .image-box { text-align: center; }
+        .image-box img { 
+            border: 2px solid #ddd; 
+            image-rendering: pixelated;
+            width: 256px;
+            height: 256px;
+        }
+        .label { font-weight: bold; margin-top: 10px; }
+        .original { border-color: #4CAF50 !important; }
+        .java { border-color: #2196F3 !important; }
+        .dart { border-color: #FF9800 !important; }
+        .openjpeg { border-color: #9C27B0 !important; }
+    </style>
+</head>
+<body>
+    <h1>JPEG2000 Decoder Visual Comparison</h1>
+    <p>Compare visual quality of different decoders. All decoders should produce nearly identical results.</p>    
+    <div class="test-group">
+        <div class="test-name">gradient_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="gradient_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="gradient_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="gradient_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">gradient_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="gradient_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="gradient_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="gradient_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">rainbow_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="rainbow_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="rainbow_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="rainbow_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">rainbow_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="rainbow_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="rainbow_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="rainbow_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">checkerboard_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="checkerboard_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="checkerboard_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="checkerboard_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">checkerboard_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="checkerboard_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="checkerboard_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="checkerboard_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">circles_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="circles_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="circles_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="circles_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">circles_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="circles_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="circles_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="circles_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">text_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="text_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="text_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="text_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">text_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="text_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="text_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="text_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">stripes_32 (32x32)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="stripes_32.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="stripes_32_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="stripes_32_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>    
+    <div class="test-group">
+        <div class="test-name">stripes_64 (64x64)</div>
+        <div class="images">
+            <div class="image-box">
+                <img src="stripes_64.png" class="original">
+                <div class="label" style="color: #4CAF50;">Original</div>
+            </div>
+            <div class="image-box">
+                <img src="stripes_64_dart_decoded.png" class="dart">
+                <div class="label" style="color: #FF9800;">Dart (Our Implementation)</div>
+            </div>
+            <div class="image-box">
+                <img src="stripes_64_openjpeg_decoded.png" class="openjpeg">
+                <div class="label" style="color: #9C27B0;">OpenJPEG</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

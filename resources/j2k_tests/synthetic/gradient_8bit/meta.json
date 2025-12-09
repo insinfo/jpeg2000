@@ -1,0 +1,21 @@
+{
+  "name": "gradient_8bit",
+  "description": "Gradiente horizontal 8-bit para testar precisão de decodificação.",
+  "width": 64,
+  "height": 64,
+  "bitDepth": 8,
+  "components": 1,
+  "colorspace": "GRAY",
+  "files": {
+    "sourcePgm": "gradient_8bit.pgm",
+    "losslessJp2": "gradient_8bit_lossless.jp2",
+    "lossyJp2": "gradient_8bit_lossy.jp2",
+    "referenceLosslessPgm": "gradient_8bit_lossless_reference.pgm",
+    "referenceLossyPgm": "gradient_8bit_lossy_reference.pgm"
+  },
+  "tolerances": {
+    "losslessMaxAbsError": 0,
+    "lossyMaxAbsError": 1,
+    "lossyMinPsnrDb": 80.0
+  }
+}
