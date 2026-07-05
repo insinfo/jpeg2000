@@ -20,7 +20,8 @@ PPM inputs, and ships bit-exact regression fixtures inside the repository.
 - Fixtures are consolidated under `test/fixtures`; tests do not depend on local
   reference checkouts.
 - CI runs formatting, analysis, VM tests, a Chrome test for the public browser
-  API, a VM benchmark smoke run, and production JavaScript compilation.
+  API, a VM benchmark smoke run, production JavaScript compilation, and
+  WebAssembly compilation/execution.
 
 ## Installation
 
@@ -142,6 +143,8 @@ dart test
 dart test -p chrome test/jpeg2000_public_api_test.dart
 dart run benchmark/codec_benchmark.dart
 dart compile js -O2 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
+dart compile wasm -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
+node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
 ```
 
 The JavaScript compile smoke uses `-O2`, Dart's safe production-oriented
@@ -154,6 +157,43 @@ Fixtures live in:
 - `test/fixtures/test_images`: synthetic JP2/J2K files and decoded references.
 - `test/fixtures/j2k_tests`: conformance subset and bit-exact references.
 - `test/fixtures/*.json`: small MQ/entropy/parity fixtures.
+
+## Performance Snapshot
+
+These local measurements were taken on 2026-07-05 on Windows x64, Intel Core
+i3-1215U (6 cores, 8 logical processors), Dart 3.6.2, Node 24.14.1, Go 1.26.4,
+OpenJPEG 2.5.4 built from `referencias/openjpeg` with CMake 4.3.3, Ninja
+1.13.2, and GCC 16.1.0 from `C:\w64devkit`.
+
+The Dart and Go rows are in-process API benchmarks. The OpenJPEG row uses the
+`opj_compress`/`opj_decompress` command line tools, so process startup and file
+I/O are included and dominate this tiny 64x64 fixture. Lower is better.
+
+| Codec/runtime | Execution model | Gray encode PGM->J2K | Gray decode J2K | RGB/RGBA encode | RGB/RGBA decode | Notes |
+|---|---|---:|---:|---:|---:|---|
+| Dart VM JIT | in-process | 2772.2 us/op | 4733.0 us/op | 3850.8 us/op | 9863.6 us/op | `dart run`, 64x64 PGM/PPM, 80 iterations |
+| Dart AOT exe | in-process | 2525.4 us/op | 5137.8 us/op | 6168.0 us/op | 12435.5 us/op | `dart compile exe` |
+| Dart JavaScript `-O2` | Node 24 | 7900.0 us/op | 3762.5 us/op | 17075.0 us/op | 8400.0 us/op | `dart compile js -O2` |
+| Dart WasmGC | Node 24 | 5046.7 us/op | 6768.2 us/op | 10024.4 us/op | 12250.3 us/op | `dart compile wasm` |
+| Go reference | in-process | 395.9 us/op | 1126.0 us/op | 819.7 us/op | 3271.2 us/op | `referencias/go-jpeg2000`; color case is RGBA |
+| OpenJPEG C | CLI end-to-end | 11773.4 us/op | 12484.6 us/op | 12991.8 us/op | 15697.9 us/op | Native tools; includes startup and filesystem I/O |
+
+Reproduce the Dart rows with:
+
+```bash
+dart run benchmark/codec_benchmark.dart --size=64 --iterations=80 --warmup=8
+dart compile exe benchmark/codec_benchmark.dart -o build/codec_benchmark.exe
+build/codec_benchmark.exe --size=64 --iterations=80 --warmup=8
+dart compile js -O2 --define=jpeg2000.benchmark.size=64 --define=jpeg2000.benchmark.iterations=80 --define=jpeg2000.benchmark.warmup=8 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
+node build/codec_benchmark.js
+dart compile wasm --define=jpeg2000.benchmark.size=64 --define=jpeg2000.benchmark.iterations=80 --define=jpeg2000.benchmark.warmup=8 -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
+node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
+```
+
+JDeli and JAI ImageIO remain correctness references for the bit-exact fixtures.
+They are not included in this table because the checked local JDeli CLI does not
+accept PGM/PPM input directly, and the JAI ImageIO source tree does not provide a
+checked-in performance harness comparable to the byte API benchmark.
 
 ## Performance Roadmap
 

@@ -40,3 +40,8 @@ jobs:
 
       - name: Compile benchmark to production JavaScript
         run: dart compile js -O2 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
+
+      - name: Compile and run benchmark as WebAssembly
+        run: |
+          dart compile wasm -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
+          node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
