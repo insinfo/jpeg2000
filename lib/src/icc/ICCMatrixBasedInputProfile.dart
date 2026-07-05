@@ -20,4 +20,3 @@ class ICCMatrixBasedInputProfile extends ICCProfile {
   /// @exception ICCProfileInvalidException
   ICCMatrixBasedInputProfile(ColorSpace csm) : super(csm);
 }
-

@@ -22,16 +22,16 @@ class ImgWriterPpm extends ImgWriter {
   ) {
     final numComps = imageSource.getNumComps();
     if (firstComponent < 0 || firstComponent >= numComps) {
-      throw ArgumentError.value(firstComponent, 'firstComponent',
-          'Component index out of range');
+      throw ArgumentError.value(
+          firstComponent, 'firstComponent', 'Component index out of range');
     }
     if (secondComponent < 0 || secondComponent >= numComps) {
-      throw ArgumentError.value(secondComponent, 'secondComponent',
-          'Component index out of range');
+      throw ArgumentError.value(
+          secondComponent, 'secondComponent', 'Component index out of range');
     }
     if (thirdComponent < 0 || thirdComponent >= numComps) {
-      throw ArgumentError.value(thirdComponent, 'thirdComponent',
-          'Component index out of range');
+      throw ArgumentError.value(
+          thirdComponent, 'thirdComponent', 'Component index out of range');
     }
     final range1 = imageSource.getNomRangeBits(firstComponent);
     final range2 = imageSource.getNomRangeBits(secondComponent);
@@ -110,7 +110,8 @@ class ImgWriterPpm extends ImgWriter {
       final zeroChunk = Uint8List(math.min(padding, 4096));
       var remaining = padding;
       while (remaining > 0) {
-        final limit = remaining < zeroChunk.length ? remaining : zeroChunk.length;
+        final limit =
+            remaining < zeroChunk.length ? remaining : zeroChunk.length;
         writer.writeFromSync(zeroChunk, 0, limit);
         remaining -= limit;
       }
@@ -193,10 +194,10 @@ class ImgWriterPpm extends ImgWriter {
         final captureDebug = _isInstrumentationEnabled() && _debugLines > 0;
         var debugRemaining = captureDebug ? debugSamples : 0;
         while (targetIndex >= 0) {
-            var sample = fracBits == 0
+          var sample = fracBits == 0
               ? data[sourceIndex] + shift
               : Int32Utils.logicalShiftRight(data[sourceIndex], fracBits) +
-                shift;
+                  shift;
           if (sample < 0) {
             sample = 0;
           } else if (sample > maxValue) {
@@ -220,7 +221,8 @@ class ImgWriterPpm extends ImgWriter {
       if (_isInstrumentationEnabled() && _debugLines > 0) {
         final tuples = <String>[];
         for (var i = 0; i < debugSamples; i++) {
-          tuples.add('(${_debugTuple[0][i]},${_debugTuple[1][i]},${_debugTuple[2][i]})');
+          tuples.add(
+              '(${_debugTuple[0][i]},${_debugTuple[1][i]},${_debugTuple[2][i]})');
         }
         _log('PPM writer debug line $_debugLines: ${tuples.join(' ')}');
         _debugLines--;
@@ -228,8 +230,7 @@ class ImgWriterPpm extends ImgWriter {
 
       final imageRow = uly + tOffy + line;
       final imageCol = ulx + tOffx;
-      final offset =
-          _pixelDataOffset + 3 * (width * imageRow + imageCol);
+      final offset = _pixelDataOffset + 3 * (width * imageRow + imageCol);
       writer.setPositionSync(offset);
       writer.writeFromSync(_buffer!, 0, bufferSize);
     }
@@ -255,4 +256,3 @@ class ImgWriterPpm extends ImgWriter {
     }
   }
 }
-

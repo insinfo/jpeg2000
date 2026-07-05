@@ -26,9 +26,8 @@ class ArrayUtil {
       return;
     }
 
-    final cappedInit = initialElementCopying < length
-        ? initialElementCopying
-        : length;
+    final cappedInit =
+        initialElementCopying < length ? initialElementCopying : length;
     var i = 0;
     for (; i < cappedInit; i++) {
       array[i] = value;

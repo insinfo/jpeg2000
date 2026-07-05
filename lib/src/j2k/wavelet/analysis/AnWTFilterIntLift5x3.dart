@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import '../FilterTypes.dart';
 import '../WaveletFilter.dart';
-import 'AnWtFilterInt.dart';
+import 'AnWTFilterInt.dart';
 
 /// Integer lifting implementation of the 5x3 analysis wavelet filter.
 class AnWTFilterIntLift5x3 extends AnWTFilterInt {
@@ -30,7 +30,8 @@ class AnWTFilterIntLift5x3 extends AnWTFilterInt {
 
     // High frequency subband.
     for (var i = 1; i < inLen - 1; i += 2) {
-      highSig[hk] = inSig[ik] - ((inSig[ik - inStep] + inSig[ik + inStep]) >> 1);
+      highSig[hk] =
+          inSig[ik] - ((inSig[ik - inStep] + inSig[ik + inStep]) >> 1);
       ik += iStep;
       hk += highStep;
     }
@@ -180,6 +181,3 @@ class AnWTFilterIntLift5x3 extends AnWTFilterInt {
   @override
   String toString() => 'w5x3 (lifting)';
 }
-
-
-

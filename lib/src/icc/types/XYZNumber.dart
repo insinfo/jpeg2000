@@ -29,4 +29,3 @@ class XYZNumber {
     return "[$dwX, $dwY, $dwZ]";
   }
 }
-

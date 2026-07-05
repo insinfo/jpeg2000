@@ -20,7 +20,8 @@ class MonochromeInputRestrictedProfile extends RestrictedICCProfile {
   /// @return String representation of a MonochromeInputRestrictedProfile
   @override
   String toString() {
-    StringBuffer rep = StringBuffer("Monochrome Input Restricted ICC profile${RestrictedICCProfile.eol}");
+    StringBuffer rep = StringBuffer(
+        "Monochrome Input Restricted ICC profile${RestrictedICCProfile.eol}");
 
     rep
       ..write("trc[GRAY]:${RestrictedICCProfile.eol}")
@@ -30,4 +31,3 @@ class MonochromeInputRestrictedProfile extends RestrictedICCProfile {
     return rep.toString();
   }
 }
-

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import '../../image/DataBlk.dart';
-import 'AnWtFilter.dart';
+import 'AnWTFilter.dart';
 
 /// Float-specialized analysis wavelet filter contract.
 abstract class AnWTFilterFloat extends AnWTFilter {
@@ -88,4 +88,3 @@ abstract class AnWTFilterFloat extends AnWTFilter {
   @override
   int getDataType() => DataBlk.typeFloat;
 }
-

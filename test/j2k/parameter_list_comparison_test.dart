@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/util/ParameterList.dart';
@@ -18,9 +19,15 @@ void main() {
         final parts = line.split(',');
         final id = int.parse(parts[0]);
         final type = parts[1];
-        
-        testCases.putIfAbsent(id, () => {'args': <int, String>{}, 'props': <String, String>{}, 'error': null});
-        
+
+        testCases.putIfAbsent(
+            id,
+            () => {
+                  'args': <int, String>{},
+                  'props': <String, String>{},
+                  'error': null
+                });
+
         if (type == 'ARG') {
           final index = int.parse(parts[2]);
           final val = parts[3];
@@ -41,24 +48,25 @@ void main() {
         final expectedError = data['error'] as String?;
 
         final pl = ParameterList();
-        
+
         if (expectedError != null) {
           // Expect error
           try {
-             pl.parseArgs(args);
-             fail('Test $id: Expected error $expectedError but succeeded');
+            pl.parseArgs(args);
+            fail('Test $id: Expected error $expectedError but succeeded');
           } catch (e) {
-             // Success
+            // Success
           }
         } else {
           try {
             pl.parseArgs(args);
-            
+
             // Check all expected props are present and correct
             expectedProps.forEach((key, val) {
-              expect(pl.getParameter(key), equals(val), reason: 'Test $id: Property $key mismatch');
+              expect(pl.getParameter(key), equals(val),
+                  reason: 'Test $id: Property $key mismatch');
             });
-            
+
             // Check that we don't have extra properties
             // Note: propertyNames() includes defaults, but here we have no defaults.
             // We should check that the number of properties matches.
@@ -66,8 +74,8 @@ void main() {
             for (var _ in pl.propertyNames()) {
               count++;
             }
-            expect(count, equals(expectedProps.length), reason: 'Test $id: Property count mismatch');
-            
+            expect(count, equals(expectedProps.length),
+                reason: 'Test $id: Property count mismatch');
           } catch (e) {
             fail('Test $id: Unexpected error: $e');
           }
@@ -76,4 +84,3 @@ void main() {
     });
   });
 }
-

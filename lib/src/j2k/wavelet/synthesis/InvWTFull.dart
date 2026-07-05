@@ -18,8 +18,8 @@ class InvWTFull extends InverseWT {
   InvWTFull(this.src, DecoderSpecs decSpec)
       : reconstructedComps = List<DataBlk?>.filled(src.getNumComps(), null),
         ndl = List<int>.filled(src.getNumComps(), 0),
-        reversible =
-            List<List<bool>?>.filled(src.getNumTilesTotal(), null, growable: false),
+        reversible = List<List<bool>?>.filled(src.getNumTilesTotal(), null,
+            growable: false),
         super(src, decSpec) {
     pw = FacilityManager.getProgressWatch();
   }
@@ -66,7 +66,7 @@ class InvWTFull extends InverseWT {
     }
     final compStates = List<bool>.filled(getNumComps(), false);
     for (var i = compStates.length - 1; i >= 0; i--) {
-        compStates[i] = _isSubbandReversible(src.getSynSubbandTree(tile, i));
+      compStates[i] = _isSubbandReversible(src.getSynSubbandTree(tile, i));
     }
     reversible[tile] = compStates;
     return compStates[component];
@@ -90,11 +90,11 @@ class InvWTFull extends InverseWT {
       final height = getTileCompHeight(tileIdx, component);
       switch (dtype) {
         case DataBlk.typeFloat:
-            reconstructedComps[component] =
+          reconstructedComps[component] =
               DataBlkFloat.withGeometry(0, 0, width, height);
           break;
         default:
-            reconstructedComps[component] =
+          reconstructedComps[component] =
               DataBlkInt.withGeometry(0, 0, width, height);
           break;
       }
@@ -103,7 +103,8 @@ class InvWTFull extends InverseWT {
         root,
         component,
       );
-      _logReconstructionPreview(tileIdx, component, reconstructedComps[component]!);
+      _logReconstructionPreview(
+          tileIdx, component, reconstructedComps[component]!);
       if (pw != null && component == src.getNumComps() - 1) {
         pw!.terminateProgressWatch();
       }
@@ -513,7 +514,8 @@ class InvWTFull extends InverseWT {
   }
 
   void _logReconstructionPreview(int tileIdx, int component, DataBlk block) {
-    if (!DecoderInstrumentation.isEnabled() || _reconstructionLogCount >= _maxReconstructionLogs) {
+    if (!DecoderInstrumentation.isEnabled() ||
+        _reconstructionLogCount >= _maxReconstructionLogs) {
       return;
     }
     _reconstructionLogCount++;
@@ -538,12 +540,13 @@ class InvWTFull extends InverseWT {
 
     final summary = data is Float32List
         ? _summarizeFloatBlock(data, width, height, block.offset, block.scanw)
-        : _summarizeIntBlock(data as List<int>, width, height, block.offset, block.scanw);
+        : _summarizeIntBlock(
+            data as List<int>, width, height, block.offset, block.scanw);
 
     DecoderInstrumentation.log(
       'InvWTFull',
       'tile=$tileIdx comp=$component reconstruction dtype=${block.getDataType()} '
-      'block=${width}x$height min=${summary.minLabel} max=${summary.maxLabel} preview=${summary.preview}',
+          'block=${width}x$height min=${summary.minLabel} max=${summary.maxLabel} preview=${summary.preview}',
     );
   }
 
@@ -624,7 +627,8 @@ class InvWTFull extends InverseWT {
     if (!DecoderInstrumentation.isEnabled()) {
       return;
     }
-    final key = 't${tileIdx}c${component}r${subband.resLvl}b${subband.sbandIdx}';
+    final key =
+        't${tileIdx}c${component}r${subband.resLvl}b${subband.sbandIdx}';
     final count = _subbandLogCounts[key] ?? 0;
     if (count >= _subbandLogLimit) {
       return;
@@ -635,13 +639,15 @@ class InvWTFull extends InverseWT {
     }
     _subbandLogCounts[key] = count + 1;
     final summary = data is Float32List
-        ? _summarizeFloatBlock(data, block.w, block.h, block.offset, block.scanw)
-        : _summarizeIntBlock(data as List<int>, block.w, block.h, block.offset, block.scanw);
+        ? _summarizeFloatBlock(
+            data, block.w, block.h, block.offset, block.scanw)
+        : _summarizeIntBlock(
+            data as List<int>, block.w, block.h, block.offset, block.scanw);
     DecoderInstrumentation.log(
       'InvWTFull',
       'subband tile=$tileIdx comp=$component res=${subband.resLvl} band=${subband.sbandIdx} '
-      'dtype=${block.getDataType()} block=${block.w}x${block.h} min=${summary.minLabel} '
-      'max=${summary.maxLabel} preview=${summary.preview}',
+          'dtype=${block.getDataType()} block=${block.w}x${block.h} min=${summary.minLabel} '
+          'max=${summary.maxLabel} preview=${summary.preview}',
     );
   }
 }
@@ -653,5 +659,3 @@ class _ReconstructionSummary {
   final String maxLabel;
   final String preview;
 }
-
-

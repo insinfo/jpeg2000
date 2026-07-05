@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/NotImplementedError.dart';
-import 'package:jpeg2000/src/j2k/wavelet/WtDecompSpec.dart';
+import 'package:jpeg2000/src/j2k/wavelet/WTDecompSpec.dart';
 
 void main() {
   group('WTDecompSpec', () {
@@ -28,4 +28,3 @@ void main() {
     });
   });
 }
-

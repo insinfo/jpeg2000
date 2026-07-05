@@ -23,4 +23,3 @@ class LookUpTable32Gamma extends LookUpTable32 {
     }
   }
 }
-

@@ -15,13 +15,27 @@ class Int32Utils {
   static int logicalShiftRight(int value, int shift) =>
       mask32(mask32(value) >>> shift);
 
+  /// Equivalente ao operador Java `>>`, estável também no backend JS.
+  static int arithmeticShiftRight(int value, int shift) {
+    final amount = shift & 31;
+    final signed = asInt32(value);
+    if (amount == 0) {
+      return signed;
+    }
+    final divisor = 1 << amount;
+    if (signed >= 0) {
+      return signed ~/ divisor;
+    }
+    return -(((-signed) + divisor - 1) ~/ divisor);
+  }
+
   /// Inverte todos os bits e retorna o resultado mascarado para 32 bits.
   static int invert32(int value) => mask32(~value);
 
   /// Codifica o sinal com o bit mais significativo preservando 32 bits.
   static int encodeSignSample(int sign, int setmask) {
-     int val = (sign << 31) | setmask;
-     return asInt32(val);
+    int val = (sign << 31) | setmask;
+    return asInt32(val);
   }
 
   /// Refina a magnitude de um coeficiente conforme implementado no JJ2000.

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import '../../util/ArrayUtil.dart';
 import '../../util/FacilityManager.dart';
 import '../../util/MsgLogger.dart';
@@ -14,7 +14,7 @@ import '../../wavelet/analysis/CBlkWTData.dart';
 import '../../wavelet/subband.dart';
 import 'CBlkRateDistStats.dart';
 import 'EntropyCoder.dart';
-import 'MqCoder.dart';
+import 'MQCoder.dart';
 import 'BitToByteOutput.dart';
 import 'ByteOutputBuffer.dart';
 import '../StdEntropyCoderOptions.dart';
@@ -30,7 +30,8 @@ class StdEntropyCoder extends EntropyCoder {
   static const int OPT_RESET_MQ = StdEntropyCoderOptions.OPT_RESET_MQ;
 
   /// The identifier for the vertically stripe causal context option
-  static const int OPT_VERT_STR_CAUSAL = StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+  static const int OPT_VERT_STR_CAUSAL =
+      StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
 
   /// The identifier for the lazy coding mode option (bypass MQ coder)
   static const int OPT_BYPASS = StdEntropyCoderOptions.OPT_BYPASS;
@@ -270,7 +271,8 @@ class StdEntropyCoder extends EntropyCoder {
 
   /// Distortion estimation lookup table for bits coded using the sign-code
   /// (SC) primative, for lossy coding (i.e. normal).
-  static final List<int> FS_LOSSY = List<int>.filled(1 << (MSE_LKP_BITS - 1), 0);
+  static final List<int> FS_LOSSY =
+      List<int>.filled(1 << (MSE_LKP_BITS - 1), 0);
 
   /// Distortion estimation lookup table for bits coded using the
   /// magnitude-refinement (MR) primative, for lossy coding (i.e. normal)
@@ -585,17 +587,8 @@ class StdEntropyCoder extends EntropyCoder {
     }
   }
 
-  StdEntropyCoder(
-      CBlkQuantDataSrcEnc src,
-      this.cblks,
-      this.pss,
-      this.bms,
-      this.mqrs,
-      this.rts,
-      this.css,
-      this.sss,
-      this.lcs,
-      this.tts)
+  StdEntropyCoder(CBlkQuantDataSrcEnc src, this.cblks, this.pss, this.bms,
+      this.mqrs, this.rts, this.css, this.sss, this.lcs, this.tts)
       : super(src) {
     _staticInit();
     int maxCBlkWidth, maxCBlkHeight;
@@ -611,15 +604,20 @@ class StdEntropyCoder extends EntropyCoder {
         tsl,
         (_) => List<int>.filled(
             (maxCBlkWidth + 2) * ((maxCBlkHeight + 1) ~/ 2 + 2), 0));
-    symbufT = List.generate(
-        tsl, (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
-    ctxtbufT = List.generate(
-        tsl, (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
-    distbufT =
-        List.generate(tsl, (_) => List<double>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0.0));
-    ratebufT = List.generate(tsl, (_) => List<int>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0));
-    istermbufT =
-        List.generate(tsl, (_) => List<bool>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, false));
+    symbufT = List.generate(tsl,
+        (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
+    ctxtbufT = List.generate(tsl,
+        (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
+    distbufT = List.generate(
+        tsl,
+        (_) =>
+            List<double>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0.0));
+    ratebufT = List.generate(tsl,
+        (_) => List<int>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0));
+    istermbufT = List.generate(
+        tsl,
+        (_) =>
+            List<bool>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, false));
     srcblkT = List.filled(tsl, null);
 
     precinctPartition = List.generate(
@@ -720,7 +718,8 @@ class StdEntropyCoder extends EntropyCoder {
         } else if (lCalcType == "lazy") {
           lenCalc[t][c] = MQCoder.LENGTH_LAZY;
         } else {
-          throw ArgumentError("Unrecognized or unsupported MQ length calculation.");
+          throw ArgumentError(
+              "Unrecognized or unsupported MQ length calculation.");
         }
 
         String termType = tts.getTileCompVal(t, c) as String;
@@ -742,7 +741,8 @@ class StdEntropyCoder extends EntropyCoder {
                 "'Cbypass' option for increased error resilience.");
           }
         } else {
-          throw ArgumentError("Unrecognized or unsupported MQ coder termination.");
+          throw ArgumentError(
+              "Unrecognized or unsupported MQ coder termination.");
         }
       }
     }
@@ -1007,9 +1007,8 @@ class StdEntropyCoder extends EntropyCoder {
     sk = srcblk.offset;
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
-      sheight = (s != 0)
-          ? STRIPE_HEIGHT
-          : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+      sheight =
+          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1019,7 +1018,7 @@ class StdEntropyCoder extends EntropyCoder {
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
             ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -1078,7 +1077,7 @@ class StdEntropyCoder extends EntropyCoder {
             k += dscanw;
             ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -1133,7 +1132,7 @@ class StdEntropyCoder extends EntropyCoder {
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
             ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -1186,7 +1185,7 @@ class StdEntropyCoder extends EntropyCoder {
             k += dscanw;
             ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -1310,9 +1309,8 @@ class StdEntropyCoder extends EntropyCoder {
     sk = srcblk.offset;
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
-      sheight = (s != 0)
-          ? STRIPE_HEIGHT
-          : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+      sheight =
+          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
       stopsk = sk + srcblk.w;
       for (; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1322,7 +1320,7 @@ class StdEntropyCoder extends EntropyCoder {
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               if (!causal) {
                 state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
@@ -1379,7 +1377,7 @@ class StdEntropyCoder extends EntropyCoder {
             k += dscanw;
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
               state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
@@ -1432,7 +1430,7 @@ class StdEntropyCoder extends EntropyCoder {
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
               state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
@@ -1483,7 +1481,7 @@ class StdEntropyCoder extends EntropyCoder {
             k += dscanw;
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
               state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
@@ -1591,9 +1589,8 @@ class StdEntropyCoder extends EntropyCoder {
     sk = srcblk.offset;
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
-      sheight = (s != 0)
-          ? STRIPE_HEIGHT
-          : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+      sheight =
+          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1715,9 +1712,8 @@ class StdEntropyCoder extends EntropyCoder {
     sk = srcblk.offset;
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
-      sheight = (s != 0)
-          ? STRIPE_HEIGHT
-          : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+      sheight =
+          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
       stopsk = sk + srcblk.w;
       for (; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1831,9 +1827,8 @@ class StdEntropyCoder extends EntropyCoder {
     sk = srcblk.offset;
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
-      sheight = (s != 0)
-          ? STRIPE_HEIGHT
-          : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+      sheight =
+          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1869,7 +1864,7 @@ class StdEntropyCoder extends EntropyCoder {
             ctxtbuf[nsym++] = UNIF_CTXT;
             normval = (data[k] >> downshift) << upshift;
             dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
-            sym = data[k] >> 31;
+            sym = (data[k] >> 31) & 1;
             if ((rlclen & 0x01) == 0) {
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
@@ -1970,7 +1965,7 @@ class StdEntropyCoder extends EntropyCoder {
             if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
               ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-                sym = data[k] >> 31;
+                sym = (data[k] >> 31) & 1;
                 ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
                 symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
                 ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -2028,7 +2023,7 @@ class StdEntropyCoder extends EntropyCoder {
               k += dscanw;
               ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-                sym = data[k] >> 31;
+                sym = (data[k] >> 31) & 1;
                 ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
                 symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
                 ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -2084,7 +2079,7 @@ class StdEntropyCoder extends EntropyCoder {
           if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
             ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -2136,7 +2131,7 @@ class StdEntropyCoder extends EntropyCoder {
             k += dscanw;
             ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
-              sym = data[k] >> 31;
+              sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
@@ -2246,5 +2241,3 @@ class StdEntropyCoder extends EntropyCoder {
     return precinctPartition[c][t];
   }
 }
-
-

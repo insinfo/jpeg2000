@@ -1,5 +1,5 @@
 import 'BlkImgDataSrc.dart';
-import 'Coord.dart';
+import 'coord.dart';
 import 'DataBlk.dart';
 import '../NoNextElementException.dart';
 
@@ -186,4 +186,3 @@ class ImgDataJoiner implements BlkImgDataSrc {
     return buffer.toString();
   }
 }
-

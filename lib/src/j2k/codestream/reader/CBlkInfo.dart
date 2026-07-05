@@ -36,9 +36,11 @@ class CBlkInfo {
   @override
   String toString() {
     final buffer = StringBuffer();
-    buffer.writeln('(ulx,uly,w,h)= ($ulx,$uly,$w,$h) $msbSkipped MSB bit(s) skipped');
+    buffer.writeln(
+        '(ulx,uly,w,h)= ($ulx,$uly,$w,$h) $msbSkipped MSB bit(s) skipped');
     for (var i = 0; i < len.length; i++) {
-      buffer.write('\tl:$i, start:${off[i]}, len:${len[i]}, ntp:${ntp[i]}, pktIdx=${pktIdx[i]}');
+      buffer.write(
+          '\tl:$i, start:${off[i]}, len:${len[i]}, ntp:${ntp[i]}, pktIdx=${pktIdx[i]}');
       final segments = segLen[i];
       if (segments != null) {
         buffer.write(' { ');

@@ -80,5 +80,3 @@ abstract class CodedCBlkDataSrcEnc extends ForwWTDataProps {
   /// [t] The tile
   bool precinctPartitionUsed(int c, int t);
 }
-
-

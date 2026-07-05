@@ -53,14 +53,14 @@ class ICCCurveTypeReverse extends ICCTag {
       : type = ICCProfile.getInt(data, offset),
         reserved = ICCProfile.getInt(data, offset + ICCProfile.int_size),
         nEntries = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
-        entry = Int32List(ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size)),
+        entry = Int32List(
+            ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size)),
         super(signature, data, offset, offset + 2 * ICCProfile.int_size) {
-    
     for (int i = 0; i < nEntries; ++i) {
       // Reverse the storage order.
       // Assuming the Java code meant nEntries - 1 - i
-      entry[nEntries - 1 - i] = ICCProfile.getShort(
-              data, offset + 3 * ICCProfile.int_size + i * ICCProfile.short_size) &
+      entry[nEntries - 1 - i] = ICCProfile.getShort(data,
+              offset + 3 * ICCProfile.int_size + i * ICCProfile.short_size) &
           0xFFFF;
     }
   }
@@ -70,4 +70,3 @@ class ICCCurveTypeReverse extends ICCTag {
     return entry[i];
   }
 }
-

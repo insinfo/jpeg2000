@@ -22,7 +22,8 @@ abstract class ROIMaskGenerator {
   List<ROI> getRegions() => rois;
 
   /// Populates [block] with ROI scaling factors for the provided subband.
-  bool getRoiMask(DataBlkInt block, Subband subband, int magnitudeBits, int componentIndex);
+  bool getRoiMask(
+      DataBlkInt block, Subband subband, int magnitudeBits, int componentIndex);
 
   /// Rebuilds the cached mask for the current tile-component.
   void buildMask(Subband subband, int magnitudeBits, int componentIndex);
@@ -34,4 +35,3 @@ abstract class ROIMaskGenerator {
     }
   }
 }
-

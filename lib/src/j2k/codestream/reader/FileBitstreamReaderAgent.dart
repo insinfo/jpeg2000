@@ -1,8 +1,6 @@
 part of 'BitstreamReaderAgent.dart';
 
-
-typedef _CodeBlockGrid =
-    List<List<List<List<List<CBlkInfo?>?>?>?>?>;
+typedef _CodeBlockGrid = List<List<List<List<List<CBlkInfo?>?>?>?>?>;
 
 class _ProgressionSegment {
   const _ProgressionSegment({
@@ -38,23 +36,24 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
   late final int _ncbQuitTarget;
 
   FileBitstreamReaderAgent(
-    HeaderDecoder header,
-    RandomAccessIO input,
-    DecoderSpecs decoderSpecs,
-    ParameterList parameters,
-    bool codestreamInfo,
-    HeaderInfo headerInfo,
-    {PktDecoder Function(FileBitstreamReaderAgent agent)? pktDecoderFactory}
-  )   : _input = input,
+      HeaderDecoder header,
+      RandomAccessIO input,
+      DecoderSpecs decoderSpecs,
+      ParameterList parameters,
+      bool codestreamInfo,
+      HeaderInfo headerInfo,
+      {PktDecoder Function(FileBitstreamReaderAgent agent)? pktDecoderFactory})
+      : _input = input,
         _parameters = parameters,
         _codestreamInfo = codestreamInfo,
         _headerInfo = headerInfo,
         super(header, decoderSpecs) {
     _initializeOptionState();
-      _isTruncationMode = !_isParsingMode;
+    _isTruncationMode = !_isParsingMode;
     _pktDecoder = pktDecoderFactory?.call(this) ??
-        PktDecoder(decoderSpecs, header, input, this, _isTruncationMode, _ncbQuitTarget);
-    
+        PktDecoder(decoderSpecs, header, input, this, _isTruncationMode,
+            _ncbQuitTarget);
+
     // Parse all tile parts to populate offsets
     try {
       while (true) {
@@ -109,18 +108,23 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final hasLocalNbytes = _parameters.containsKey('nbytes');
     final resolvedNbytes = _parameters.getParameter('nbytes') ?? defaultNbytes;
     final usesNbytes = hasLocalNbytes ||
-        (resolvedNbytes != null && defaultNbytes != null && resolvedNbytes != defaultNbytes);
+        (resolvedNbytes != null &&
+            defaultNbytes != null &&
+            resolvedNbytes != defaultNbytes);
 
     if (usesNbytes && resolvedNbytes != null) {
       tnbytes = targetBytes <= 0 ? _maxBudget : targetBytes;
-      trate = tnbytes * 8.0 / hd.getMaxCompImgWidth() / hd.getMaxCompImgHeight();
+      trate =
+          tnbytes * 8.0 / hd.getMaxCompImgWidth() / hd.getMaxCompImgHeight();
     } else {
       trate = targetRate;
       if (targetRate >= double.maxFinite / 2) {
         tnbytes = _maxBudget;
       } else {
-        final computedBytes =
-            targetRate * hd.getMaxCompImgWidth() * hd.getMaxCompImgHeight() / 8.0;
+        final computedBytes = targetRate *
+            hd.getMaxCompImgWidth() *
+            hd.getMaxCompImgHeight() /
+            8.0;
         tnbytes = computedBytes.isFinite
             ? math.max(0, computedBytes.floor())
             : _maxBudget;
@@ -179,7 +183,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     }
     final parsed = double.tryParse(raw);
     if (parsed == null) {
-      throw StringFormatException("Invalid floating-point value for '$name': $raw");
+      throw StringFormatException(
+          "Invalid floating-point value for '$name': $raw");
     }
     return parsed;
   }
@@ -310,16 +315,16 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         _tileTotalLengths[tile] = _maxBudget;
       } else {
         final combined = bodyTotal + headerTotal;
-        _tileTotalLengths[tile] = combined >= _maxBudget ? _maxBudget : combined;
+        _tileTotalLengths[tile] =
+            combined >= _maxBudget ? _maxBudget : combined;
       }
     }
   }
 
   void _allocateParsingBudgets() {
     final stopOff = tnbytes <= 0 ? _maxBudget : tnbytes;
-    final baseHeaders = _ncbQuitTarget == -1
-        ? hd.mainHeaderLength + _totalTileHeaderBytes
-        : 0;
+    final baseHeaders =
+        _ncbQuitTarget == -1 ? hd.mainHeaderLength + _totalTileHeaderBytes : 0;
     anbytes = baseHeaders;
 
     if (stopOff == _maxBudget) {
@@ -352,9 +357,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final totnByte = rem;
     for (var tile = nt - 1; tile > 0; tile--) {
       final weight = _tileTotalLengths[tile];
-      final allocation = weight == 0
-          ? 0
-          : (totnByte * weight / totalTileLength).floor();
+      final allocation =
+          weight == 0 ? 0 : (totnByte * weight / totalTileLength).floor();
       _tileBudgets[tile] = math.max(0, allocation);
       rem -= _tileBudgets[tile];
       if (rem < 0) {
@@ -380,8 +384,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
     if (unlimited) {
       _tileBudgets = List<int>.filled(nt, _maxBudget, growable: false);
-      _tileBudgetRemaining =
-          List<int>.filled(nt, _maxBudget, growable: false);
+      _tileBudgetRemaining = List<int>.filled(nt, _maxBudget, growable: false);
       anbytes = headerBase;
       return;
     }
@@ -459,9 +462,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       final partCount = _tilePartBodyLengths[tile].isEmpty
           ? 1
           : _tilePartBodyLengths[tile].length;
-      final limit = _limitToSingleTilePart
-          ? math.min(1, partCount)
-          : partCount;
+      final limit = _limitToSingleTilePart ? math.min(1, partCount) : partCount;
       for (var part = 0; part < limit; part++) {
         traversal.add(tile);
       }
@@ -539,24 +540,29 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
       final quantParams = decSpec.qsss.getTileCompVal(tileIdx, comp);
       if (quantParams == null) {
-        throw StateError('Missing quantization step sizes for tile=$tileIdx component=$comp');
+        throw StateError(
+            'Missing quantization step sizes for tile=$tileIdx component=$comp');
       }
-      params[comp] = quantParams;
+      params[comp] = quantParams as StdDequantizerParams;
 
       final guardBitsValue = decSpec.gbs.getTileCompVal(tileIdx, comp);
       if (guardBitsValue == null) {
-        throw StateError('Missing guard bits for tile=$tileIdx component=$comp');
+        throw StateError(
+            'Missing guard bits for tile=$tileIdx component=$comp');
       }
       guardBits[comp] = guardBitsValue;
 
       final maxDecompLevels = decSpec.dls.getTileCompVal(tileIdx, comp);
       if (maxDecompLevels == null) {
-        throw StateError('Missing decomposition levels for tile=$tileIdx component=$comp');
+        throw StateError(
+            'Missing decomposition levels for tile=$tileIdx component=$comp');
       }
       mdl[comp] = maxDecompLevels;
 
-      final hFilters = decSpec.wfs.getHFilters(tileIdx, comp).cast<WaveletFilter>();
-      final vFilters = decSpec.wfs.getVFilters(tileIdx, comp).cast<WaveletFilter>();
+      final hFilters =
+          decSpec.wfs.getHFilters(tileIdx, comp).cast<WaveletFilter>();
+      final vFilters =
+          decSpec.wfs.getVFilters(tileIdx, comp).cast<WaveletFilter>();
 
       subbTrees[comp] = SubbandSyn.tree(
         getTileCompWidth(tileIdx, comp, maxDecompLevels),
@@ -570,7 +576,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
       final tree = subbTrees[comp];
       if (tree == null) {
-        throw StateError('Failed to initialise subband tree for tile=$tileIdx component=$comp');
+        throw StateError(
+            'Failed to initialise subband tree for tile=$tileIdx component=$comp');
       }
       initSubbandsFields(comp, tree);
     }
@@ -615,7 +622,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final tileIndex = getTileIdx();
     final blockGrid = cbI;
     if (blockGrid == null) {
-      throw StateError('Code-block metadata not initialised for tile $tileIndex');
+      throw StateError(
+          'Code-block metadata not initialised for tile $tileIndex');
     }
 
     final totalLayers = decSpec.nls.getTileDef(tileIndex);
@@ -632,7 +640,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       layersRequested = lQuit - firstLayer;
     }
 
-    if (firstLayer < 1 || firstLayer > totalLayers || firstLayer + layersRequested - 1 > totalLayers) {
+    if (firstLayer < 1 ||
+        firstLayer > totalLayers ||
+        firstLayer + layersRequested - 1 > totalLayers) {
       throw ArgumentError(
         'Invalid layer range request (tile=$tileIndex component=$component fl=$firstLayer nl=$layersRequested)',
       );
@@ -693,7 +703,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     }
 
     if (component > 0 && layersRequested > 0) {
-      final previewCount = _debugCblkPreviewCounts.putIfAbsent(component, () => 0);
+      final previewCount =
+          _debugCblkPreviewCounts.putIfAbsent(component, () => 0);
       if (previewCount < 6) {
         _debugCblkPreviewCounts[component] = previewCount + 1;
         // final displayCount = math.min(layersRequested, requested.ntp.length);
@@ -717,13 +728,16 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       ..h = requested.h;
 
     var layerCursor = 0;
-    while (layerCursor < requested.len.length && requested.len[layerCursor] == 0) {
+    while (
+        layerCursor < requested.len.length && requested.len[layerCursor] == 0) {
       result.ftpIdx += requested.ntp[layerCursor];
       layerCursor++;
     }
 
     if (layersRequested > 0) {
-      for (var layer = firstLayer - 1; layer < firstLayer + layersRequested - 1; layer++) {
+      for (var layer = firstLayer - 1;
+          layer < firstLayer + layersRequested - 1;
+          layer++) {
         result.nl++;
         result.dl += requested.len[layer];
         result.nTrunc += requested.ntp[layer];
@@ -732,12 +746,15 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
     if (DecoderInstrumentation.isEnabled()) {
       final metaSummary = StringBuffer()
-        ..write('tile=$tileIndex comp=$component res=$resolution band=$subbandIdx ')
+        ..write(
+            'tile=$tileIndex comp=$component res=$resolution band=$subbandIdx ')
         ..write('m=$verticalCodeBlockIndex n=$horizontalCodeBlockIndex ')
         ..write('firstLayer=$firstLayer layersRequested=$layersRequested ')
         ..write('dl=${result.dl} nl=${result.nl} ftpIdx=${result.ftpIdx} ')
-        ..write('nTrunc=${result.nTrunc} ntp=${requested.ntp} len=${requested.len}');
-      DecoderInstrumentation.log('FileBitstreamReaderAgent', metaSummary.toString());
+        ..write(
+            'nTrunc=${result.nTrunc} ntp=${requested.ntp} len=${requested.len}');
+      DecoderInstrumentation.log(
+          'FileBitstreamReaderAgent', metaSummary.toString());
     }
 
     final options = decSpec.ecopts.getTileCompVal(tileIndex, component) ?? 0;
@@ -752,7 +769,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         for (var tpIdx = result.ftpIdx; tpIdx < result.nTrunc; tpIdx++) {
           if (tpIdx >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
             final passType =
-                (tpIdx + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) % StdEntropyCoderOptions.NUM_PASSES;
+                (tpIdx + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
+                    StdEntropyCoderOptions.NUM_PASSES;
             if (passType == 1 || passType == 2) {
               terminatedSegments++;
             }
@@ -778,8 +796,11 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     if (terminatedSegments > 1) {
       final current = result.tsLengths;
       if (current == null || current.length < terminatedSegments) {
-        result.tsLengths = List<int>.filled(terminatedSegments, 0, growable: false);
-      } else if ((options & (StdEntropyCoderOptions.OPT_BYPASS | StdEntropyCoderOptions.OPT_TERM_PASS)) ==
+        result.tsLengths =
+            List<int>.filled(terminatedSegments, 0, growable: false);
+      } else if ((options &
+              (StdEntropyCoderOptions.OPT_BYPASS |
+                  StdEntropyCoderOptions.OPT_TERM_PASS)) ==
           StdEntropyCoderOptions.OPT_BYPASS) {
         ArrayUtil.intArraySet(current, 0);
       }
@@ -788,7 +809,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     }
 
     if (result.dl == 0) {
-      if (terminatedSegments == 1 && result.tsLengths != null && result.tsLengths!.isNotEmpty) {
+      if (terminatedSegments == 1 &&
+          result.tsLengths != null &&
+          result.tsLengths!.isNotEmpty) {
         result.tsLengths![0] = 0;
       }
       return result;
@@ -801,7 +824,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
     final tsLengths = result.tsLengths;
 
-    for (var layer = firstLayer - 1; layer < firstLayer + layersRequested - 1; layer++) {
+    for (var layer = firstLayer - 1;
+        layer < firstLayer + layersRequested - 1;
+        layer++) {
       cumulativeTruncation += requested.ntp[layer];
       final layerLength = requested.len[layer];
       if (layerLength == 0) {
@@ -810,7 +835,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
       final data = result.data;
       if (data == null) {
-        throw StateError('Allocated code-block buffer missing for tile $tileIndex');
+        throw StateError(
+            'Allocated code-block buffer missing for tile $tileIndex');
       }
       final payload = requested.body[layer];
       if (payload != null) {
@@ -835,17 +861,23 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
       if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
         final segLengths = requested.segLen[layer];
-        for (var j = 0; truncationIndex < cumulativeTruncation; j++, truncationIndex++) {
+        for (var j = 0;
+            truncationIndex < cumulativeTruncation;
+            j++, truncationIndex++) {
           tsLengths[terminatedIndex++] =
-              segLengths != null && j < segLengths.length ? segLengths[j] : requested.len[layer];
+              segLengths != null && j < segLengths.length
+                  ? segLengths[j]
+                  : requested.len[layer];
         }
       } else {
         final segLengths = requested.segLen[layer];
         var segCursor = 0;
         for (; truncationIndex < cumulativeTruncation; truncationIndex++) {
-          if (truncationIndex >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
-            final passType =
-                (truncationIndex + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) % StdEntropyCoderOptions.NUM_PASSES;
+          if (truncationIndex >=
+              StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
+            final passType = (truncationIndex +
+                    StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
+                StdEntropyCoderOptions.NUM_PASSES;
             if (passType != 0) {
               if (segLengths != null && segCursor < segLengths.length) {
                 tsLengths[terminatedIndex] += segLengths[segCursor];
@@ -893,7 +925,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       _prepareTileBudgets();
     }
 
-    final tileBudget = tileIdx < _tileBudgets.length ? _tileBudgets[tileIdx] : _maxBudget;
+    final tileBudget =
+        tileIdx < _tileBudgets.length ? _tileBudgets[tileIdx] : _maxBudget;
     if (tileBudget <= 0) {
       DecoderInstrumentation.log(
         'FileBitstreamReaderAgent',
@@ -902,7 +935,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       return;
     }
 
-    final numLayersValue = decSpec.nls.getTileDef(tileIdx) ?? decSpec.nls.getDefault();
+    final numLayersValue =
+        decSpec.nls.getTileDef(tileIdx) ?? decSpec.nls.getDefault();
     if (numLayersValue == null) {
       throw StateError('Number of layers undefined for tile $tileIdx');
     }
@@ -912,7 +946,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       (component) {
         final value = decSpec.dls.getTileCompVal(tileIdx, component);
         if (value == null) {
-          throw StateError('Missing decomposition levels for tile=$tileIdx component=$component');
+          throw StateError(
+              'Missing decomposition levels for tile=$tileIdx component=$component');
         }
         return value;
       },
@@ -954,7 +989,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       budgets.removeRange(1, budgets.length);
     }
 
-    final remainingBytes = List<int>.filled(nt > 0 ? nt : 1, 0, growable: false);
+    final remainingBytes =
+        List<int>.filled(nt > 0 ? nt : 1, 0, growable: false);
     remainingBytes[tileIdx] = budgets.first;
 
     final grid = _pktDecoder.restart(
@@ -977,16 +1013,21 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       return;
     }
 
-    _tileBudgetRemaining[tileIdx] = tileBudget >= _maxBudget ? _maxBudget : tileBudget;
+    _tileBudgetRemaining[tileIdx] =
+        tileBudget >= _maxBudget ? _maxBudget : tileBudget;
     _tileBytesConsumed[tileIdx] = 0;
 
-    final maxResolutionsInTile = maxLevels.isEmpty ? 0 : maxLevels.reduce(math.max) + 1;
-    final precinctGrid = _buildPrecinctGridCache(maxLevels, maxResolutionsInTile);
+    final maxResolutionsInTile =
+        maxLevels.isEmpty ? 0 : maxLevels.reduce(math.max) + 1;
+    final precinctGrid =
+        _buildPrecinctGridCache(maxLevels, maxResolutionsInTile);
 
-    final segments = _buildProgressionSegments(tileIdx, numLayersValue, maxLevels, maxResolutionsInTile);
+    final segments = _buildProgressionSegments(
+        tileIdx, numLayersValue, maxLevels, maxResolutionsInTile);
     final layerStarts = List<List<int>>.generate(
       nc,
-      (component) => List<int>.filled(maxLevels[component] + 1, 0, growable: false),
+      (component) =>
+          List<int>.filled(maxLevels[component] + 1, 0, growable: false),
       growable: false,
     );
 
@@ -1007,7 +1048,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       if (truncated) {
         final partExhausted = remainingBytes[tileIdx] <= 0;
         final budgetDepleted = _tileBudgetRemaining[tileIdx] <= 0;
-        if (partExhausted && tilePartIdx + 1 < budgets.length && !budgetDepleted) {
+        if (partExhausted &&
+            tilePartIdx + 1 < budgets.length &&
+            !budgetDepleted) {
           tilePartIdx++;
           remainingBytes[tileIdx] = budgets[tilePartIdx];
           if (tilePartOffsets != null && tilePartIdx < tilePartOffsets.length) {
@@ -1031,7 +1074,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     }
   }
 
-  List<List<Coord?>> _buildPrecinctGridCache(List<int> maxLevels, int maxResolutions) {
+  List<List<Coord?>> _buildPrecinctGridCache(
+      List<int> maxLevels, int maxResolutions) {
     return List<List<Coord?>>.generate(
       nc,
       (component) => List<Coord?>.generate(
@@ -1040,7 +1084,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
           if (resolution > maxLevels[component]) {
             return null;
           }
-          final numPrecincts = _pktDecoder.getNumPrecinct(component, resolution);
+          final numPrecincts =
+              _pktDecoder.getNumPrecinct(component, resolution);
           if (numPrecincts == 0) {
             return null;
           }
@@ -1071,7 +1116,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final resEnd = math.min(segment.resEnd, maxResolutions);
     final compStart = math.max(segment.compStart, 0);
     final compEnd = math.min(segment.compEnd, nc);
-    final minLayer = _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
+    final minLayer =
+        _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
 
     for (var layer = minLayer; layer < layerEnd; layer++) {
       for (var resolution = resStart; resolution < resEnd; resolution++) {
@@ -1092,7 +1138,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
           }
           final precinctCount = coord.x * coord.y;
           for (var precinct = 0; precinct < precinctCount; precinct++) {
-            if (_processPacket(layer, resolution, component, precinct, remainingBytes, grid)) {
+            if (_processPacket(
+                layer, resolution, component, precinct, remainingBytes, grid)) {
               return true;
             }
           }
@@ -1118,7 +1165,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final resEnd = math.min(segment.resEnd, maxResolutions);
     final compStart = math.max(segment.compStart, 0);
     final compEnd = math.min(segment.compEnd, nc);
-    final minLayer = _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
+    final minLayer =
+        _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
 
     for (var resolution = resStart; resolution < resEnd; resolution++) {
       for (var layer = minLayer; layer < layerEnd; layer++) {
@@ -1145,7 +1193,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
             continue;
           }
           for (var precinct = 0; precinct < precinctCount; precinct++) {
-            if (_processPacket(layer, resolution, component, precinct, remainingBytes, grid)) {
+            if (_processPacket(
+                layer, resolution, component, precinct, remainingBytes, grid)) {
               return true;
             }
           }
@@ -1174,7 +1223,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final resEnd = math.min(segment.resEnd, maxResolutions);
     final compStart = math.max(segment.compStart, 0);
     final compEnd = math.min(segment.compEnd, nc);
-    final minLayer = _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
+    final minLayer =
+        _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
 
     for (var resolution = resStart; resolution < resEnd; resolution++) {
       var maxPrecX = 0;
@@ -1220,7 +1270,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
             final startLayer = layerStarts[component][resolution];
             final effectiveStart = math.max(minLayer, startLayer);
             for (var layer = effectiveStart; layer < layerEnd; layer++) {
-              if (_processPacket(layer, resolution, component, precinct, remainingBytes, grid)) {
+              if (_processPacket(layer, resolution, component, precinct,
+                  remainingBytes, grid)) {
                 return true;
               }
             }
@@ -1247,7 +1298,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final resEnd = math.min(segment.resEnd, maxResolutions);
     final compStart = math.max(segment.compStart, 0);
     final compEnd = math.min(segment.compEnd, nc);
-    final minLayer = _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
+    final minLayer =
+        _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
 
     var maxPrecX = 0;
     var maxPrecY = 0;
@@ -1283,7 +1335,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
           }
           final levels = precinctGrid[component];
           final compMaxRes = math.min(resEnd, maxLevels[component] + 1);
-          for (var resolution = resStart; resolution < compMaxRes; resolution++) {
+          for (var resolution = resStart;
+              resolution < compMaxRes;
+              resolution++) {
             final coord = levels[resolution];
             if (coord == null || x >= coord.x || y >= coord.y) {
               continue;
@@ -1292,7 +1346,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
             final startLayer = layerStarts[component][resolution];
             final effectiveStart = math.max(minLayer, startLayer);
             for (var layer = effectiveStart; layer < layerEnd; layer++) {
-              if (_processPacket(layer, resolution, component, precinct, remainingBytes, grid)) {
+              if (_processPacket(layer, resolution, component, precinct,
+                  remainingBytes, grid)) {
                 return true;
               }
             }
@@ -1319,7 +1374,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final resEnd = math.min(segment.resEnd, maxResolutions);
     final compStart = math.max(segment.compStart, 0);
     final compEnd = math.min(segment.compEnd, nc);
-    final minLayer = _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
+    final minLayer =
+        _computeMinLayerStart(layerStarts, segment, maxLevels, numLayers);
 
     for (var component = compStart; component < compEnd; component++) {
       if (component >= nc) {
@@ -1348,7 +1404,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
       for (var y = 0; y < maxPrecY; y++) {
         for (var x = 0; x < maxPrecX; x++) {
-          for (var resolution = resStart; resolution < compMaxRes; resolution++) {
+          for (var resolution = resStart;
+              resolution < compMaxRes;
+              resolution++) {
             final coord = levels[resolution];
             if (coord == null || x >= coord.x || y >= coord.y) {
               continue;
@@ -1357,7 +1415,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
             final startLayer = layerStarts[component][resolution];
             final effectiveStart = math.max(minLayer, startLayer);
             for (var layer = effectiveStart; layer < layerEnd; layer++) {
-              if (_processPacket(layer, resolution, component, precinct, remainingBytes, grid)) {
+              if (_processPacket(layer, resolution, component, precinct,
+                  remainingBytes, grid)) {
                 return true;
               }
             }
@@ -1377,8 +1436,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
   ) {
     final pocSpec = decSpec.pcs.getTileDef(tileIdx);
     if (pocSpec == null || pocSpec.isEmpty) {
-      final progression =
-          decSpec.pos.getTileDef(tileIdx) ?? decSpec.pos.getDefault() ?? ProgressionType.LY_RES_COMP_POS_PROG;
+      final progression = decSpec.pos.getTileDef(tileIdx) ??
+          decSpec.pos.getDefault() ??
+          ProgressionType.LY_RES_COMP_POS_PROG;
       return <_ProgressionSegment>[
         _ProgressionSegment(
           progression: progression,
@@ -1394,7 +1454,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final segments = <_ProgressionSegment>[];
     for (final entry in pocSpec) {
       if (entry.length < 6) {
-        throw StateError('Invalid POC specification entry: expected 6 values, got ${entry.length}');
+        throw StateError(
+            'Invalid POC specification entry: expected 6 values, got ${entry.length}');
       }
       segments.add(
         _ProgressionSegment(
@@ -1428,17 +1489,23 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     }
     switch (segment.progression) {
       case ProgressionType.LY_RES_COMP_POS_PROG:
-        return _decodeLrcp(segment, layerStarts, maxLevels, maxResolutions, numLayers, remainingBytes, grid, precinctGrid);
+        return _decodeLrcp(segment, layerStarts, maxLevels, maxResolutions,
+            numLayers, remainingBytes, grid, precinctGrid);
       case ProgressionType.RES_LY_COMP_POS_PROG:
-        return _decodeRlcp(segment, layerStarts, maxLevels, maxResolutions, numLayers, remainingBytes, grid, precinctGrid);
+        return _decodeRlcp(segment, layerStarts, maxLevels, maxResolutions,
+            numLayers, remainingBytes, grid, precinctGrid);
       case ProgressionType.RES_POS_COMP_LY_PROG:
-        return _decodeRpcl(segment, layerStarts, maxLevels, maxResolutions, numLayers, remainingBytes, grid, precinctGrid);
+        return _decodeRpcl(segment, layerStarts, maxLevels, maxResolutions,
+            numLayers, remainingBytes, grid, precinctGrid);
       case ProgressionType.POS_COMP_RES_LY_PROG:
-        return _decodePcrl(segment, layerStarts, maxLevels, maxResolutions, numLayers, remainingBytes, grid, precinctGrid);
+        return _decodePcrl(segment, layerStarts, maxLevels, maxResolutions,
+            numLayers, remainingBytes, grid, precinctGrid);
       case ProgressionType.COMP_POS_RES_LY_PROG:
-        return _decodeCprl(segment, layerStarts, maxLevels, maxResolutions, numLayers, remainingBytes, grid, precinctGrid);
+        return _decodeCprl(segment, layerStarts, maxLevels, maxResolutions,
+            numLayers, remainingBytes, grid, precinctGrid);
       default:
-        throw UnsupportedError('Progression order ${segment.progression} is not supported yet');
+        throw UnsupportedError(
+            'Progression order ${segment.progression} is not supported yet');
     }
   }
 
@@ -1521,16 +1588,18 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     final before = remainingBytes[tileIdx];
 
     if (_packetOverride != null) {
-      if (_packetOverrideCount > 0 && _packetOverrideInvocations >= _packetOverrideCount) {
+      if (_packetOverrideCount > 0 &&
+          _packetOverrideInvocations >= _packetOverrideCount) {
         return _finalizePacket(tileIdx, before, remainingBytes, true);
       }
       _packetOverrideInvocations++;
-      final forced =
-          _packetOverride!(layer, resolution, component, precinct, remainingBytes);
+      final forced = _packetOverride!(
+          layer, resolution, component, precinct, remainingBytes);
       return _finalizePacket(tileIdx, before, remainingBytes, forced);
     }
 
-    if (_pktDecoder.readSOPMarker(remainingBytes, precinct, component, resolution)) {
+    if (_pktDecoder.readSOPMarker(
+        remainingBytes, precinct, component, resolution)) {
       return _finalizePacket(tileIdx, before, remainingBytes, true);
     }
 
@@ -1542,12 +1611,12 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
       }
     }
 
-    if (_pktDecoder.readPktHead(
-        layer, resolution, component, precinct, subbandBlocks, remainingBytes)) {
+    if (_pktDecoder.readPktHead(layer, resolution, component, precinct,
+        subbandBlocks, remainingBytes)) {
       return _finalizePacket(tileIdx, before, remainingBytes, true);
     }
-    if (_pktDecoder.readPktBody(
-        layer, resolution, component, precinct, subbandBlocks, remainingBytes)) {
+    if (_pktDecoder.readPktBody(layer, resolution, component, precinct,
+        subbandBlocks, remainingBytes)) {
       return _finalizePacket(tileIdx, before, remainingBytes, true);
     }
     return _finalizePacket(tileIdx, before, remainingBytes, false);
@@ -1571,7 +1640,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         _tileBudgetRemaining[tileIdx] = updated <= 0 ? 0 : updated;
       }
     }
-    if (tileIdx < _tileBudgetRemaining.length && _tileBudgetRemaining[tileIdx] <= 0) {
+    if (tileIdx < _tileBudgetRemaining.length &&
+        _tileBudgetRemaining[tileIdx] <= 0) {
       tilePartBudgets[tileIdx] = 0;
       return true;
     }
@@ -1582,8 +1652,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
   List<int> debugGetTileBudgets() => List<int>.from(_tileBudgets);
 
   @visibleForTesting
-  List<List<int>> debugGetCachedTilePartBodyLengths() =>
-      _tilePartBodyLengths.map((parts) => List<int>.from(parts)).toList(growable: false);
+  List<List<int>> debugGetCachedTilePartBodyLengths() => _tilePartBodyLengths
+      .map((parts) => List<int>.from(parts))
+      .toList(growable: false);
 
   @visibleForTesting
   int debugGetPktDecoderMaxCodeBlocks() => _pktDecoder.maxCB;
@@ -1610,8 +1681,8 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     );
     final maxResolutions =
         maxLevels.isEmpty ? 0 : maxLevels.reduce(math.max) + 1;
-    final segments =
-        _buildProgressionSegments(tileIdx, numLayers, maxLevels, maxResolutions);
+    final segments = _buildProgressionSegments(
+        tileIdx, numLayers, maxLevels, maxResolutions);
     return segments
         .map((segment) => <String, int>{
               'progression': segment.progression,
@@ -1645,4 +1716,3 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     _packetOverrideInvocations = 0;
   }
 }
-

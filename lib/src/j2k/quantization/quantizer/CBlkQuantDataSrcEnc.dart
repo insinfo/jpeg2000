@@ -97,5 +97,3 @@ abstract class CBlkQuantDataSrcEnc implements ForwWTDataProps {
   /// @see CBlkWTData
   CBlkWTData? getNextInternCodeBlock(int c, CBlkWTData? cblk);
 }
-
-

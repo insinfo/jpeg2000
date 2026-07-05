@@ -3,8 +3,7 @@ import 'LookUpTable8.dart';
 
 /// Interpolated 8-bit LUT built from curve data.
 class LookUpTable8Interp extends LookUpTable8 {
-  LookUpTable8Interp(
-      ICCCurveType curve, int dwNumInput, int dwMaxOutput)
+  LookUpTable8Interp(ICCCurveType curve, int dwNumInput, int dwMaxOutput)
       : super.fromCurve(curve, dwNumInput, dwMaxOutput) {
     double ratio =
         (dwNumInput == 1) ? 0.0 : (curve.count - 1) / (dwNumInput - 1);

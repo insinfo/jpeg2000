@@ -32,7 +32,8 @@ Future<PortableImage> loadPortableImage(File file) async {
       final b = bytes[index];
       if (b == 35) {
         // '#'
-        while (index < bytes.length && bytes[index] != 10 && bytes[index] != 13) {
+        while (
+            index < bytes.length && bytes[index] != 10 && bytes[index] != 13) {
           index++;
         }
       } else if (b == 9 || b == 10 || b == 13 || b == 32) {
@@ -58,9 +59,27 @@ Future<PortableImage> loadPortableImage(File file) async {
     return String.fromCharCodes(bytes.sublist(start, index));
   }
 
+  void consumeRasterSeparator() {
+    if (index >= bytes.length) {
+      throw FormatException('Dados raster ausentes em ${file.path}');
+    }
+    final b = bytes[index++];
+    if (b == 13) {
+      if (index < bytes.length && bytes[index] == 10) {
+        index++;
+      }
+      return;
+    }
+    if (b == 9 || b == 10 || b == 32) {
+      return;
+    }
+    throw FormatException('Separador raster inválido em ${file.path}');
+  }
+
   final magic = readToken();
   if (magic != 'P6' && magic != 'P5' && magic != 'P7') {
-    throw FormatException('Formato PNM não suportado ($magic). Apenas P5/P6/P7.');
+    throw FormatException(
+        'Formato PNM não suportado ($magic). Apenas P5/P6/P7.');
   }
 
   if (magic == 'P7') {
@@ -98,38 +117,37 @@ Future<PortableImage> loadPortableImage(File file) async {
       throw FormatException('Cabeçalho P7 incompleto em ${file.path}');
     }
 
-    while (index < bytes.length && (bytes[index] == 9 || bytes[index] == 10 || bytes[index] == 13 || bytes[index] == 32)) {
-      index++;
-    }
+    consumeRasterSeparator();
 
     final bytesPerSample = maxVal > 255 ? 2 : 1;
     final expectedLength = width * height * depth * bytesPerSample;
     final pixelData = bytes.sublist(index);
     if (pixelData.length != expectedLength) {
-      throw FormatException('Tamanho de dados inconsistente: esperado $expectedLength bytes, obtido ${pixelData.length}.');
+      throw FormatException(
+          'Tamanho de dados inconsistente: esperado $expectedLength bytes, obtido ${pixelData.length}.');
     }
 
-    return PortableImage(width, height, maxVal, depth, bytesPerSample, Uint8List.fromList(pixelData));
+    return PortableImage(width, height, maxVal, depth, bytesPerSample,
+        Uint8List.fromList(pixelData));
   }
 
   final width = int.parse(readToken());
   final height = int.parse(readToken());
   final maxVal = int.parse(readToken());
 
-  // Skip single whitespace char after header
-  while (index < bytes.length && (bytes[index] == 9 || bytes[index] == 10 || bytes[index] == 13 || bytes[index] == 32)) {
-    index++;
-  }
+  consumeRasterSeparator();
 
   final channels = magic == 'P6' ? 3 : 1;
   final bytesPerSample = maxVal > 255 ? 2 : 1;
   final expectedLength = width * height * channels * bytesPerSample;
   final pixelData = bytes.sublist(index);
   if (pixelData.length != expectedLength) {
-    throw FormatException('Tamanho de dados inconsistente: esperado $expectedLength bytes, obtido ${pixelData.length}.');
+    throw FormatException(
+        'Tamanho de dados inconsistente: esperado $expectedLength bytes, obtido ${pixelData.length}.');
   }
 
-  return PortableImage(width, height, maxVal, channels, bytesPerSample, Uint8List.fromList(pixelData));
+  return PortableImage(width, height, maxVal, channels, bytesPerSample,
+      Uint8List.fromList(pixelData));
 }
 
 Future<PortableImage> decodeCodestreamWithJj2000(
@@ -141,7 +159,8 @@ Future<PortableImage> decodeCodestreamWithJj2000(
   }
 
   final tempDir = await Directory.systemTemp.createTemp('jj2000_decode_');
-  final normalizedExtension = outputExtension.startsWith('.') ? outputExtension : '.$outputExtension';
+  final normalizedExtension =
+      outputExtension.startsWith('.') ? outputExtension : '.$outputExtension';
   final outputFile = File('${tempDir.path}/decoded$normalizedExtension');
 
   late final PortableImage decoded;
@@ -158,7 +177,8 @@ Future<PortableImage> decodeCodestreamWithJj2000(
     decoder.run();
 
     if (decoder.exitCode != 0) {
-      throw StateError('Decoder retornou código ${decoder.exitCode} para ${codestream.path}');
+      throw StateError(
+          'Decoder retornou código ${decoder.exitCode} para ${codestream.path}');
     }
 
     decoded = await loadPortableImage(outputFile);
@@ -177,16 +197,19 @@ void expectImagesAlmostEqual(
   int maxAbsError = 0,
 }) {
   if (a.width != b.width || a.height != b.height) {
-    throw StateError('Dimensões diferentes: ${a.width}x${a.height} vs ${b.width}x${b.height}');
+    throw StateError(
+        'Dimensões diferentes: ${a.width}x${a.height} vs ${b.width}x${b.height}');
   }
   if (a.channels != b.channels) {
-    throw StateError('Quantidade de canais diferente: ${a.channels} vs ${b.channels}');
+    throw StateError(
+        'Quantidade de canais diferente: ${a.channels} vs ${b.channels}');
   }
   if (a.maxVal != b.maxVal) {
     throw StateError('maxVal diferente: ${a.maxVal} vs ${b.maxVal}');
   }
   if (a.bytesPerSample != b.bytesPerSample) {
-    throw StateError('bytes por amostra diferente: ${a.bytesPerSample} vs ${b.bytesPerSample}');
+    throw StateError(
+        'bytes por amostra diferente: ${a.bytesPerSample} vs ${b.bytesPerSample}');
   }
 
   if (a.data.length != b.data.length) {
@@ -200,4 +223,3 @@ void expectImagesAlmostEqual(
     }
   }
 }
-

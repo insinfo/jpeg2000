@@ -7,7 +7,7 @@ class StringSpec extends ModuleSpec<String> {
   static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
   static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
   static const int SPEC_TILE_COMP = ModuleSpec.SPEC_TILE_COMP;
-    static List<bool> parseIdx(String token, int max) =>
+  static List<bool> parseIdx(String token, int max) =>
       ModuleSpec.parseIdx(token, max);
 
   StringSpec(int numTiles, int numComps, int specType)
@@ -200,4 +200,3 @@ class StringSpec extends ModuleSpec<String> {
     }
   }
 }
-

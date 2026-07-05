@@ -3,7 +3,7 @@ import 'package:jpeg2000/src/j2k/codestream/CBlkCoordInfo.dart';
 
 import '../../entropy/encoder/CodedCBlkDataSrcEnc.dart';
 import '../../encoder/EncoderSpecs.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import '../../util/ParameterList.dart';
 import '../../codestream/PrecInfo.dart';
 import '../../entropy/encoder/CBlkRateDistStats.dart';
@@ -12,7 +12,6 @@ import '../../util/MathUtil.dart';
 import '../../util/ArrayUtil.dart';
 import 'BitOutputBuffer.dart';
 import 'TagTreeEncoder.dart';
-
 
 /// This class builds packets and keeps the state information of packet
 /// interdependencies. It also supports saving the state and reverting
@@ -108,10 +107,11 @@ class PktEncoder {
 
   /// Creates a new packet encoder object, using the information from the
   /// 'infoSrc' object.
-  PktEncoder(
-      this.infoSrc, this.encSpec, List<List<List<Coord>>> numPrec, ParameterList pl) {
+  PktEncoder(this.infoSrc, this.encSpec, List<List<List<Coord>>> numPrec,
+      ParameterList pl) {
     // Check parameters
-    pl.checkList([optPrefix.codeUnitAt(0)], ParameterList.toNameArray(pinfo));
+    pl.checkListSingle(
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     // Get number of components and tiles
     int nc = infoSrc.getNumComps();
@@ -151,13 +151,16 @@ class PktEncoder {
 
           int maxPrec = numPrec[t][c][r].x * numPrec[t][c][r].y;
 
-          ttIncl[t][c][r] = List.generate(maxPrec, (_) => List.filled(maxs, TagTreeEncoder(0, 0, null)));
-          ttMaxBP[t][c][r] = List.generate(maxPrec, (_) => List.filled(maxs, TagTreeEncoder(0, 0, null)));
+          ttIncl[t][c][r] = List.generate(
+              maxPrec, (_) => List.filled(maxs, TagTreeEncoder(0, 0, null)));
+          ttMaxBP[t][c][r] = List.generate(
+              maxPrec, (_) => List.filled(maxs, TagTreeEncoder(0, 0, null)));
           prevtIdxs[t][c][r] = List.generate(maxs, (_) => []);
           lblock[t][c][r] = List.generate(maxs, (_) => []);
 
           // Precincts and code-blocks
-          ppinfo[t][c][r] = List.filled(maxPrec, PrecInfo(0, 0, 0, 0, 0, 0, 0, 0, 0));
+          ppinfo[t][c][r] =
+              List.filled(maxPrec, PrecInfo(0, 0, 0, 0, 0, 0, 0, 0, 0));
           _fillPrecInfo(t, c, r);
 
           for (int s = mins; s < maxs; s++) {
@@ -656,7 +659,8 @@ class PktEncoder {
                   // representation of newtp-36
                   hbuf.writeBits((511 << 7) | (newtp - 36), 16);
                 } else {
-                  throw Exception("Maximum number of truncation points exceeded");
+                  throw Exception(
+                      "Maximum number of truncation points exceeded");
                 }
             }
           } else {
@@ -797,8 +801,8 @@ class PktEncoder {
               cblen = curCbs[b].truncRates[curCbs[b].truncIdxs[curTIndx[b]]] -
                   curCbs[b].truncRates[curCbs[b].truncIdxs[curPrevtIdxs[b]]];
               // System.arraycopy(cur_cbs[b].data, cur_cbs[b].truncRates[cur_cbs[b].truncIdxs[cur_prevtIdxs[b]]], lbbuf,lblen,cblen);
-              int srcPos = curCbs[b]
-                  .truncRates[curCbs[b].truncIdxs[curPrevtIdxs[b]]];
+              int srcPos =
+                  curCbs[b].truncRates[curCbs[b].truncIdxs[curPrevtIdxs[b]]];
               lbbuf!.setRange(lblen, lblen + cblen, curCbs[b].data!, srcPos);
             }
             lblen += cblen;
@@ -863,15 +867,20 @@ class PktEncoder {
         bakPrevtIdxs![t] = List.generate(ttIncl[t].length, (_) => []);
         for (int c = ttIncl[t].length - 1; c >= 0; c--) {
           bakLblock![t][c] = List.generate(lblock[t][c].length, (_) => []);
-          bakPrevtIdxs![t][c] = List.generate(prevtIdxs[t][c].length, (_) => []);
+          bakPrevtIdxs![t][c] =
+              List.generate(prevtIdxs[t][c].length, (_) => []);
           for (int r = lblock[t][c].length - 1; r >= 0; r--) {
-            bakLblock![t][c][r] = List.generate(lblock[t][c][r].length, (_) => []);
-            bakPrevtIdxs![t][c][r] = List.generate(prevtIdxs[t][c][r].length, (_) => []);
+            bakLblock![t][c][r] =
+                List.generate(lblock[t][c][r].length, (_) => []);
+            bakPrevtIdxs![t][c][r] =
+                List.generate(prevtIdxs[t][c][r].length, (_) => []);
             minsbi = (r == 0) ? 0 : 1;
             maxsbi = (r == 0) ? 1 : 4;
             for (int s = minsbi; s < maxsbi; s++) {
-              bakLblock![t][c][r][s] = List.filled(lblock[t][c][r][s].length, 0);
-              bakPrevtIdxs![t][c][r][s] = List.filled(prevtIdxs[t][c][r][s].length, 0);
+              bakLblock![t][c][r][s] =
+                  List.filled(lblock[t][c][r][s].length, 0);
+              bakPrevtIdxs![t][c][r][s] =
+                  List.filled(prevtIdxs[t][c][r][s].length, 0);
             }
           }
         }
@@ -1044,5 +1053,3 @@ class PktEncoder {
     return ppinfo[t][c][r][p];
   }
 }
-
-

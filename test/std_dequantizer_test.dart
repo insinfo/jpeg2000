@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkFloat.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
@@ -174,5 +174,3 @@ void main() {
     expect(outData[3], closeTo(-5.12, 0.0001));
   });
 }
-
-

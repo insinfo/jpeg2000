@@ -195,4 +195,3 @@ class BitToByteOutput {
     this._isPredTerm = isPredTerm;
   }
 }
-

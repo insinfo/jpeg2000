@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkFloat.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
@@ -11,7 +11,7 @@ import 'package:jpeg2000/src/j2k/quantization/dequantizer/CBlkQuantDataSrcDec.da
 import 'package:jpeg2000/src/j2k/roi/MaxShiftSpec.dart';
 import 'package:jpeg2000/src/j2k/roi/RectRoiSpec.dart';
 import 'package:jpeg2000/src/j2k/roi/RectangularRoi.dart';
-import 'package:jpeg2000/src/j2k/roi/RoiDeScaler.dart';
+import 'package:jpeg2000/src/j2k/roi/ROIDeScaler.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
 
 void main() {
@@ -380,5 +380,3 @@ class _SingleBlockComponentSource implements BlkImgDataSrc {
   @override
   int getNumTiles() => 1;
 }
-
-

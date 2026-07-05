@@ -8,6 +8,7 @@ import '../j2k/image/DataBlkFloat.dart';
 import '../j2k/image/DataBlk.dart';
 import 'ICCMonochromeInputProfile.dart';
 import 'ICCMatrixBasedInputProfile.dart';
+import 'tags/ICCXYZType.dart';
 import 'lut/MonochromeTransformTosRGB.dart';
 import 'lut/MatrixBasedTransformTosRGB.dart';
 import 'lut/MatrixBasedTransformException.dart';
@@ -52,7 +53,60 @@ class ICCProfiler extends ColorSpaceMapper {
   /// @exception IOException profile access exception
   /// @exception ICCProfileException profile content exception
   static BlkImgDataSrc createInstance(BlkImgDataSrc src, ColorSpace csMap) {
+    // Some files embed degenerate restricted ICC profiles (e.g. all-zero
+    // colorants). Applying such a profile produces garbage output, so —
+    // like the jai-imageio reference, which does not apply ICC profiles to
+    // the sample data — skip the transform and pass samples through.
+    if (src.getNumComps() == 3) {
+      try {
+        final icc = ICCMatrixBasedInputProfile.createInstance(csMap);
+        final rICC = icc.parse();
+        if (!_hasUsableColorants(rICC)) {
+          FacilityManager.getMsgLogger().printmsg(
+              MsgLogger.warning,
+              'ICC profile has degenerate colorants; '
+              'skipping ICC color transform.');
+          return src;
+        }
+      } catch (e) {
+        FacilityManager.getMsgLogger().printmsg(
+            MsgLogger.warning,
+            'Unable to parse ICC profile ($e); '
+            'skipping ICC color transform.');
+        return src;
+      }
+    }
     return ICCProfiler(src, csMap);
+  }
+
+  /// Returns false when the colorant matrix is missing or numerically
+  /// degenerate (singular), which would make the PCS conversion meaningless.
+  static bool _hasUsableColorants(RestrictedICCProfile rICC) {
+    final colorant = rICC.colorant;
+    if (colorant == null || colorant.length < 3) {
+      return false;
+    }
+    final red = colorant[RED];
+    final green = colorant[GREEN];
+    final blue = colorant[BLUE];
+    if (red == null || green == null || blue == null) {
+      return false;
+    }
+    final m = <double>[
+      ICCXYZType.xyzToDouble(red.x),
+      ICCXYZType.xyzToDouble(green.x),
+      ICCXYZType.xyzToDouble(blue.x),
+      ICCXYZType.xyzToDouble(red.y),
+      ICCXYZType.xyzToDouble(green.y),
+      ICCXYZType.xyzToDouble(blue.y),
+      ICCXYZType.xyzToDouble(red.z),
+      ICCXYZType.xyzToDouble(green.z),
+      ICCXYZType.xyzToDouble(blue.z),
+    ];
+    final det = m[0] * (m[4] * m[8] - m[5] * m[7]) -
+        m[1] * (m[3] * m[8] - m[5] * m[6]) +
+        m[2] * (m[3] * m[7] - m[4] * m[6]);
+    return det.abs() > 1e-6;
   }
 
   /// Ctor which creates an ICCProfile for the image and initializes
@@ -72,7 +126,8 @@ class ICCProfiler extends ColorSpaceMapper {
       xform = MonochromeTransformTosRGB(
           ICCp!, maxValueArray![0], shiftValueArray![0]);
     } else {
-      xform = MatrixBasedTransformTosRGB(ICCp!, maxValueArray!, shiftValueArray!);
+      xform =
+          MatrixBasedTransformTosRGB(ICCp!, maxValueArray!, shiftValueArray!);
     }
   }
 
@@ -199,9 +254,8 @@ class ICCProfiler extends ColorSpaceMapper {
               kIn = leftedgeIn;
               for (; kIn < rightedgeIn; ++kIn, ++kOut) {
                 int tmpInt = (dataInt[i]![kIn] >> fixedPtBits) + shiftVal;
-                workDataInt[i]![kOut] = ((tmpInt < 0)
-                    ? 0
-                    : ((tmpInt > maxVal) ? maxVal : tmpInt));
+                workDataInt[i]![kOut] =
+                    ((tmpInt < 0) ? 0 : ((tmpInt > maxVal) ? maxVal : tmpInt));
               }
             }
             break;
@@ -296,8 +350,8 @@ class ICCProfiler extends ColorSpaceMapper {
       outblk.offset = 0;
       outblk.scanw = outblk.w;
     } on MatrixBasedTransformException catch (e) {
-      FacilityManager.getMsgLogger().printmsg(
-          MsgLogger.error, "matrix transform problem:\n${e.message}");
+      FacilityManager.getMsgLogger()
+          .printmsg(MsgLogger.error, "matrix transform problem:\n${e.message}");
       if (pl!.getParameter("debug") == "on") {
         // e.printStackTrace(); // Not available in Dart
         print(e);
@@ -381,4 +435,3 @@ class ICCProfiler extends ColorSpaceMapper {
     return (rep..write("]")).toString();
   }
 }
-

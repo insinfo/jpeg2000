@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/MqDecoder.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/MQDecoder.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -41,7 +40,8 @@ void main() {
       );
 
       final buffer = List<int>.filled(expectedBits.length, 0);
-      final usedFast = decoder.fastDecodeSymbols(buffer, 0, expectedBits.length);
+      final usedFast =
+          decoder.fastDecodeSymbols(buffer, 0, expectedBits.length);
       if (usedFast) {
         expect(buffer[0], expectedBits.first);
       } else {
@@ -58,9 +58,7 @@ void main() {
 }
 
 Map<String, dynamic> _loadFixtures() {
-  final file = File('test/fixtures/mq_decoder/scenarios.json');
-  final content = file.readAsStringSync();
-  return json.decode(content) as Map<String, dynamic>;
+  return json.decode(_fixtureJson) as Map<String, dynamic>;
 }
 
 Uint8List _bytesFromHex(String hex) {
@@ -72,3 +70,18 @@ Uint8List _bytesFromHex(String hex) {
   return Uint8List.fromList(bytes);
 }
 
+const _fixtureJson = '''
+{
+  "initStates": [0, 7, 3, 12],
+  "scenarioOne": {
+    "contexts": [0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 3, 3, 1, 2, 0],
+    "bits": [0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1],
+    "codestreamHex": "2A 91 A4"
+  },
+  "run": {
+    "contexts": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "bits": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "codestreamHex": "7D"
+  }
+}
+''';

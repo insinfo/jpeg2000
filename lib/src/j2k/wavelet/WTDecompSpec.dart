@@ -4,7 +4,8 @@ import '../NotImplementedError.dart';
 /// levels per tile/component.
 class WTDecompSpec {
   WTDecompSpec(int numComps, this._mainDefDecompType, this._mainDefLevels)
-      : _specValType = List<int>.filled(numComps, decSpecMainDef, growable: false);
+      : _specValType =
+            List<int>.filled(numComps, decSpecMainDef, growable: false);
 
   // Decomposition identifiers.
   static const int wtDecompDyadic = 0;
@@ -29,9 +30,13 @@ class WTDecompSpec {
       throw ArgumentError('decompType and levels cannot both be negative');
     }
     _specValType[comp] = decSpecCompDef;
-    _compMainDefDecompType ??= List<int>.filled(_specValType.length, _mainDefDecompType, growable: false);
-    _compMainDefLevels ??= List<int>.filled(_specValType.length, _mainDefLevels, growable: false);
-    _compMainDefDecompType![comp] = decompType >= 0 ? decompType : _mainDefDecompType;
+    _compMainDefDecompType ??= List<int>.filled(
+        _specValType.length, _mainDefDecompType,
+        growable: false);
+    _compMainDefLevels ??=
+        List<int>.filled(_specValType.length, _mainDefLevels, growable: false);
+    _compMainDefDecompType![comp] =
+        decompType >= 0 ? decompType : _mainDefDecompType;
     _compMainDefLevels![comp] = levels >= 0 ? levels : _mainDefLevels;
 
     throw NotImplementedError(
@@ -55,7 +60,8 @@ class WTDecompSpec {
       case decSpecTileComp:
         throw NotImplementedError();
       default:
-        throw StateError('Invalid decomposition spec type ${_specValType[comp]}');
+        throw StateError(
+            'Invalid decomposition spec type ${_specValType[comp]}');
     }
   }
 
@@ -69,13 +75,15 @@ class WTDecompSpec {
       case decSpecTileComp:
         throw NotImplementedError();
       default:
-        throw StateError('Invalid decomposition spec type ${_specValType[comp]}');
+        throw StateError(
+            'Invalid decomposition spec type ${_specValType[comp]}');
     }
   }
 
   /// Returns a deep copy of this specification.
   WTDecompSpec getCopy() {
-    final copy = WTDecompSpec(_specValType.length, _mainDefDecompType, _mainDefLevels);
+    final copy =
+        WTDecompSpec(_specValType.length, _mainDefDecompType, _mainDefLevels);
     for (var i = 0; i < _specValType.length; i++) {
       copy._specValType[i] = _specValType[i];
     }
@@ -86,4 +94,3 @@ class WTDecompSpec {
     return copy;
   }
 }
-

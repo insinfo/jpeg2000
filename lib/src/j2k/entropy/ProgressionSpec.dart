@@ -68,7 +68,8 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
           }
           break;
         default:
-          throw ArgumentError('Unsupported specification type for progression.');
+          throw ArgumentError(
+              'Unsupported specification type for progression.');
       }
       progression = <Progression>[];
       curProg = null;
@@ -84,7 +85,8 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
       final first = word[0];
       if (first == 't') {
         if (needInteger) {
-          throw ArgumentError('Incomplete progression definition before tile spec.');
+          throw ArgumentError(
+              'Incomplete progression definition before tile spec.');
         }
         flushProgressions();
         currentTiles = ModuleSpec.parseIdx(word, nTiles);
@@ -112,7 +114,8 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
         throw ArgumentError('Unknown progression type: $word');
       }
       if (needInteger) {
-        throw ArgumentError('Missing progression bounds before declaring next progression.');
+        throw ArgumentError(
+            'Missing progression bounds before declaring next progression.');
       }
       final newProg = Progression(
         mode,
@@ -129,7 +132,8 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
     }
 
     if (needInteger) {
-      throw ArgumentError('Incomplete progression definition at end of -Aptype.');
+      throw ArgumentError(
+          'Incomplete progression definition at end of -Aptype.');
     }
 
     flushProgressions();
@@ -224,4 +228,3 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
     );
   }
 }
-

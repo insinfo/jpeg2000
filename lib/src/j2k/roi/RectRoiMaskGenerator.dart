@@ -61,4 +61,3 @@ class RectROIMaskGenerator extends ROIMaskGenerator {
     }
   }
 }
-

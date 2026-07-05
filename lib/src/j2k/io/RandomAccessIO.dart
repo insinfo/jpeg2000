@@ -17,4 +17,3 @@ abstract class RandomAccessIO implements BinaryDataInput, BinaryDataOutput {
 
   void write(int value);
 }
-

@@ -69,8 +69,8 @@ class MonochromeTransformTosRGB {
   ///   @param rICC input RestrictedICCProfile
   ///   @param dwInputMaxValue size of the output lut.
   ///   @param dwInputShiftValue value used to shift samples to positive
-  MonochromeTransformTosRGB(RestrictedICCProfile rICC, int dwInputMaxValue,
-      int dwInputShiftValue) {
+  MonochromeTransformTosRGB(
+      RestrictedICCProfile rICC, int dwInputMaxValue, int dwInputShiftValue) {
     if (rICC.getType() != RestrictedICCProfile.kMonochromeInput)
       throw ArgumentError(
           "MonochromeTransformTosRGB: wrong type ICCProfile supplied");
@@ -85,8 +85,8 @@ class MonochromeTransformTosRGB {
     for (i = 0;
         ((i <= dwInputMaxValue) && (fLut.lut[i] <= ksRGBShadowCutoff));
         i++) {
-      lut[i] = (ksRGB8ShadowSlope * fLut.lut[i] + 0.5).floor() -
-          dwInputShiftValue;
+      lut[i] =
+          (ksRGB8ShadowSlope * fLut.lut[i] + 0.5).floor() - dwInputShiftValue;
     }
 
     // Now calculate the rest
@@ -147,7 +147,7 @@ class MonochromeTransformTosRGB {
       output = Float32List(input.length);
       outb.setDataFloat(output);
     }
-    
+
     outb.uly = inb.uly;
     outb.ulx = inb.ulx;
     outb.h = inb.h;
@@ -165,4 +165,3 @@ class MonochromeTransformTosRGB {
     }
   }
 }
-

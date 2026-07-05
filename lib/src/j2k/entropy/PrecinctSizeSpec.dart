@@ -41,7 +41,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
       return;
     }
 
-    final tokens = param.split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toList();
+    final tokens =
+        param.split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toList();
     var index = 0;
     String? pending;
     var currentType = SPEC_DEF;
@@ -67,11 +68,13 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
       switch (word[0]) {
         case 't':
           tileSpec = parseIdx(word, nTiles);
-          currentType = currentType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
+          currentType =
+              currentType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
           break;
         case 'c':
           compSpec = parseIdx(word, nComp);
-          currentType = currentType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
+          currentType =
+              currentType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
           break;
         default:
           if (!_startsWithDigit(word)) {
@@ -84,7 +87,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
           while (true) {
             final width = _parsePrecinctDimension(currentWord);
             if (!hasNext()) {
-              throw ArgumentError("'$optionName' option: could not parse the precinct height");
+              throw ArgumentError(
+                  "'$optionName' option: could not parse the precinct height");
             }
             final heightWord = nextToken();
             final height = _parsePrecinctDimension(heightWord);
@@ -157,7 +161,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
       case SPEC_TILE_DEF:
         final tiles = tileSpec;
         if (tiles == null) {
-          throw ArgumentError('Tile specification missing before precinct dimensions');
+          throw ArgumentError(
+              'Tile specification missing before precinct dimensions');
         }
         for (var i = tiles.length - 1; i >= 0; i--) {
           if (tiles[i]) {
@@ -168,7 +173,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
       case SPEC_COMP_DEF:
         final comps = compSpec;
         if (comps == null) {
-          throw ArgumentError('Component specification missing before precinct dimensions');
+          throw ArgumentError(
+              'Component specification missing before precinct dimensions');
         }
         for (var i = comps.length - 1; i >= 0; i--) {
           if (comps[i]) {
@@ -180,7 +186,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
         final tiles = tileSpec;
         final comps = compSpec;
         if (tiles == null || comps == null) {
-          throw ArgumentError('Tile/component specification missing before precinct dimensions');
+          throw ArgumentError(
+              'Tile/component specification missing before precinct dimensions');
         }
         for (var ti = tiles.length - 1; ti >= 0; ti--) {
           if (!tiles[ti]) {
@@ -249,7 +256,8 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
   static int _parsePrecinctDimension(String token) {
     final value = int.tryParse(token);
     if (value == null) {
-      throw ArgumentError("'$optionName' option: the argument '$token' could not be parsed.");
+      throw ArgumentError(
+          "'$optionName' option: the argument '$token' could not be parsed.");
     }
     if (value <= 0 || value != (1 << MathUtil.log2(value))) {
       throw ArgumentError('Precinct dimensions must be powers of 2');
@@ -276,4 +284,3 @@ class _PrecinctEntry {
   final List<List<int>> value;
   final int mrl;
 }
-

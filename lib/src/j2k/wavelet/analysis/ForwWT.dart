@@ -1,5 +1,5 @@
 import '../WaveletTransform.dart';
-import 'AnWtFilter.dart';
+import 'AnWTFilter.dart';
 import 'ForwWTDataProps.dart';
 
 /// This interface extends the WaveletTransform with the specifics of forward
@@ -76,4 +76,3 @@ abstract class ForwWT implements WaveletTransform, ForwWTDataProps {
   /// @return The wavelet decomposition.
   int getDecomp(int t, int c);
 }
-

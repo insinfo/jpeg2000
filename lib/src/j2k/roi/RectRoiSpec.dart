@@ -23,11 +23,11 @@ class RectROISpec extends ModuleSpec<RectangularROI?> {
         if (roi == null) {
           continue;
         }
-        final tileEntry = result.putIfAbsent(tile, () => <int, RectangularROI>{});
+        final tileEntry =
+            result.putIfAbsent(tile, () => <int, RectangularROI>{});
         tileEntry[comp] = roi;
       }
     }
     return result;
   }
 }
-

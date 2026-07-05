@@ -60,4 +60,3 @@ class DataBlkShort extends DataBlk {
     return length == null ? base : '$base,data=$length shorts';
   }
 }
-

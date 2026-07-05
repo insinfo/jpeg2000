@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
+import '../../j2k/util/FacilityManager.dart';
+import '../../j2k/util/MsgLogger.dart';
 import '../ColorSpaceException.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 import 'JP2Box.dart';
 import '../ColorSpace.dart';
 
@@ -44,9 +46,10 @@ class ColorSpecificationBox extends JP2Box {
             colorSpace = ColorSpace.sYCC;
             break;
           default:
-            // TODO: pipe warning through FacilityManager equivalent once available.
-            print(
-              "Unknown enumerated colorspace ($cs) in color specification box");
+            FacilityManager.getMsgLogger().printmsg(
+              MsgLogger.warning,
+              "Unknown enumerated colorspace ($cs) in color specification box",
+            );
             colorSpace = ColorSpace.Unknown;
         }
         break;
@@ -104,4 +107,3 @@ class ColorSpecificationBox extends JP2Box {
     return rep.toString();
   }
 }
-

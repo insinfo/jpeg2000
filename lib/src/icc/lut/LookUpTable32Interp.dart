@@ -41,4 +41,3 @@ class LookUpTable32Interp extends LookUpTable32 {
     }
   }
 }
-

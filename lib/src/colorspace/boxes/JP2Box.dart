@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
 import '../../j2k/fileformat/FileFormatBoxes.dart';
 import '../ColorSpaceException.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 
 abstract class JP2Box {
   /** Platform dependant line terminator */
@@ -77,4 +77,3 @@ class BoxType {
     return map[type] ?? "Unknown Box Type";
   }
 }
-

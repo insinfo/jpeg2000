@@ -116,5 +116,3 @@ abstract class CBlkWTDataSrc implements ForwWTDataProps {
   /// @see CBlkWTData
   CBlkWTData? getNextInternCodeBlock(int c, CBlkWTData? cblk);
 }
-
-

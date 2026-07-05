@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 
 import 'package:jpeg2000/src/j2k/util/CodestreamManipulator.dart';
@@ -32,7 +33,8 @@ void main() {
           false,
           false,
         );
-        expect(() => manipulator.doCodestreamManipulation(), throwsA(isException));
+        expect(
+            () => manipulator.doCodestreamManipulation(), throwsA(isException));
       } finally {
         await tempDir.delete(recursive: true);
       }
@@ -61,7 +63,8 @@ void main() {
         expect(_containsSequence(bytes, const [0xFF, 0x91]), isFalse);
         expect(_containsSequence(bytes, const [0xFF, 0x92]), isFalse);
 
-        final codIndex = _indexOfSequence(bytes, const [0xFF, 0x52, 0x00, 0x0C]);
+        final codIndex =
+            _indexOfSequence(bytes, const [0xFF, 0x52, 0x00, 0x0C]);
         expect(codIndex, isNonNegative);
         expect(bytes[codIndex + 4], 0);
 
@@ -281,12 +284,18 @@ final List<int> _codestreamWithTemporaryMarkers = List<int>.unmodifiable(<int>[
   0xD9,
 ]);
 
-final List<int> _firstPacketHeader = List<int>.unmodifiable(<int>[0xC0, 0xC1, 0xC2]);
-final List<int> _firstPacketData = List<int>.unmodifiable(<int>[0xA0, 0xA1, 0xA2, 0xA3]);
-final List<int> _secondPacketHeader = List<int>.unmodifiable(<int>[0xC4, 0xC5, 0xC6]);
-final List<int> _secondPacketData = List<int>.unmodifiable(<int>[0xA4, 0xA5, 0xA6, 0xA7]);
-final List<int> _tile1PacketHeader = List<int>.unmodifiable(<int>[0xD0, 0xD1, 0xD2]);
-final List<int> _tile1PacketData = List<int>.unmodifiable(<int>[0xB0, 0xB1, 0xB2, 0xB3]);
+final List<int> _firstPacketHeader =
+    List<int>.unmodifiable(<int>[0xC0, 0xC1, 0xC2]);
+final List<int> _firstPacketData =
+    List<int>.unmodifiable(<int>[0xA0, 0xA1, 0xA2, 0xA3]);
+final List<int> _secondPacketHeader =
+    List<int>.unmodifiable(<int>[0xC4, 0xC5, 0xC6]);
+final List<int> _secondPacketData =
+    List<int>.unmodifiable(<int>[0xA4, 0xA5, 0xA6, 0xA7]);
+final List<int> _tile1PacketHeader =
+    List<int>.unmodifiable(<int>[0xD0, 0xD1, 0xD2]);
+final List<int> _tile1PacketData =
+    List<int>.unmodifiable(<int>[0xB0, 0xB1, 0xB2, 0xB3]);
 
 bool _containsSequence(List<int> data, List<int> pattern) =>
     _indexOfSequence(data, pattern) != -1;
@@ -344,7 +353,9 @@ _PacketSlices _parseSinglePacket(_TilePart part) {
     throw StateError('SOD marker missing in tile-part');
   }
   var cursor = sodIndex + 2;
-  if (cursor + 5 >= bytes.length || bytes[cursor] != 0xFF || bytes[cursor + 1] != 0x91) {
+  if (cursor + 5 >= bytes.length ||
+      bytes[cursor] != 0xFF ||
+      bytes[cursor + 1] != 0x91) {
     throw StateError('Expected SOP marker in tile-part payload');
   }
   cursor += 6; // Skip SOP marker, Lsop and Nsop.
@@ -365,7 +376,11 @@ int _readInt(List<int> data, int offset) =>
     data[offset + 3];
 
 class _TilePart {
-  const _TilePart({required this.tileIndex, required this.tpIndex, required this.totalParts, required this.bytes});
+  const _TilePart(
+      {required this.tileIndex,
+      required this.tpIndex,
+      required this.totalParts,
+      required this.bytes});
 
   final int tileIndex;
   final int tpIndex;
@@ -384,7 +399,9 @@ List<int> _buildCodestream(List<List<_PacketDef>> tiles) {
   final bytes = <int>[];
 
   void writeMarker(int value) {
-    bytes..add(0xFF)..add(value & 0xFF);
+    bytes
+      ..add(0xFF)
+      ..add(value & 0xFF);
   }
 
   writeMarker(0x4F); // SOC
@@ -434,4 +451,3 @@ class _PacketDef {
   final List<int> header;
   final List<int> data;
 }
-

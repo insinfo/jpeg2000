@@ -70,8 +70,7 @@ class Resampler extends ColorSpaceMapper {
     switch (outblk.getDataType()) {
       case DataBlk.typeInt:
         final inblk = DataBlkInt.withGeometry(x0In, y0In, reqW, reqH);
-        final sourceBlock =
-            src!.getInternCompData(inblk, c) as DataBlkInt;
+        final sourceBlock = src!.getInternCompData(inblk, c) as DataBlkInt;
         dataInt[c] = sourceBlock.getDataInt();
         _upsampleInt(outblk as DataBlkInt, sourceBlock, x0Out, x1Out, y0Out,
             y0In, hfactor, wfactor);
@@ -79,11 +78,10 @@ class Resampler extends ColorSpaceMapper {
         break;
       case DataBlk.typeFloat:
         final inblk = DataBlkFloat.withGeometry(x0In, y0In, reqW, reqH);
-        final sourceBlock =
-            src!.getInternCompData(inblk, c) as DataBlkFloat;
+        final sourceBlock = src!.getInternCompData(inblk, c) as DataBlkFloat;
         dataFloat[c] = sourceBlock.getDataFloat();
-        _upsampleFloat(outblk as DataBlkFloat, sourceBlock, x0Out, x1Out,
-            y0Out, y0In, hfactor, wfactor);
+        _upsampleFloat(outblk as DataBlkFloat, sourceBlock, x0Out, x1Out, y0Out,
+            y0In, hfactor, wfactor);
         outblk.progressive = sourceBlock.progressive;
         break;
       default:
@@ -92,15 +90,8 @@ class Resampler extends ColorSpaceMapper {
     return outblk;
   }
 
-  void _upsampleInt(
-      DataBlkInt outblk,
-      DataBlkInt inblk,
-      int x0Out,
-      int x1Out,
-      int y0Out,
-      int y0In,
-      int hfactor,
-      int wfactor) {
+  void _upsampleInt(DataBlkInt outblk, DataBlkInt inblk, int x0Out, int x1Out,
+      int y0Out, int y0In, int hfactor, int wfactor) {
     final outData = outblk.getDataInt();
     if (outData == null || outData.length != outblk.w * outblk.h) {
       outblk.setData(Int32List(outblk.w * outblk.h));
@@ -128,15 +119,8 @@ class Resampler extends ColorSpaceMapper {
     }
   }
 
-  void _upsampleFloat(
-      DataBlkFloat outblk,
-      DataBlkFloat inblk,
-      int x0Out,
-      int x1Out,
-      int y0Out,
-      int y0In,
-      int hfactor,
-      int wfactor) {
+  void _upsampleFloat(DataBlkFloat outblk, DataBlkFloat inblk, int x0Out,
+      int x1Out, int y0Out, int y0In, int hfactor, int wfactor) {
     final outData = outblk.getDataFloat();
     if (outData == null || outData.length != outblk.w * outblk.h) {
       outblk.setData(Float32List(outblk.w * outblk.h));

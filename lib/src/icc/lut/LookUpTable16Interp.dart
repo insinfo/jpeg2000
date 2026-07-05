@@ -3,8 +3,7 @@ import 'LookUpTable16.dart';
 
 /// Interpolated 16-bit LUT built from ICC curve data.
 class LookUpTable16Interp extends LookUpTable16 {
-  LookUpTable16Interp(
-      ICCCurveType curve, int dwNumInput, int dwMaxOutput)
+  LookUpTable16Interp(ICCCurveType curve, int dwNumInput, int dwMaxOutput)
       : super.fromCurve(curve, dwNumInput, dwMaxOutput) {
     double ratio =
         (dwNumInput == 1) ? 0.0 : (curve.count - 1) / (dwNumInput - 1);

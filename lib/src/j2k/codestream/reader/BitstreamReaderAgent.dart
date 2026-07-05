@@ -6,14 +6,14 @@ import 'package:meta/meta.dart';
 import 'package:jpeg2000/src/j2k/codestream/CBlkCoordInfo.dart';
 
 import '../../codestream/HeaderInfo.dart';
-import '../../codestream/Markers.dart';
+import '../markers.dart';
 import '../../codestream/PrecInfo.dart';
 import '../../codestream/ProgressionType.dart';
 import '../../decoder/DecoderSpecs.dart';
 import '../../entropy/decoder/CodedCBlkDataSrcDec.dart';
 import '../../entropy/decoder/DecLyrdCBlk.dart';
 import '../../entropy/StdEntropyCoderOptions.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import '../../io/RandomAccessIO.dart';
 import '../../io/exceptions.dart';
 import '../../ModuleSpec.dart';
@@ -25,7 +25,7 @@ import '../../util/MathUtil.dart';
 import '../../util/MsgLogger.dart';
 import '../../util/ParameterList.dart';
 import '../../util/StringFormatException.dart';
-import '../../wavelet/Subband.dart';
+import '../../wavelet/subband.dart';
 import '../../wavelet/synthesis/SubbandSyn.dart';
 import '../../wavelet/WaveletFilter.dart';
 import 'HeaderDecoder.dart';
@@ -37,7 +37,6 @@ import 'CBlkInfo.dart';
 part 'FileBitstreamReaderAgent.dart';
 part 'PktDecoder.dart';
 part 'PktDecoderHarness.dart';
-
 
 /// Base port of JJ2000's `BitstreamReaderAgent`.
 abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
@@ -157,7 +156,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getImgWidth(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable for at least one tile-component');
+      throw ArgumentError(
+          'Resolution $rl unavailable for at least one tile-component');
     }
     final dl = mindl - rl;
     final div = 1 << dl;
@@ -167,7 +167,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getImgHeight(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable for at least one tile-component');
+      throw ArgumentError(
+          'Resolution $rl unavailable for at least one tile-component');
     }
     final dl = mindl - rl;
     final div = 1 << dl;
@@ -177,7 +178,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getImgULX(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable for at least one tile-component');
+      throw ArgumentError(
+          'Resolution $rl unavailable for at least one tile-component');
     }
     final dl = mindl - rl;
     return _ceilDiv(ax, 1 << dl);
@@ -186,7 +188,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getImgULY(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable for at least one tile-component');
+      throw ArgumentError(
+          'Resolution $rl unavailable for at least one tile-component');
     }
     final dl = mindl - rl;
     return _ceilDiv(ay, 1 << dl);
@@ -234,7 +237,9 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   @override
   Coord getTile(Coord? reuse) {
-    return reuse == null ? Coord(ctX, ctY) : reuse..x = ctX..y = ctY;
+    return reuse == null ? Coord(ctX, ctY) : reuse
+      ..x = ctX
+      ..y = ctY;
   }
 
   @override
@@ -243,7 +248,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getResULX(int c, int rl) {
     final dl = mdl[c] - rl;
     if (dl < 0) {
-      throw ArgumentError('Resolution $rl unavailable for component $c in tile $ctX,$ctY');
+      throw ArgumentError(
+          'Resolution $rl unavailable for component $c in tile $ctX,$ctY');
     }
     final tx0 = math.max(px + ctX * ntW, ax);
     final tcx0 = _ceilDiv(tx0, getCompSubsX(c));
@@ -253,7 +259,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getResULY(int c, int rl) {
     final dl = mdl[c] - rl;
     if (dl < 0) {
-      throw ArgumentError('Resolution $rl unavailable for component $c in tile $ctX,$ctY');
+      throw ArgumentError(
+          'Resolution $rl unavailable for component $c in tile $ctX,$ctY');
     }
     final ty0 = math.max(py + ctY * ntH, ay);
     final tcy0 = _ceilDiv(ty0, getCompSubsY(c));
@@ -262,7 +269,9 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   @override
   Coord getNumTiles(Coord? reuse) {
-    return reuse == null ? Coord(ntX, ntY) : reuse..x = ntX..y = ntY;
+    return reuse == null ? Coord(ntX, ntY) : reuse
+      ..x = ntX
+      ..y = ntY;
   }
 
   @override
@@ -270,7 +279,8 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   SubbandSyn getSynSubbandTree(int t, int c) {
     if (t != getTileIdx()) {
-      throw ArgumentError('Cannot access subband tree of tile $t while current tile is ${getTileIdx()}');
+      throw ArgumentError(
+          'Cannot access subband tree of tile $t while current tile is ${getTileIdx()}');
     }
     if (c < 0 || c >= nc) {
       throw ArgumentError('Component index out of range: $c');
@@ -313,8 +323,10 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   void initSubbandsFields(int comp, SubbandSyn sb) {
     final tileIdx = getTileIdx();
     final rl = sb.resLvl;
-    final cbw = decSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
-    final cbh = decSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
+    final cbw =
+        decSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
+    final cbh =
+        decSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
 
     if (!sb.isNode) {
       if (hd.precinctPartitionUsed()) {
@@ -365,14 +377,17 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
         }
 
         if (sb.ulcx - acb0x < 0 || sb.ulcy - acb0y < 0) {
-          throw ArgumentError('Invalid code-block partition origin or image offset');
+          throw ArgumentError(
+              'Invalid code-block partition origin or image offset');
         }
 
         final tmpX = sb.ulcx - acb0x + sb.nomCBlkW;
-        sb.numCb!.x = ((tmpX + sb.w - 1) ~/ sb.nomCBlkW) - ((tmpX ~/ sb.nomCBlkW) - 1);
+        sb.numCb!.x =
+            ((tmpX + sb.w - 1) ~/ sb.nomCBlkW) - ((tmpX ~/ sb.nomCBlkW) - 1);
 
         final tmpY = sb.ulcy - acb0y + sb.nomCBlkH;
-        sb.numCb!.y = ((tmpY + sb.h - 1) ~/ sb.nomCBlkH) - ((tmpY ~/ sb.nomCBlkH) - 1);
+        sb.numCb!.y =
+            ((tmpY + sb.h - 1) ~/ sb.nomCBlkH) - ((tmpY ~/ sb.nomCBlkH) - 1);
       }
 
       // JJ2000 defines magnitude bits as guardBits + exponent (derived bands use
@@ -382,9 +397,12 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
       // causes every coefficient to be doubled, which is what we observe when
       // comparing against the reference gradient fixture.
       if (derived[comp]) {
-        sb.magBits = guardBits[comp] + (params[comp]!.exp[0][0] - (mdl[comp] - sb.level)) - 1;
+        sb.magBits = guardBits[comp] +
+            (params[comp]!.exp[0][0] - (mdl[comp] - sb.level)) -
+            1;
       } else {
-        sb.magBits = guardBits[comp] + params[comp]!.exp[sb.resLvl][sb.sbandIdx] - 1;
+        sb.magBits =
+            guardBits[comp] + params[comp]!.exp[sb.resLvl][sb.sbandIdx] - 1;
       }
     } else {
       initSubbandsFields(comp, sb.getLL() as SubbandSyn);
@@ -441,5 +459,3 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return value ~/ divisor;
   }
 }
-
-

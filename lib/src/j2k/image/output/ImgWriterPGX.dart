@@ -36,9 +36,7 @@ class ImgWriterPgx extends ImgWriter {
       throw ArgumentError('PGX supports bit depths between 1 and 31.');
     }
     _bytesPerSample = _bitDepth <= 8 ? 1 : (_bitDepth <= 16 ? 2 : 4);
-    _maxValue = _isSigned
-        ? (1 << (_bitDepth - 1)) - 1
-        : (1 << _bitDepth) - 1;
+    _maxValue = _isSigned ? (1 << (_bitDepth - 1)) - 1 : (1 << _bitDepth) - 1;
     _minValue = _isSigned ? -(1 << (_bitDepth - 1)) : 0;
     _levelShift = _isSigned ? 0 : 1 << (_bitDepth - 1);
 
@@ -157,15 +155,16 @@ class ImgWriterPgx extends ImgWriter {
         } else if (sample > _maxValue) {
           sample = _maxValue;
         }
-        DataPacker.packBigEndian(_buffer!, targetIndex, _bytesPerSample, sample);
+        DataPacker.packBigEndian(
+            _buffer!, targetIndex, _bytesPerSample, sample);
         sourceIndex++;
         targetIndex += _bytesPerSample;
       }
 
       final imageRow = uly + tOffy + line;
       final imageCol = ulx + tOffx;
-      final offset = _pixelDataOffset +
-          (width * imageRow + imageCol) * _bytesPerSample;
+      final offset =
+          _pixelDataOffset + (width * imageRow + imageCol) * _bytesPerSample;
       writer.setPositionSync(offset);
       writer.writeFromSync(_buffer!, 0, bufferSize);
     }
@@ -179,4 +178,3 @@ class ImgWriterPgx extends ImgWriter {
     _pixelDataOffset = header.length;
   }
 }
-

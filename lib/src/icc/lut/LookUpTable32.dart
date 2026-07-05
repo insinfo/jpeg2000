@@ -91,4 +91,3 @@ abstract class LookUpTable32 extends LookUpTable {
     return lut[index];
   }
 }
-

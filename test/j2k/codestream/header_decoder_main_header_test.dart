@@ -8,7 +8,6 @@ import 'package:jpeg2000/src/j2k/codestream/markers.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/image/invcomptransf/InvCompTransf.dart';
 
-
 void main() {
   group('HeaderDecoder.readMainHeader', () {
     test('parses SIZ/COD/QCD markers and initialises specs', () {
@@ -262,8 +261,7 @@ Uint8List _buildCodestreamWithQcc() {
   writeMarkerSegment(Markers.COD, codSegment.takeBytes());
 
   final qcdSegment = BytesBuilder();
-  final qcdSqcd =
-      (1 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+  final qcdSqcd = (1 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
   final qcdValues = <int>[
     5 << Markers.SQCX_EXP_SHIFT,
     4 << Markers.SQCX_EXP_SHIFT,
@@ -383,4 +381,3 @@ Uint8List _buildCodestreamWithCoc() {
 
   return builder.takeBytes();
 }
-

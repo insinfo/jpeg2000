@@ -9,4 +9,3 @@ abstract class BlkImgDataSrc extends ImgData {
 
   DataBlk getCompData(DataBlk block, int component);
 }
-

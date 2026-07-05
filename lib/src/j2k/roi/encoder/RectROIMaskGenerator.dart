@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import '../../image/DataBlkInt.dart';
 import '../../wavelet/subband.dart';
 import 'roi.dart';
-import 'RoiMaskGenerator.dart';
-import 'SubbandRectRoiMask.dart';
+import 'ROIMaskGenerator.dart';
+import 'SubbandRectROIMask.dart';
 
 /// Encoder-side mask generator optimized for purely rectangular ROIs.
 class RectROIMaskGenerator extends ROIMaskGenerator {
@@ -156,7 +156,7 @@ class RectROIMaskGenerator extends ROIMaskGenerator {
         continue;
       }
       if (!roi.isRectangular) {
-        // TODO: add support for circular and arbitrary shapes.
+        // This fast-path generator is selected for rectangular ROI sets.
         continue;
       }
       final int roiLeft = roi.upperLeftX!;
@@ -214,4 +214,3 @@ class RectROIMaskGenerator extends ROIMaskGenerator {
   @override
   String toString() => 'Fast rectangular ROI mask generator';
 }
-

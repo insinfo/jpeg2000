@@ -38,7 +38,12 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
 
   /** The list of parameters that are accepted for ICC profiling.*/
   static const List<List<String?>> pinfo = [
-    ["IcolorSpacedebug", null, "Print debugging messages during colorspace mapping.", "off"]
+    [
+      "IcolorSpacedebug",
+      null,
+      "Print debugging messages during colorspace mapping.",
+      "off"
+    ]
   ];
 
   /** Parameter Specs */
@@ -83,7 +88,8 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
 
       case DataBlk.typeFloat:
         final existingFloat = db.getData();
-        if (existingFloat is Float32List && existingFloat.length >= db.w * db.h) {
+        if (existingFloat is Float32List &&
+            existingFloat.length >= db.w * db.h) {
           return;
         }
         db.setData(Float32List(db.w * db.h));
@@ -250,4 +256,3 @@ class ComputedComponents {
         scanw == cc.scanw);
   }
 }
-

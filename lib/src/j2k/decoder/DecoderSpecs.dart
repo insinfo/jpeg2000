@@ -11,7 +11,7 @@ import '../quantization/QuantTypeSpec.dart';
 import '../roi/MaxShiftSpec.dart';
 import '../roi/RectRoiSpec.dart';
 import '../wavelet/synthesis/SynWTFilterSpec.dart';
-import '../wavelet/WtDecompSpec.dart';
+import '../wavelet/WTDecompSpec.dart';
 
 /// Aggregated decoder specifications required by the inverse wavelet stage.
 ///
@@ -47,19 +47,24 @@ class DecoderSpecs {
   factory DecoderSpecs.basic(int numTiles, int numComps) {
     final dls = IntegerSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
       ..setDefault(0);
-    final wfs = SynWTFilterSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP);
-    final qts = QuantTypeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-      ..setDefault('reversible');
-    final qsss = QuantStepSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-      ..setDefault(
-        StdDequantizerParams(
-          nStep: <List<double>>[<double>[1.0]],
-        ),
-      );
-    final gbs = GuardBitsSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-      ..setDefault(1);
-    final rois = MaxShiftSpec(numTiles, numComps)
-      ..setDefault(0);
+    final wfs =
+        SynWTFilterSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP);
+    final qts =
+        QuantTypeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+          ..setDefault('reversible');
+    final qsss =
+        QuantStepSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+          ..setDefault(
+            StdDequantizerParams(
+              nStep: <List<double>>[
+                <double>[1.0]
+              ],
+            ),
+          );
+    final gbs =
+        GuardBitsSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+          ..setDefault(1);
+    final rois = MaxShiftSpec(numTiles, numComps)..setDefault(0);
     final rectRois = RectROISpec(numTiles, numComps);
     final cts = CompTransfSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE)
       ..setDefault(InvCompTransf.none);
@@ -68,9 +73,11 @@ class DecoderSpecs {
       numComps,
       ModuleSpec.SPEC_TYPE_TILE_COMP,
     )..setDefault(0);
-    final pss = PrecinctSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP, dls);
-    final cblks = CBlkSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-      ..setDefault(<int>[64, 64]);
+    final pss = PrecinctSizeSpec(
+        numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP, dls);
+    final cblks =
+        CBlkSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+          ..setDefault(<int>[64, 64]);
     final ers = ModuleSpec<bool>(
       numTiles,
       numComps,
@@ -189,5 +196,3 @@ class DecoderSpecs {
   /// Wavelet tree decomposition specification (`wts`).
   final WTDecompSpec wts;
 }
-
-

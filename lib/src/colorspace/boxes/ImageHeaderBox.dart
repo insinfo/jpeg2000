@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 import 'JP2Box.dart';
 
 class ImageHeaderBox extends JP2Box {
@@ -58,4 +58,3 @@ class ImageHeaderBox extends JP2Box {
     ipr = bfr[13] == 1 ? true : false;
   }
 }
-

@@ -405,4 +405,3 @@ class ImgWriterBmp extends ImgWriter {
     }
   }
 }
-

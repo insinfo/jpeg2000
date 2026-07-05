@@ -15,8 +15,10 @@ class TagTreeDecoder {
 
   TagTreeDecoder._(this._height, this._width, int levels)
       : _levels = levels,
-        _values = List<List<int>>.generate(levels, (_) => <int>[], growable: false),
-        _states = List<List<int>>.generate(levels, (_) => <int>[], growable: false);
+        _values =
+            List<List<int>>.generate(levels, (_) => <int>[], growable: false),
+        _states =
+            List<List<int>>.generate(levels, (_) => <int>[], growable: false);
 
   final int _width;
   final int _height;
@@ -29,7 +31,8 @@ class TagTreeDecoder {
 
   int update(int m, int n, int threshold, PktHeaderBitReader reader) {
     if (m >= _height || n >= _width || threshold < 0) {
-      throw ArgumentError('Invalid coordinates or threshold for tag-tree update');
+      throw ArgumentError(
+          'Invalid coordinates or threshold for tag-tree update');
     }
 
     var level = _levels - 1;
@@ -112,4 +115,3 @@ class TagTreeDecoder {
     return lvls;
   }
 }
-

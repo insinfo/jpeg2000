@@ -36,20 +36,34 @@ abstract class ICCTag {
   static const String sdwDmddSignature = "dmdd";
 
   // Tag Signatures
-  static final int kdwCprtSignature = ICCProfile.getIntFromString(sdwCprtSignature);
-  static final int kdwDescSignature = ICCProfile.getIntFromString(sdwDescSignature);
-  static final int kdwWtPtSignature = ICCProfile.getIntFromString(sdwWtPtSignature);
-  static final int kdwBkPtSignature = ICCProfile.getIntFromString(sdwBkPtSignature);
-  static final int kdwRXYZSignature = ICCProfile.getIntFromString(sdwRXYZSignature);
-  static final int kdwGXYZSignature = ICCProfile.getIntFromString(sdwGXYZSignature);
-  static final int kdwBXYZSignature = ICCProfile.getIntFromString(sdwBXYZSignature);
-  static final int kdwKXYZSignature = ICCProfile.getIntFromString(sdwKXYZSignature);
-  static final int kdwRTRCSignature = ICCProfile.getIntFromString(sdwRTRCSignature);
-  static final int kdwGTRCSignature = ICCProfile.getIntFromString(sdwGTRCSignature);
-  static final int kdwBTRCSignature = ICCProfile.getIntFromString(sdwBTRCSignature);
-  static final int kdwKTRCSignature = ICCProfile.getIntFromString(sdwKTRCSignature);
-  static final int kdwDmndSignature = ICCProfile.getIntFromString(sdwDmndSignature);
-  static final int kdwDmddSignature = ICCProfile.getIntFromString(sdwDmddSignature);
+  static final int kdwCprtSignature =
+      ICCProfile.getIntFromString(sdwCprtSignature);
+  static final int kdwDescSignature =
+      ICCProfile.getIntFromString(sdwDescSignature);
+  static final int kdwWtPtSignature =
+      ICCProfile.getIntFromString(sdwWtPtSignature);
+  static final int kdwBkPtSignature =
+      ICCProfile.getIntFromString(sdwBkPtSignature);
+  static final int kdwRXYZSignature =
+      ICCProfile.getIntFromString(sdwRXYZSignature);
+  static final int kdwGXYZSignature =
+      ICCProfile.getIntFromString(sdwGXYZSignature);
+  static final int kdwBXYZSignature =
+      ICCProfile.getIntFromString(sdwBXYZSignature);
+  static final int kdwKXYZSignature =
+      ICCProfile.getIntFromString(sdwKXYZSignature);
+  static final int kdwRTRCSignature =
+      ICCProfile.getIntFromString(sdwRTRCSignature);
+  static final int kdwGTRCSignature =
+      ICCProfile.getIntFromString(sdwGTRCSignature);
+  static final int kdwBTRCSignature =
+      ICCProfile.getIntFromString(sdwBTRCSignature);
+  static final int kdwKTRCSignature =
+      ICCProfile.getIntFromString(sdwKTRCSignature);
+  static final int kdwDmndSignature =
+      ICCProfile.getIntFromString(sdwDmndSignature);
+  static final int kdwDmddSignature =
+      ICCProfile.getIntFromString(sdwDmddSignature);
 
   // Tag Type Strings
   static const String sdwTextDescType = "desc";
@@ -60,12 +74,15 @@ abstract class ICCTag {
   static const String sdwXYZTypeReverse = " ZYX";
 
   // Tag Types
-  static final int kdwTextDescType = ICCProfile.getIntFromString(sdwTextDescType);
+  static final int kdwTextDescType =
+      ICCProfile.getIntFromString(sdwTextDescType);
   static final int kdwTextType = ICCProfile.getIntFromString(sdwTextType);
   static final int kdwCurveType = ICCProfile.getIntFromString(sdwCurveType);
-  static final int kdwCurveTypeReverse = ICCProfile.getIntFromString(sdwCurveTypeReverse);
+  static final int kdwCurveTypeReverse =
+      ICCProfile.getIntFromString(sdwCurveTypeReverse);
   static final int kdwXYZType = ICCProfile.getIntFromString(sdwXYZType);
-  static final int kdwXYZTypeReverse = ICCProfile.getIntFromString(sdwXYZTypeReverse);
+  static final int kdwXYZTypeReverse =
+      ICCProfile.getIntFromString(sdwXYZTypeReverse);
 
   /// Tag signature
   final int signature;
@@ -162,4 +179,3 @@ abstract class ICCTag {
     return "${signatureString(signature)}:${typeString(type)}";
   }
 }
-

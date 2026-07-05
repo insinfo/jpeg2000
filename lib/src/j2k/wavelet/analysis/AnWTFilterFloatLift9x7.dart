@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../WaveletFilter.dart';
 import '../FilterTypes.dart';
-import 'AnWtFilterFloat.dart';
+import 'AnWTFilterFloat.dart';
 
 /// This class inherits from the analysis wavelet filter definition
 /// for int data. It implements the forward wavelet transform
@@ -458,4 +458,3 @@ class AnWTFilterFloatLift9x7 extends AnWTFilterFloat {
     return "w9x7";
   }
 }
-

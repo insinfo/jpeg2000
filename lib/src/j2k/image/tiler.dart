@@ -1,6 +1,6 @@
 import '../NoNextElementException.dart';
 import 'BlkImgDataSrc.dart';
-import 'Coord.dart';
+import 'coord.dart';
 import 'DataBlk.dart';
 import 'ImgDataAdapter.dart';
 
@@ -157,8 +157,8 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
     }
 
     // Calculate the number of tiles
-    ntX = ((x0siz + src.getImgWidth()) / xtsiz).ceil();
-    ntY = ((y0siz + src.getImgHeight()) / ytsiz).ceil();
+    ntX = ((x0siz + src.getImgWidth() - xt0siz) / xtsiz).ceil();
+    ntY = ((y0siz + src.getImgHeight() - yt0siz) / ytsiz).ceil();
   }
 
   /// Returns the overall width of the current tile in pixels. This is the
@@ -241,10 +241,7 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
   @override
   DataBlk getInternCompData(DataBlk blk, int c) {
     // Check that block is inside tile
-    if (blk.ulx < 0 ||
-        blk.uly < 0 ||
-        blk.w > compW![c] ||
-        blk.h > compH![c]) {
+    if (blk.ulx < 0 || blk.uly < 0 || blk.w > compW![c] || blk.h > compH![c]) {
       throw ArgumentError("Block is outside the tile");
     }
     // Translate to the sources coordinates
@@ -276,10 +273,7 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
   @override
   DataBlk getCompData(DataBlk blk, int c) {
     // Check that block is inside tile
-    if (blk.ulx < 0 ||
-        blk.uly < 0 ||
-        blk.w > compW![c] ||
-        blk.h > compH![c]) {
+    if (blk.ulx < 0 || blk.uly < 0 || blk.w > compW![c] || blk.h > compH![c]) {
       throw ArgumentError("Block is outside the tile");
     }
     // Translate to the source's coordinates
@@ -500,4 +494,3 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
     return "Tiler: source= $src\n${getNumTiles()} tile(s), nominal width=$xtsiz, nominal height=$ytsiz";
   }
 }
-

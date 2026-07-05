@@ -62,4 +62,3 @@ class DataBlkInt extends DataBlk {
     return length == null ? base : '$base,data=$length bytes';
   }
 }
-

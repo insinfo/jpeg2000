@@ -185,7 +185,7 @@ class CBlkRateDistStats extends CodedCBlk {
     // Select the valid points
     npnt = n - firstPnt;
     pSlope = 0.0; // To keep compiler happy
-    
+
     bool restart = false;
     do {
       restart = false;
@@ -255,7 +255,7 @@ class CBlkRateDistStats extends CodedCBlk {
     } else {
       isTermPass = null;
     }
-    
+
     for (int j = 0; j < n; j++) {
       truncRates[j] = rates[j];
     }
@@ -295,5 +295,3 @@ class CBlkRateDistStats extends CodedCBlk {
     return str;
   }
 }
-
-

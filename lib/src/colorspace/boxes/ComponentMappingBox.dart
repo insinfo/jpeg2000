@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 import 'JP2Box.dart';
 
 class ComponentMappingBox extends JP2Box {
@@ -74,4 +74,3 @@ class ComponentMappingBox extends JP2Box {
     return mapping[3] & 0x000ff;
   }
 }
-

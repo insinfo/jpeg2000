@@ -30,4 +30,3 @@ class NoOpROIMaskGenerator extends ROIMaskGenerator {
     mask.fillRange(0, mask.length, 0);
   }
 }
-

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import '../codestream/markers.dart';
-import '../io/BeBufferedRandomAccessFile.dart';
+import '../io/BEBufferedRandomAccessFile.dart';
 import '../io/BufferedRandomAccessFile.dart';
 
 /// Rewrites codestream structures (tile-parts, packed packet headers) to match
@@ -86,7 +86,8 @@ class CodestreamManipulator {
 
       if (marker == Markers.COD) {
         final scod = file.readUnsignedByte();
-        final updated = (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
+        final updated =
+            (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
         if (updated != scod) {
           file.seek(pos + 2);
           file.write(updated);
@@ -116,7 +117,8 @@ class CodestreamManipulator {
 
         if (marker == Markers.COD) {
           final scod = file.readUnsignedByte();
-          final updated = (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
+          final updated =
+              (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
           if (updated != scod) {
             file.seek(innerPos + 2);
             file.write(updated);
@@ -151,7 +153,8 @@ class CodestreamManipulator {
   }
 
   void _readAndBuffer(BufferedRandomAccessFile file) {
-    _tileParts = List<List<Uint8List>>.generate(_numTiles, (_) => <Uint8List>[]);
+    _tileParts =
+        List<List<Uint8List>>.generate(_numTiles, (_) => <Uint8List>[]);
     _tileHeaders = List<Uint8List>.generate(_numTiles, (_) => Uint8List(0));
     _packetHeaders =
         List<List<Uint8List>>.generate(_numTiles, (_) => <Uint8List>[]);
@@ -171,17 +174,20 @@ class CodestreamManipulator {
     for (var tile = 0; tile < _numTiles; tile++) {
       final totalPackets = _packetsPerTile[tile];
 
-      final tileHeaderLength = _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
+      final tileHeaderLength =
+          _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
       final tileHeader = Uint8List(tileHeaderLength);
       file.readFully(tileHeader, 0, tileHeaderLength);
       markerIndex++;
 
-      final headers = List<Uint8List>.generate(totalPackets, (_) => Uint8List(0));
+      final headers =
+          List<Uint8List>.generate(totalPackets, (_) => Uint8List(0));
       final data = List<Uint8List>.generate(totalPackets, (_) => Uint8List(0));
       final sopSegments = List<Uint8List?>.filled(totalPackets, null);
 
       for (var packet = 0; packet < totalPackets; packet++) {
-        var length = _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
+        var length =
+            _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
 
         if (_tempSop) {
           length -= Markers.SOP_LENGTH;
@@ -202,7 +208,8 @@ class CodestreamManipulator {
         headers[packet] = headerBytes;
         markerIndex++;
 
-        var dataLength = _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
+        var dataLength =
+            _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
         dataLength -= Markers.EPH_LENGTH;
         if (_tempEph) {
           file.skipBytes(Markers.EPH_LENGTH);
@@ -221,12 +228,14 @@ class CodestreamManipulator {
   }
 
   void _createTileParts() {
-    _tileParts = List<List<Uint8List>>.generate(_numTiles, (_) => <Uint8List>[]);
+    _tileParts =
+        List<List<Uint8List>>.generate(_numTiles, (_) => <Uint8List>[]);
     _maxTileParts = 0;
 
     for (var tile = 0; tile < _numTiles; tile++) {
       var remainingPackets = _packetsPerTile[tile];
-      final packetsPerPart = _packetsPerTilePart == 0 ? remainingPackets : _packetsPerTilePart;
+      final packetsPerPart =
+          _packetsPerTilePart == 0 ? remainingPackets : _packetsPerTilePart;
       final numTileParts = remainingPackets == 0
           ? 0
           : (remainingPackets / packetsPerPart).ceil();
@@ -239,12 +248,15 @@ class CodestreamManipulator {
       var packetIndex = 0;
 
       for (var tilePart = 0; tilePart < numTileParts; tilePart++) {
-        final packetsThisPart = packetsPerPart > remainingPackets ? remainingPackets : packetsPerPart;
+        final packetsThisPart = packetsPerPart > remainingPackets
+            ? remainingPackets
+            : packetsPerPart;
         var np = packetsThisPart;
         final builder = BytesBuilder();
 
         if (tilePart == 0) {
-          builder.add(_tileHeaders[tile].sublist(0, _tileHeaders[tile].length - 2));
+          builder.add(
+              _tileHeaders[tile].sublist(0, _tileHeaders[tile].length - 2));
         } else {
           builder.add(Uint8List(_tilePartHeaderLength - 2));
         }
@@ -258,7 +270,8 @@ class CodestreamManipulator {
           while (remainingForMarker > 0) {
             final headerLength = _packetHeaders[tile][p].length;
             if (pptLength + headerLength > Markers.MAX_LPPT) {
-              _emitPptSegment(builder, tile, pptLength, pptIndex++, packetIndex, p);
+              _emitPptSegment(
+                  builder, tile, pptLength, pptIndex++, packetIndex, p);
               pptLength = 3;
               packetIndex = p;
             }
@@ -273,7 +286,9 @@ class CodestreamManipulator {
 
         builder.add([Markers.SOD >> 8, Markers.SOD & 0xff]);
 
-        for (var packet = tilePartStart; packet < tilePartStart + np; packet++) {
+        for (var packet = tilePartStart;
+            packet < tilePartStart + np;
+            packet++) {
           final sop = _sopMarkerSegments[tile][packet];
           if (!_tempSop && sop != null) {
             builder.add(sop);
@@ -347,13 +362,16 @@ class CodestreamManipulator {
           final totalPackets = _packetHeaders[tile].length;
           final packetsInPart = tilePart == _tileParts[tile].length - 1
               ? remaining[tile]
-              : (_packetsPerTilePart == 0 ? remaining[tile] : _packetsPerTilePart);
+              : (_packetsPerTilePart == 0
+                  ? remaining[tile]
+                  : _packetsPerTilePart);
 
           final start = totalPackets - remaining[tile];
           final stop = start + packetsInPart;
 
           for (var packet = start; packet < stop; packet++) {
-            packetHeaderLengths[tile][tilePart] += _packetHeaders[tile][packet].length;
+            packetHeaderLengths[tile][tilePart] +=
+                _packetHeaders[tile][packet].length;
           }
 
           remaining[tile] -= packetsInPart;
@@ -378,7 +396,9 @@ class CodestreamManipulator {
           final totalPackets = _packetHeaders[tile].length;
           final packetsInPart = tilePart == _tileParts[tile].length - 1
               ? remainingForSegments[tile]
-              : (_packetsPerTilePart == 0 ? remainingForSegments[tile] : _packetsPerTilePart);
+              : (_packetsPerTilePart == 0
+                  ? remainingForSegments[tile]
+                  : _packetsPerTilePart);
 
           final start = totalPackets - remainingForSegments[tile];
           final stop = start + packetsInPart;
@@ -386,7 +406,8 @@ class CodestreamManipulator {
           final headerLength = packetHeaderLengths[tile][tilePart];
           if (ppmLength + 4 > Markers.MAX_LPPM) {
             _flushPpm(file, ppmBuilder);
-            ppmBuilder.add([Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
+            ppmBuilder
+                .add([Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
             ppmLength = 3;
           }
 
@@ -402,7 +423,8 @@ class CodestreamManipulator {
             final headerBytes = _packetHeaders[tile][packet];
             if (ppmLength + headerBytes.length > Markers.MAX_LPPM) {
               _flushPpm(file, ppmBuilder);
-              ppmBuilder.add([Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
+              ppmBuilder.add(
+                  [Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
               ppmLength = 3;
             }
             ppmBuilder.add(headerBytes);
@@ -449,4 +471,3 @@ class CodestreamManipulator {
     buffer[offset + 1] = value & 0xff;
   }
 }
-

@@ -5,7 +5,7 @@ import 'package:jpeg2000/src/j2k/codestream/reader/BitstreamReaderAgent.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
 import 'package:jpeg2000/src/j2k/entropy/decoder/DecLyrdCBlk.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
 
 void main() {

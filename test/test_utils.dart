@@ -36,37 +36,40 @@ class PpmProbe {
 
     int index = 0;
     final tokens = <String>[];
-    
+
     // Helper to read next token
     // void readToken() { ... } // Unused
 
     // Reset index to find the start of binary data properly.
     index = 0;
     tokens.clear();
-    
+
     while (tokens.length < 4 && index < data.length) {
-       // Skip whitespace
-       while (index < data.length && _isWhitespace(data[index])) {
-         index++;
-       }
-       
-       if (index >= data.length) break;
-       
-       if (data[index] == 35) { // Comment
-         while (index < data.length && data[index] != 10) {
-           index++;
-         }
-         continue;
-       }
-       
-       final start = index;
-       while (index < data.length && !_isWhitespace(data[index]) && data[index] != 35) {
-         index++;
-       }
-       
-       tokens.add(String.fromCharCodes(data.sublist(start, index)));
+      // Skip whitespace
+      while (index < data.length && _isWhitespace(data[index])) {
+        index++;
+      }
+
+      if (index >= data.length) break;
+
+      if (data[index] == 35) {
+        // Comment
+        while (index < data.length && data[index] != 10) {
+          index++;
+        }
+        continue;
+      }
+
+      final start = index;
+      while (index < data.length &&
+          !_isWhitespace(data[index]) &&
+          data[index] != 35) {
+        index++;
+      }
+
+      tokens.add(String.fromCharCodes(data.sublist(start, index)));
     }
-    
+
     // After the last token (maxval), there is exactly one whitespace char (usually newline).
     if (index < data.length && _isWhitespace(data[index])) {
       index++;
@@ -88,21 +91,21 @@ class PpmProbe {
     final pixelCount = remaining ~/ 3;
     final unique = <int>{};
     bool chroma = false;
-    
+
     final inspect = (pixelCount < 512) ? pixelCount : 512;
-    
+
     for (int i = 0; i < inspect; i++) {
       final base = index + i * 3;
       if (base + 2 >= data.length) break;
-      
+
       final r = data[base];
       final g = data[base + 1];
       final b = data[base + 2];
-      
+
       unique.add(r);
       unique.add(g);
       unique.add(b);
-      
+
       if (r != g || g != b) {
         chroma = true;
       }
@@ -115,4 +118,3 @@ class PpmProbe {
     return charCode == 32 || charCode == 9 || charCode == 10 || charCode == 13;
   }
 }
-

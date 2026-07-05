@@ -10,9 +10,9 @@ import 'CBlkRateDistStats.dart';
 import 'CodedCBlkDataSrcEnc.dart';
 import 'PostCompRateAllocator.dart';
 import 'LayersInfo.dart';
-import 'EbcotLayer.dart';
+import 'EBCOTLayer.dart';
 import '../../encoder/EncoderSpecs.dart';
-import '../../image/Coord.dart' as img;
+import '../../image/coord.dart' as img;
 import '../../util/MathUtil.dart';
 import '../../util/FacilityManager.dart';
 import '../../util/MsgLogger.dart';
@@ -176,15 +176,14 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
     //Allocate the coded code-blocks and truncation points indexes arrays
     cblks = List.generate(
-        nt,
-        (_) => List.generate(
-            nc, (_) => [], growable: false), growable: false);
+        nt, (_) => List.generate(nc, (_) => [], growable: false),
+        growable: false);
     truncIdxs = List.generate(
         nt,
         (_) => List.generate(
-            numLayers,
-            (_) => List.generate(nc, (_) => [], growable: false),
-            growable: false), growable: false);
+            numLayers, (_) => List.generate(nc, (_) => [], growable: false),
+            growable: false),
+        growable: false);
 
     int cblkPerSubband; // Number of code-blocks per subband
     int mrl; // Number of resolution levels
@@ -237,7 +236,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
         // Initialize maximum number of precincts per resolution array
         if (numPrec == null) {
-          numPrec = List.generate(nt, (_) => List.generate(nc, (_) => <img.Coord>[]));
+          numPrec =
+              List.generate(nt, (_) => List.generate(nc, (_) => <img.Coord>[]));
         }
         if (numPrec![t][c].isEmpty) {
           numPrec![t][c] = List.generate(mrl, (_) => img.Coord(0, 0));
@@ -276,8 +276,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           double twoppy = encSpec.pss.getPPY(t, c, r).toDouble();
           numPrec![t][c][r] = img.Coord(0, 0);
           if (trx1 > trx0) {
-          numPrec![t][c][r].x = ((trx1 - cb0x) / twoppx).ceil() -
-              ((trx0 - cb0x) / twoppx).floor();
+            numPrec![t][c][r].x = ((trx1 - cb0x) / twoppx).ceil() -
+                ((trx0 - cb0x) / twoppx).floor();
           } else {
             numPrec![t][c][r].x = 0;
           }
@@ -286,7 +286,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
                 ((try0 - cb0y) / twoppy).floor();
           } else {
             numPrec![t][c][r].y = 0;
-          }          minsbi = (r == 0) ? 0 : 1;
+          }
+          minsbi = (r == 0) ? 0 : 1;
           maxsbi = (r == 0) ? 1 : 4;
 
           cblks[t][c][r] = List.generate(maxsbi, (_) => [], growable: false);
@@ -301,8 +302,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
             sb2 = sb.getSubbandByIdx(r, s) as SubbandAn;
             ncblks = sb2.numCb;
             cblkPerSubband = ncblks!.x * ncblks.y;
-            cblks[t][c][r][s] =
-                List.generate(cblkPerSubband, (_) => CBlkRateDistStats()); // Placeholder init
+            cblks[t][c][r][s] = List.generate(
+                cblkPerSubband, (_) => CBlkRateDistStats()); // Placeholder init
 
             for (l = 0; l < numLayers; l++) {
               truncIdxs[t][l][c][r][s] = List.filled(cblkPerSubband, -1);
@@ -461,7 +462,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       // At an optimized layer
       basebytes = (lyrSpec.getTargetBitrate(i) * np).floorToDouble();
       if (i < lyrSpec.getNOptPoints() - 1) {
-        nextbytes = (lyrSpec.getTargetBitrate(i + 1) * np).toInt();
+        nextbytes = _javaIntCast(lyrSpec.getTargetBitrate(i + 1) * np);
         // Limit target length to 'totenclength'
         if (nextbytes > totenclength) nextbytes = totenclength;
       } else {
@@ -471,14 +472,14 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       ls = math.exp(math.log(nextbytes / basebytes) / loopnlyrs);
       layers[n].optimize = true;
       for (l = 0; l < loopnlyrs; l++) {
-        newbytes = basebytes.toInt() - lastbytes - ho;
+        newbytes = _javaIntCast(basebytes) - lastbytes - ho;
         if (newbytes < minlsz) {
           // Skip layer (too small)
           basebytes *= ls;
           numLayers--;
           continue;
         }
-        lastbytes = basebytes.toInt() - ho;
+        lastbytes = _javaIntCast(basebytes) - ho;
         layers[n].maxBytes = lastbytes;
         basebytes *= ls;
         n++;
@@ -489,7 +490,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // Ensure minimum size of last layer (this one determines overall
     // bitrate)
     n = numLayers - 2;
-    nextbytes = (lyrSpec.getTotBitrate() * np).toInt() - ho;
+    nextbytes = _javaIntCast(lyrSpec.getTotBitrate() * np) - ho;
     newbytes = nextbytes - ((n >= 0) ? layers[n].maxBytes : 0);
     while (newbytes < minlsz) {
       if (numLayers == 1) {
@@ -717,9 +718,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           //loop on components
 
           // set boolean sopUsed here (SOP markers)
-          sopUsed = (encSpec.sops.getTileDef(t) as String).toLowerCase() == "on";
+          sopUsed =
+              (encSpec.sops.getTileDef(t) as String).toLowerCase() == "on";
           // set boolean ephUsed here (EPH markers)
-          ephUsed = (encSpec.ephs.getTileDef(t) as String).toLowerCase() == "on";
+          ephUsed =
+              (encSpec.ephs.getTileDef(t) as String).toLowerCase() == "on";
 
           // Go to LL band
           sb = src.getAnSubbandTree(t, c);
@@ -753,7 +756,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
                 tileLengths[t] += tmp;
               }
             } // End loop on precincts
-            sb = sb.parent as SubbandAn;
+            // Java tolerates a null parent at the tree root; the loop on
+            // resolution levels then terminates.
+            final parentSb2 = sb.parent;
+            if (parentSb2 == null) {
+              break;
+            }
+            sb = parentSb2;
           } // End loop on resolution levels
         } // End loop on components
       } // end loop on tiles
@@ -909,8 +918,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
                 truncIdxs[t][l][c][r], hBuff, bBuff, p);
 
             if (pktEnc.isPacketWritable()) {
-              bsWriter.writePacketHead(
-                  hBuff.getBuffer(), hBuff.getLength(), false, sopUsed, ephUsed);
+              bsWriter.writePacketHead(hBuff.getBuffer(), hBuff.getLength(),
+                  false, sopUsed, ephUsed);
               bsWriter.writePacketBody(
                   pktEnc.getLastBodyBuf(),
                   pktEnc.getLastBodyLen(),
@@ -992,8 +1001,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
                 truncIdxs[t][l][c][r], hBuff, bBuff, p);
 
             if (pktEnc.isPacketWritable()) {
-              bsWriter.writePacketHead(
-                  hBuff.getBuffer(), hBuff.getLength(), false, sopUsed, ephUsed);
+              bsWriter.writePacketHead(hBuff.getBuffer(), hBuff.getLength(),
+                  false, sopUsed, ephUsed);
               bsWriter.writePacketBody(
                   pktEnc.getLastBodyBuf(),
                   pktEnc.getLastBodyLen(),
@@ -1057,8 +1066,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
     int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
-    List<List<int>> nextPrec = List.generate(
-        ce, (_) => []); // Next precinct index in each
+    List<List<int>> nextPrec =
+        List.generate(ce, (_) => []); // Next precinct index in each
     // component and resolution level
     int minlys = 100000; // minimum layer start index of each component
     int minx = tx1; // Horiz. offset of the second precinct in the
@@ -1118,8 +1127,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           for (int r = rs; r < re; r++) {
             // Resolution levels
             if (r > mrl) continue;
-            if (nextPrec[c][r] >=
-                numPrec![t][c][r].x * numPrec![t][c][r].y) {
+            if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
             prec = pktEnc.getPrecInfo(t, c, r, nextPrec[c][r]);
@@ -1236,8 +1244,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
     int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
-    List<List<int>> nextPrec = List.generate(
-        ce, (_) => []); // Next precinct index in each
+    List<List<int>> nextPrec =
+        List.generate(ce, (_) => []); // Next precinct index in each
     // component and resolution level
     int minlys = 100000; // minimum layer start index of each component
     int minx = tx1; // Horiz. offset of the second precinct in the
@@ -1297,8 +1305,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           for (int r = rs; r < re; r++) {
             // Resolution levels
             if (r > mrl) continue;
-            if (nextPrec[c][r] >=
-                numPrec![t][c][r].x * numPrec![t][c][r].y) {
+            if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
             prec = pktEnc.getPrecInfo(t, c, r, nextPrec[c][r]);
@@ -1399,8 +1406,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
     int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
-    List<List<int>> nextPrec = List.generate(
-        ce, (_) => []); // Next precinct index in each
+    List<List<int>> nextPrec =
+        List.generate(ce, (_) => []); // Next precinct index in each
     // component and resolution level
     int minlys = 100000; // minimum layer start index of each component
     int minx = tx1; // Horiz. offset of the second precinct in the
@@ -1460,8 +1467,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           for (int r = rs; r < re; r++) {
             // Resolution levels
             if (r > mrl) continue;
-            if (nextPrec[c][r] >=
-                numPrec![t][c][r].x * numPrec![t][c][r].y) {
+            if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
             prec = pktEnc.getPrecInfo(t, c, r, nextPrec[c][r]);
@@ -1624,9 +1630,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       for (int t = 0; t < nt; t++) {
         for (int c = 0; c < nc; c++) {
           // set boolean sopUsed here (SOP markers)
-          sopUsed = (encSpec.sops.getTileDef(t) as String).toLowerCase() == "on";
+          sopUsed =
+              (encSpec.sops.getTileDef(t) as String).toLowerCase() == "on";
           // set boolean ephUsed here (EPH markers)
-          ephUsed = (encSpec.ephs.getTileDef(t) as String).toLowerCase() == "on";
+          ephUsed =
+              (encSpec.ephs.getTileDef(t) as String).toLowerCase() == "on";
 
           // Get LL subband
           sb = src.getAnSubbandTree(t, c);
@@ -1652,7 +1660,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
                     pktEnc.getROILen());
               }
             } // end loop on precincts
-            sb = sb.parent as SubbandAn;
+            // Java tolerates a null parent at the tree root; the loop on
+            // resolution levels then terminates.
+            final parentSb = sb.parent;
+            if (parentSb == null) {
+              break;
+            }
+            sb = parentSb;
           } // End loop on resolution levels
         } // End loop on components
       } // End loop on tiles
@@ -1761,7 +1775,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           truncIdxs[tileIdx][layerIdx][compIdx][lvlIdx][s][b] = n - 1;
         } // End loop on horizontal code-blocks
       } // End loop on vertical code-blocks
-      sb = sb.nextSubband() as SubbandAn;
+      // Java tolerates a null here on the last subband; the for-condition
+      // then terminates the loop.
+      final nextSb = sb.nextSubband() as SubbandAn?;
+      if (nextSb == null) {
+        break;
+      }
+      sb = nextSb;
     } // End loop on subbands
   }
 
@@ -1776,8 +1796,31 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   /// @param slope The slope value
   ///
   /// @return The index for the summary table of the slope.
+  /// Mirrors Java's narrowing `(int)` cast from double: NaN becomes 0 and
+  /// out-of-range values saturate at Integer.MIN_VALUE/MAX_VALUE. Dart's
+  /// `toInt()` throws on Infinity/NaN instead.
+  static int _javaIntCast(double v) {
+    if (v.isNaN) {
+      return 0;
+    }
+    if (v >= 2147483647.0) {
+      return 2147483647;
+    }
+    if (v <= -2147483648.0) {
+      return -2147483648;
+    }
+    return v.truncate();
+  }
+
   static int getLimitedSIndexFromSlope(double slope) {
     int idx;
+
+    // In Java `(int)Math.floor(Math.log(0)/log2)` yields Integer.MIN_VALUE,
+    // which falls into the `idx < 0` branch below. Dart floor() throws on
+    // -Infinity, so handle the zero-slope case explicitly.
+    if (slope <= 0) {
+      return 0;
+    }
 
     idx = (math.log(slope) / LOG2).floor() + RD_SUMMARY_OFF;
 
@@ -1934,6 +1977,3 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     return eth;
   }
 }
-
-
-

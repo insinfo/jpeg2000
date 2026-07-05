@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkFloat.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
@@ -50,40 +50,80 @@ void main() {
       expect(b.getDataInt(), equals(<int>[20, 45, 30, 5]));
     });
 
+    test('reports original component bit depths after inverse RCT', () {
+      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+        ..setDefault(InvCompTransf.invRct);
+      final source = _RctStub(bitDepths: const <int>[8, 9, 9]);
+      final transformer = InvCompTransfImgDataSrc(
+        source,
+        spec,
+        originalBitDepths: const <int>[8, 8, 8],
+      );
+
+      expect(source.getNomRangeBits(1), 9);
+      expect(transformer.getNomRangeBits(0), 8);
+      expect(transformer.getNomRangeBits(1), 8);
+      expect(transformer.getNomRangeBits(2), 8);
+    });
+
     test('applies irreversible component transform', () {
       final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
         ..setDefault(InvCompTransf.invIct);
       final source = _IctStub();
       final transformer = InvCompTransfImgDataSrc(source, spec);
 
+      // Mirrors JJ2000: invICT always produces integer samples, rounded
+      // with (int)(x + 0.5f).
       final r = transformer.getInternCompData(
-        DataBlkFloat()
+        DataBlkInt()
           ..ulx = 0
           ..uly = 0
           ..w = 2
           ..h = 1,
         0,
-      ) as DataBlkFloat;
+      ) as DataBlkInt;
       final g = transformer.getInternCompData(
-        DataBlkFloat()
+        DataBlkInt()
           ..ulx = 0
           ..uly = 0
           ..w = 2
           ..h = 1,
         1,
-      ) as DataBlkFloat;
+      ) as DataBlkInt;
       final b = transformer.getInternCompData(
-        DataBlkFloat()
+        DataBlkInt()
           ..ulx = 0
           ..uly = 0
           ..w = 2
           ..h = 1,
         2,
-      ) as DataBlkFloat;
+      ) as DataBlkInt;
 
-      expect(r.getDataFloat(), closeToList(<double>[255.0, 64.0]));
-      expect(g.getDataFloat(), closeToList(<double>[128.0, 128.0]));
-      expect(b.getDataFloat(), closeToList(<double>[64.0, 32.0]));
+      expect(r.getDataInt(), equals(<int>[255, 64]));
+      expect(g.getDataInt(), equals(<int>[128, 128]));
+      expect(b.getDataInt(), equals(<int>[64, 32]));
+    });
+
+    test('ICT blue channel ignores Cr term like JJ2000', () {
+      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+        ..setDefault(InvCompTransf.invIct);
+      final source = _IctStub(
+        yValues: const <double>[100],
+        cbValues: const <double>[0],
+        crValues: const <double>[10000],
+      );
+      final transformer = InvCompTransfImgDataSrc(source, spec);
+
+      final b = transformer.getInternCompData(
+        DataBlkInt()
+          ..ulx = 0
+          ..uly = 0
+          ..w = 1
+          ..h = 1,
+        2,
+      ) as DataBlkInt;
+
+      expect(b.getDataInt(), equals(<int>[100]));
     });
   });
 }
@@ -103,8 +143,9 @@ Matcher closeToList(List<double> expected, {double epsilon = 1e-3}) {
 }
 
 class _RctStub implements BlkImgDataSrc {
-  _RctStub()
-      : y = <int>[
+  _RctStub({List<int>? bitDepths})
+      : bitDepths = bitDepths ?? const <int>[8, 8, 8],
+        y = <int>[
           31,
           56,
           28,
@@ -126,6 +167,7 @@ class _RctStub implements BlkImgDataSrc {
   final List<int> y;
   final List<int> cb;
   final List<int> cr;
+  final List<int> bitDepths;
 
   @override
   int getFixedPoint(int component) => 0;
@@ -217,7 +259,7 @@ class _RctStub implements BlkImgDataSrc {
   int getTileIdx() => 0;
 
   @override
-  int getNomRangeBits(int component) => 8;
+  int getNomRangeBits(int component) => bitDepths[component];
 
   @override
   int getCompULX(int component) => 0;
@@ -247,10 +289,13 @@ class _RctStub implements BlkImgDataSrc {
 }
 
 class _IctStub implements BlkImgDataSrc {
-  _IctStub()
-      : y = Float32List.fromList(<double>[158.677, 97.92]),
-        cb = Float32List.fromList(<double>[-53.42933, -37.19808]),
-        cr = Float32List.fromList(<double>[68.70384, -24.19424]);
+  _IctStub({
+    List<double>? yValues,
+    List<double>? cbValues,
+    List<double>? crValues,
+  })  : y = Float32List.fromList(yValues ?? <double>[158.677, 97.92]),
+        cb = Float32List.fromList(cbValues ?? <double>[-53.42933, -37.19808]),
+        cr = Float32List.fromList(crValues ?? <double>[68.70384, -24.19424]);
 
   final Float32List y;
   final Float32List cb;
@@ -374,4 +419,3 @@ class _IctStub implements BlkImgDataSrc {
   @override
   int getNumTiles() => 1;
 }
-

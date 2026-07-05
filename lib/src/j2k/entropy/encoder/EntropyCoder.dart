@@ -7,6 +7,7 @@ import '../CBlkSizeSpec.dart';
 import '../PrecinctSizeSpec.dart';
 import '../../StringSpec.dart';
 import 'CodedCBlkDataSrcEnc.dart';
+import 'StdEntropyCoder.dart';
 
 /// This abstract class provides the general interface for block-based entropy
 /// encoders. The input to the entropy coder is the quantized wavelet
@@ -279,10 +280,8 @@ abstract class EntropyCoder extends ImgDataAdapter
       StringSpec lcs,
       StringSpec tts) {
     // Check parameters
-    // pl.checkList(OPT_PREFIX, pl.toNameArray(pinfo));
-    // return new StdEntropyCoder(src,cblks,pss,bms,mqrs,rts,css,sss,lcs,tts);
-    throw UnimplementedError("StdEntropyCoder not implemented yet");
+    pl.checkListSingle(
+        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+    return StdEntropyCoder(src, cblks, pss, bms, mqrs, rts, css, sss, lcs, tts);
   }
 }
-
-

@@ -18,7 +18,8 @@ class LookUpTableFPInterp extends LookUpTableFP {
   LookUpTableFPInterp(
       ICCCurveType curve, // Pointer to the curve data
       int dwNumInput // Number of input values in created LUT
-      ) : super(curve, dwNumInput) {
+      )
+      : super(curve, dwNumInput) {
     int dwLowIndex, dwHighIndex; // Indices of interpolation points
     double dfLowIndex; // FP indices of interpolation points
     double dfTargetIndex; // Target index into interpolation table
@@ -44,4 +45,3 @@ class LookUpTableFPInterp extends LookUpTableFP {
     }
   }
 }
-

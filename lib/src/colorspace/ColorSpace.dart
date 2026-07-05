@@ -4,7 +4,7 @@ import '../j2k/util/ParameterList.dart';
 import '../j2k/codestream/reader/HeaderDecoder.dart';
 import '../j2k/io/RandomAccessIO.dart';
 import '../j2k/fileformat/FileFormatBoxes.dart';
-import '../icc/IccProfile.dart';
+import '../icc/ICCProfile.dart';
 import 'ColorSpaceException.dart';
 import 'boxes/PaletteBox.dart';
 import 'boxes/ComponentMappingBox.dart';
@@ -80,7 +80,8 @@ class ColorSpace {
       input.readFully(boxHeader, 0, 16);
       final rawLen = ICCProfile.getInt(boxHeader, 0);
       headerUsesExtendedLength = rawLen == 1;
-      len = headerUsesExtendedLength ? ICCProfile.getLong(boxHeader, 8) : rawLen;
+      len =
+          headerUsesExtendedLength ? ICCProfile.getLong(boxHeader, 8) : rawLen;
       type = ICCProfile.getInt(boxHeader, 4);
 
       // Verify the contents of the file so far.
@@ -215,8 +216,8 @@ class ColorSpace {
   /** Signed output predicate. */
   bool isOutputSigned(int channel) {
     return (pbox != null)
-      ? pbox!.isSigned(channel)
-      : hd.isOriginalSigned(channel);
+        ? pbox!.isSigned(channel)
+        : hd.isOriginalSigned(channel);
   }
 
   @override
@@ -296,4 +297,3 @@ class MethodEnum extends Enumeration {
 class CSEnum extends Enumeration {
   const CSEnum(String value) : super(value);
 }
-

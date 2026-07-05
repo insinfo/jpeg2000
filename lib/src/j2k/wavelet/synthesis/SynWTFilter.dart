@@ -32,4 +32,3 @@ abstract class SynWTFilter implements WaveletFilter {
     int outStep,
   );
 }
-

@@ -1,5 +1,6 @@
+@TestOn('vm')
 import 'dart:io';
-import 'package:jpeg2000/src/j2k/io/BeBufferedRandomAccessFile.dart';
+import 'package:jpeg2000/src/j2k/io/BEBufferedRandomAccessFile.dart';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
@@ -9,11 +10,11 @@ import 'package:jpeg2000/src/j2k/fileformat/FileFormatReader.dart';
 void main() {
   group('Codestream Reading Tests', () {
     test('Read file1.jp2', () {
-      dumpMarkers('test_images/file1.jp2');
+      dumpMarkers('test/fixtures/test_images/file1.jp2');
     });
 
     test('Read barras_rgb.jp2', () {
-      dumpMarkers('test_images/barras_rgb.jp2');
+      dumpMarkers('test/fixtures/test_images/barras_rgb.jp2');
     });
   });
 }
@@ -38,8 +39,9 @@ void dumpMarkers(String filename) {
     }
 
     // In Dart port, we use the static method readMainHeader
-    final hd = HeaderDecoder.readMainHeader(input: input, headerInfo: headerInfo);
-    
+    final hd =
+        HeaderDecoder.readMainHeader(input: input, headerInfo: headerInfo);
+
     final siz = headerInfo.siz;
     expect(siz, isNotNull);
     if (siz != null) {
@@ -62,12 +64,11 @@ void dumpMarkers(String filename) {
       // print('QCD: len=${qcd.lqcd} type=${qcd.sqcd & 0x1f} guard=${(qcd.sqcd >> 5) & 7}');
       expect(qcd.lqcd, greaterThan(0));
     }
-    
+
     // Verify HeaderDecoder properties
     expect(hd.getNumComps(), siz!.csiz);
     expect(hd.getImgWidth(), siz.xsiz - siz.x0siz);
     expect(hd.getImgHeight(), siz.ysiz - siz.y0siz);
-
   } catch (e, stack) {
     print('Error reading header: $e');
     print(stack);
@@ -76,4 +77,3 @@ void dumpMarkers(String filename) {
     input.close();
   }
 }
-

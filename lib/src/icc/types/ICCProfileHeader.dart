@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import '../ICCProfile.dart';
 import 'ICCProfileVersion.dart';
 import 'ICCDateTime.dart';
-import 'XyzNumber.dart';
+import 'XYZNumber.dart';
 
 /// An ICC profile contains a 128-byte header followed by a variable
 /// number of tags contained in a tag table. This class models the header
@@ -17,12 +17,10 @@ class ICCProfileHeader {
   // those codes required for Restricted ICC use are defined here.
 
   /// Profile header signature
-  static final int kdwProfileSignature =
-      ICCProfile.getIntFromString("acsp");
+  static final int kdwProfileSignature = ICCProfile.getIntFromString("acsp");
 
   /// Profile header signature
-  static final int kdwProfileSigReverse =
-      ICCProfile.getIntFromString("psca");
+  static final int kdwProfileSigReverse = ICCProfile.getIntFromString("psca");
 
   static const String kdwInputProfile = "scnr";
   static const String kdwDisplayProfile = "mntr";
@@ -41,13 +39,15 @@ class ICCProfileHeader {
 
   static const int offProfileSize = 0;
   static const int offCMMTypeSignature = offProfileSize + ICCProfile.int_size;
-  static const int offProfileVersion = offCMMTypeSignature + ICCProfile.int_size;
+  static const int offProfileVersion =
+      offCMMTypeSignature + ICCProfile.int_size;
   static const int offProfileClass = offProfileVersion + ICCProfileVersion.size;
   static const int offColorSpaceType = offProfileClass + ICCProfile.int_size;
   static const int offPCSType = offColorSpaceType + ICCProfile.int_size;
   static const int offDateTime = offPCSType + ICCProfile.int_size;
   static const int offProfileSignature = offDateTime + ICCDateTime.size;
-  static const int offPlatformSignature = offProfileSignature + ICCProfile.int_size;
+  static const int offPlatformSignature =
+      offProfileSignature + ICCProfile.int_size;
   static const int offCMMFlags = offPlatformSignature + ICCProfile.int_size;
   static const int offDeviceManufacturer = offCMMFlags + ICCProfile.int_size;
   static const int offDeviceModel = offDeviceManufacturer + ICCProfile.int_size;
@@ -151,23 +151,35 @@ class ICCProfileHeader {
   String toString() {
     StringBuffer rep = StringBuffer("[ICCProfileHeader: ");
 
-    rep.write("$eol         ProfileSize: ${ICCProfile.toHexStringInt(dwProfileSize)}");
-    rep.write("$eol    CMMTypeSignature: ${ICCProfile.toHexStringInt(dwCMMTypeSignature)}");
-    rep.write("$eol        ProfileClass: ${ICCProfile.toHexStringInt(dwProfileClass)}");
-    rep.write("$eol      ColorSpaceType: ${ICCProfile.toHexStringInt(dwColorSpaceType)}");
-    rep.write("$eol           dwPCSType: ${ICCProfile.toHexStringInt(dwPCSType)}");
-    rep.write("$eol  dwProfileSignature: ${ICCProfile.toHexStringInt(dwProfileSignature)}");
-    rep.write("$eol dwPlatformSignature: ${ICCProfile.toHexStringInt(dwPlatformSignature)}");
-    rep.write("$eol          dwCMMFlags: ${ICCProfile.toHexStringInt(dwCMMFlags)}");
-    rep.write("${eol}dwDeviceManufacturer: ${ICCProfile.toHexStringInt(dwDeviceManufacturer)}");
-    rep.write("$eol       dwDeviceModel: ${ICCProfile.toHexStringInt(dwDeviceModel)}");
-    rep.write("$eol dwDeviceAttributes1: ${ICCProfile.toHexStringInt(dwDeviceAttributes1)}");
-    rep.write("$eol   dwRenderingIntent: ${ICCProfile.toHexStringInt(dwRenderingIntent)}");
-    rep.write("$eol        dwCreatorSig: ${ICCProfile.toHexStringInt(dwCreatorSig)}");
+    rep.write(
+        "$eol         ProfileSize: ${ICCProfile.toHexStringInt(dwProfileSize)}");
+    rep.write(
+        "$eol    CMMTypeSignature: ${ICCProfile.toHexStringInt(dwCMMTypeSignature)}");
+    rep.write(
+        "$eol        ProfileClass: ${ICCProfile.toHexStringInt(dwProfileClass)}");
+    rep.write(
+        "$eol      ColorSpaceType: ${ICCProfile.toHexStringInt(dwColorSpaceType)}");
+    rep.write(
+        "$eol           dwPCSType: ${ICCProfile.toHexStringInt(dwPCSType)}");
+    rep.write(
+        "$eol  dwProfileSignature: ${ICCProfile.toHexStringInt(dwProfileSignature)}");
+    rep.write(
+        "$eol dwPlatformSignature: ${ICCProfile.toHexStringInt(dwPlatformSignature)}");
+    rep.write(
+        "$eol          dwCMMFlags: ${ICCProfile.toHexStringInt(dwCMMFlags)}");
+    rep.write(
+        "${eol}dwDeviceManufacturer: ${ICCProfile.toHexStringInt(dwDeviceManufacturer)}");
+    rep.write(
+        "$eol       dwDeviceModel: ${ICCProfile.toHexStringInt(dwDeviceModel)}");
+    rep.write(
+        "$eol dwDeviceAttributes1: ${ICCProfile.toHexStringInt(dwDeviceAttributes1)}");
+    rep.write(
+        "$eol   dwRenderingIntent: ${ICCProfile.toHexStringInt(dwRenderingIntent)}");
+    rep.write(
+        "$eol        dwCreatorSig: ${ICCProfile.toHexStringInt(dwCreatorSig)}");
     rep.write("$eol      profileVersion: $profileVersion");
     rep.write("$eol            dateTime: $dateTime");
     rep.write("$eol       PCSIlluminant: $PCSIlluminant");
     return (rep..write("]")).toString();
   }
 }
-

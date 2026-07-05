@@ -64,11 +64,10 @@ class LookUpTable32LinearSRGBtoSRGB extends LookUpTable32 {
 
     // Now calculate the rest
     for (; i <= inMax; i++) {
-      lut[i] = (scaleAfterExp * pow(i * normalize, exponent) -
-                  reduceAfterExp +
-                  0.5)
-              .floor() -
-          shift;
+      lut[i] =
+          (scaleAfterExp * pow(i * normalize, exponent) - reduceAfterExp + 0.5)
+                  .floor() -
+              shift;
     }
   }
 
@@ -78,4 +77,3 @@ class LookUpTable32LinearSRGBtoSRGB extends LookUpTable32 {
     return (rep..write("]")).toString();
   }
 }
-

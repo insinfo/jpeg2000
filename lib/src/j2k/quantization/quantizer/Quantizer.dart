@@ -211,5 +211,3 @@ abstract class Quantizer extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   /// current tile.
   int getMaxMagBits(int c);
 }
-
-

@@ -21,13 +21,11 @@ abstract class LookUpTable16 extends LookUpTable {
     return LookUpTable16Interp(curve, dwNumInput, dwMaxOutput);
   }
 
-  LookUpTable16(int dwNumInput, this.dwMaxOutput)
-      : super(null, dwNumInput) {
+  LookUpTable16(int dwNumInput, this.dwMaxOutput) : super(null, dwNumInput) {
     lut = Uint16List(dwNumInput);
   }
 
-  LookUpTable16.fromCurve(
-      ICCCurveType curve, int dwNumInput, this.dwMaxOutput)
+  LookUpTable16.fromCurve(ICCCurveType curve, int dwNumInput, this.dwMaxOutput)
       : super(curve, dwNumInput) {
     lut = Uint16List(dwNumInput);
   }

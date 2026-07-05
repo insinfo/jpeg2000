@@ -73,7 +73,10 @@ class StdQuantizer extends Quantizer {
   static const int SQCX_GB_SHIFT = 5;
 
   /// The shift for the exponent in the SPqcd/SPqcc field
-  static const int SQCX_EXP_SHIFT = 11;
+  // Exponent shift within the SPqcd/SPqcc byte (Markers.SQCX_EXP_SHIFT in
+  // JJ2000). NOT the 11-bit exponent position of the 16-bit exp-mantissa
+  // format used by convertToExpMantissa().
+  static const int SQCX_EXP_SHIFT = 3;
 
   /// Natural log of 2, used as a convenience variable
   static final double log2 = math.log(2);
@@ -328,10 +331,7 @@ class StdQuantizer extends Quantizer {
 
       // Calculate magnitude bits and quantization step size
       if (isDerived(tIdx, c)) {
-        cblk.magbits = g -
-            1 +
-            sb.level -
-            (math.log(baseStep) / log2).floor();
+        cblk.magbits = g - 1 + sb.level - (math.log(baseStep) / log2).floor();
         stepUDR = baseStep / (1 << sb.level);
       } else {
         cblk.magbits = g -
@@ -343,8 +343,8 @@ class StdQuantizer extends Quantizer {
       shiftBits = 31 - cblk.magbits;
       // Calculate step that decoder will get and use that one.
       stepUDR = convertFromExpMantissa(convertToExpMantissa(stepUDR));
-      invstep = 1.0 /
-          ((1 << (src.getNomRangeBits(c) + sb.anGainExp)) * stepUDR);
+      invstep =
+          1.0 / ((1 << (src.getNomRangeBits(c) + sb.anGainExp)) * stepUDR);
       // Normalize to magnitude bits (output fractional point)
       invstep *= (1 << (shiftBits - src.getFixedPoint(c)));
 
@@ -400,9 +400,8 @@ class StdQuantizer extends Quantizer {
       return;
     if (!sb.isNode) {
       if (isReversible(tIdx, c)) {
-        sb.stepWMSE = math.pow(2, -(src.getNomRangeBits(c) << 1)) *
-            sb.l2Norm *
-            sb.l2Norm;
+        sb.stepWMSE =
+            math.pow(2, -(src.getNomRangeBits(c) << 1)) * sb.l2Norm * sb.l2Norm;
       } else {
         baseStep = (qsss.getTileCompVal(tIdx, c) as double);
         if (isDerived(tIdx, c)) {
@@ -582,5 +581,3 @@ class StdQuantizer extends Quantizer {
     return max;
   }
 }
-
-

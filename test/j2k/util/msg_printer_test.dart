@@ -50,4 +50,3 @@ class _BufferSink implements StringSink {
   @override
   String toString() => _buffer.toString();
 }
-

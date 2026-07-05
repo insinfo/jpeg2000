@@ -1,4 +1,8 @@
-import 'package:jpeg2000/src/j2k/image/input/ImgReaderPgm.dart';
+@TestOn('vm')
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:jpeg2000/src/j2k/image/input/ImgReaderPGM.dart';
 import 'package:jpeg2000/src/j2k/roi/encoder/RoiOptionParser.dart';
 import 'package:test/test.dart';
 
@@ -37,11 +41,23 @@ void main() {
     });
 
     test('supports arbitrary ROI masks', () {
-      final result = parseRoiOptions('A mask.pgm', 1);
-      expect(result, hasLength(1));
-      expect(result.first.isArbitrary, isTrue);
-      expect(result.first.mask, isA<ImgReaderPGM>());
-      expect(result.first.mask!.path, 'mask.pgm');
+      // The reader opens the mask eagerly (like JJ2000), so create a real
+      // 2x2 raw PGM file.
+      final dir = Directory.systemTemp.createTempSync('roi_mask_');
+      final maskPath = '${dir.path}${Platform.pathSeparator}mask.pgm';
+      File(maskPath).writeAsBytesSync(
+          Uint8List.fromList('P5\n2 2\n255\n'.codeUnits + [0, 255, 255, 0]));
+      try {
+        final result = parseRoiOptions('A $maskPath', 1);
+        expect(result, hasLength(1));
+        expect(result.first.isArbitrary, isTrue);
+        expect(result.first.mask, isA<ImgReaderPGM>());
+        expect(result.first.mask!.w, 2);
+        expect(result.first.mask!.h, 2);
+        result.first.mask!.close();
+      } finally {
+        dir.deleteSync(recursive: true);
+      }
     });
 
     test('reuses latest component selection until overridden', () {
@@ -52,4 +68,3 @@ void main() {
     });
   });
 }
-

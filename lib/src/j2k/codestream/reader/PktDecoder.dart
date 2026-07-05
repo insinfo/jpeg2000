@@ -59,13 +59,15 @@ class PktDecoder {
     Uint8List? packedHeaderData,
   ) {
     if (packedHeaders && packedHeaderData == null) {
-      throw ArgumentError('Packed packet headers requested but no data provided');
+      throw ArgumentError(
+          'Packed packet headers requested but no data provided');
     }
 
     _numLayers = numLayers;
     _currentTileIdx = src.getTileIdx();
     _usingPackedHeaders = packedHeaders;
-    _packedHeaderReader = packedHeaders ? PktHeaderBitReader.fromBytes(packedHeaderData!) : null;
+    _packedHeaderReader =
+        packedHeaders ? PktHeaderBitReader.fromBytes(packedHeaderData!) : null;
 
     final sopSpec = decSpec.sops.getTileDef(_currentTileIdx);
     _sopUsed = sopSpec is bool ? sopSpec : (sopSpec as bool? ?? false);
@@ -74,11 +76,13 @@ class PktDecoder {
 
     _packetIndex = 0;
 
-    _includedCodeBlocks = List<List<CBlkCoordInfo>>.generate(4, (_) => <CBlkCoordInfo>[]);
+    _includedCodeBlocks =
+        List<List<CBlkCoordInfo>>.generate(4, (_) => <CBlkCoordInfo>[]);
 
     _numPrecincts = List<List<Coord>>.generate(
       numComponents,
-      (c) => List<Coord>.generate(maxDecompositionLevels[c] + 1, (_) => Coord(), growable: false),
+      (c) => List<Coord>.generate(maxDecompositionLevels[c] + 1, (_) => Coord(),
+          growable: false),
       growable: false,
     );
 
@@ -140,8 +144,10 @@ class PktDecoder {
 
       final tcx0 = src.getResULX(comp, maxResolutions);
       final tcy0 = src.getResULY(comp, maxResolutions);
-      final tcx1 = tcx0 + src.getTileCompWidth(_currentTileIdx, comp, maxResolutions);
-      final tcy1 = tcy0 + src.getTileCompHeight(_currentTileIdx, comp, maxResolutions);
+      final tcx1 =
+          tcx0 + src.getTileCompWidth(_currentTileIdx, comp, maxResolutions);
+      final tcy1 =
+          tcy0 + src.getTileCompHeight(_currentTileIdx, comp, maxResolutions);
 
       for (var res = 0; res <= maxResolutions; res++) {
         final mins = res == 0 ? 0 : 1;
@@ -158,18 +164,21 @@ class PktDecoder {
 
         final numPrec = _numPrecincts[comp][res];
         if (trx1 > trx0) {
-          numPrec.x = _ceilDivInt(trx1 - cb0x, ppx) - _floorDivInt(trx0 - cb0x, ppx);
+          numPrec.x =
+              _ceilDivInt(trx1 - cb0x, ppx) - _floorDivInt(trx0 - cb0x, ppx);
         } else {
           numPrec.x = 0;
         }
         if (try1 > try0) {
-          numPrec.y = _ceilDivInt(try1 - cb0y, ppy) - _floorDivInt(try0 - cb0y, ppy);
+          numPrec.y =
+              _ceilDivInt(try1 - cb0y, ppy) - _floorDivInt(try0 - cb0y, ppy);
         } else {
           numPrec.y = 0;
         }
 
         final maxPrec = numPrec.x * numPrec.y;
-        final precinctList = List<PrecInfo?>.filled(maxPrec, null, growable: false);
+        final precinctList =
+            List<PrecInfo?>.filled(maxPrec, null, growable: false);
         _precinctInfo[comp][res] = precinctList;
 
         final inclByPrecinct = List<List<TagTreeDecoder?>>.generate(
@@ -189,8 +198,11 @@ class PktDecoder {
 
         final root = src.getSynSubbandTree(_currentTileIdx, comp);
 
-        final subbandEntries = List<List<List<CBlkInfo?>?>?>.filled(maxs + 1, null, growable: false);
-        final lblockEntries = List<List<List<int>>?>.filled(maxs + 1, null, growable: false);
+        final subbandEntries = List<List<List<CBlkInfo?>?>?>.filled(
+            maxs + 1, null,
+            growable: false);
+        final lblockEntries =
+            List<List<List<int>>?>.filled(maxs + 1, null, growable: false);
 
         for (var s = mins; s < maxs; s++) {
           final sb = root.getSubbandByIdx(res, s) as SubbandSyn?;
@@ -244,7 +256,8 @@ class PktDecoder {
     }
     final info = precincts[precinct];
     if (info == null) {
-      throw StateError('Precinct metadata not initialised (c:$component r:$resolution p:$precinct)');
+      throw StateError(
+          'Precinct metadata not initialised (c:$component r:$resolution p:$precinct)');
     }
     return info;
   }
@@ -292,7 +305,8 @@ class PktDecoder {
       throw ArgumentError('Component $component out of range');
     }
     if (resolution < 0 || resolution >= _precinctInfo[component].length) {
-      throw ArgumentError('Resolution $resolution out of range for component $component');
+      throw ArgumentError(
+          'Resolution $resolution out of range for component $component');
     }
 
     final precinctList = _precinctInfo[component][resolution];
@@ -315,7 +329,7 @@ class PktDecoder {
     final mins = resolution == 0 ? 0 : 1;
     final maxs = resolution == 0 ? 1 : 4;
 
-      // Empty packet: nothing to decode beyond the inclusion bit.
+    // Empty packet: nothing to decode beyond the inclusion bit.
     if (reader.readBit() == 0) {
       // print('PktDecoder: Empty packet');
       for (var s = mins; s < maxs; s++) {
@@ -335,7 +349,8 @@ class PktDecoder {
         _readEphMarker(reader);
       }
       return false;
-    }    final options = decSpec.ecopts.getTileCompVal(tileIdx, component) ?? 0;
+    }
+    final options = decSpec.ecopts.getTileCompVal(tileIdx, component) ?? 0;
 
     for (var list in _includedCodeBlocks) {
       list.clear();
@@ -462,15 +477,17 @@ class PktDecoder {
               lblockRow[coordIdx.x]++;
             }
 
-            final baseLengthBits = lblockRow[coordIdx.x] + MathUtil.log2(newTruncPoints);
-            final segmentCount = _computeSegmentCount(blockInfo, newTruncPoints, options);
+            final baseLengthBits =
+                lblockRow[coordIdx.x] + MathUtil.log2(newTruncPoints);
+            final segmentCount =
+                _computeSegmentCount(blockInfo, newTruncPoints, options);
 
             if (DecoderInstrumentation.isEnabled()) {
               DecoderInstrumentation.log(
                 'PktDecoder',
                 'pkt=$_packetIndex tile=$tileIdx comp=$component res=$resolution band=$subband '
-                'block=${coordIdx.x}x${coordIdx.y} layer=$layer newTruncPoints=$newTruncPoints '
-                'lblock=${lblockRow[coordIdx.x]} baseBits=$baseLengthBits segments=$segmentCount',
+                    'block=${coordIdx.x}x${coordIdx.y} layer=$layer newTruncPoints=$newTruncPoints '
+                    'lblock=${lblockRow[coordIdx.x]} baseBits=$baseLengthBits segments=$segmentCount',
               );
             }
 
@@ -489,7 +506,8 @@ class PktDecoder {
                 */
               }
             } else {
-              final lengths = List<int>.filled(segmentCount, 0, growable: false);
+              final lengths =
+                  List<int>.filled(segmentCount, 0, growable: false);
               blockInfo.segLen[layer] = lengths;
               var tpIndex = blockInfo.ctp - newTruncPoints;
               var lastTerminated = blockInfo.ctp - newTruncPoints - 1;
@@ -503,13 +521,15 @@ class PktDecoder {
                 }
               } else {
                 while (cursor < segmentCount - 1) {
-                  if (tpIndex >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
-                    final passType =
-                        (tpIndex + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
-                            StdEntropyCoderOptions.NUM_PASSES;
+                  if (tpIndex >=
+                      StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
+                    final passType = (tpIndex +
+                            StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
+                        StdEntropyCoderOptions.NUM_PASSES;
                     if (passType != 0) {
                       final value = reader.readBits(
-                        lblockRow[coordIdx.x] + MathUtil.log2(tpIndex - lastTerminated),
+                        lblockRow[coordIdx.x] +
+                            MathUtil.log2(tpIndex - lastTerminated),
                       );
                       lengths[cursor++] = value;
                       blockInfo.len[layer] += value;
@@ -520,7 +540,8 @@ class PktDecoder {
                 }
 
                 final finalValue = reader.readBits(
-                  lblockRow[coordIdx.x] + MathUtil.log2(tpIndex - lastTerminated),
+                  lblockRow[coordIdx.x] +
+                      MathUtil.log2(tpIndex - lastTerminated),
                 );
                 blockInfo.len[layer] += finalValue;
                 lengths[cursor] = finalValue;
@@ -543,8 +564,8 @@ class PktDecoder {
               DecoderInstrumentation.log(
                 'PktDecoder',
                 'pkt=$_packetIndex tile=$tileIdx comp=$component res=$resolution band=$subband '
-                'block=${coordIdx.x}x${coordIdx.y} layer=$layer payload=${blockInfo.len[layer]} '
-                'segLen=${blockInfo.segLen[layer]}',
+                    'block=${coordIdx.x}x${coordIdx.y} layer=$layer payload=${blockInfo.len[layer]} '
+                    'segLen=${blockInfo.segLen[layer]}',
               );
             }
 
@@ -553,7 +574,8 @@ class PktDecoder {
               if (consumed > remainingBytesPerTile[tileIdx]) {
                 remainingBytesPerTile[tileIdx] = 0;
                 if (layer == 0) {
-                  _discardCodeBlock(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo);
+                  _discardCodeBlock(subbandBlocks, subband, coordIdx.y,
+                      coordIdx.x, blockInfo);
                 } else {
                   _rewindLayer(blockInfo, layer);
                 }
@@ -563,7 +585,8 @@ class PktDecoder {
             }
           } on EOFException {
             if (layer == 0) {
-              _discardCodeBlock(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo);
+              _discardCodeBlock(
+                  subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo);
             } else {
               _rewindLayer(blockInfo, layer);
             }
@@ -609,7 +632,8 @@ class PktDecoder {
       final included = _includedCodeBlocks[subband];
       for (final coord in included) {
         final coordIdx = coord.idx;
-        final blockInfo = _getCodeBlock(subbandBlocks, subband, coordIdx.y, coordIdx.x);
+        final blockInfo =
+            _getCodeBlock(subbandBlocks, subband, coordIdx.y, coordIdx.x);
         if (blockInfo == null) {
           continue;
         }
@@ -618,8 +642,10 @@ class PktDecoder {
         final payloadLength = blockInfo.len[layer];
         currentOffset += payloadLength;
 
-        final shouldReadPayload =
-            payloadLength > 0 && !(isTruncMode && (stopReading || payloadLength > remainingBytesPerTile[tileIdx]));
+        final shouldReadPayload = payloadLength > 0 &&
+            !(isTruncMode &&
+                (stopReading ||
+                    payloadLength > remainingBytesPerTile[tileIdx]));
 
         Uint8List? payload;
         if (payloadLength == 0) {
@@ -627,7 +653,8 @@ class PktDecoder {
           try {
             ehs.seek(currentOffset);
           } on EOFException {
-            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo, layer);
+            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x,
+                blockInfo, layer);
             rethrow;
           }
         } else if (shouldReadPayload) {
@@ -644,14 +671,16 @@ class PktDecoder {
             );
             */
             payload = null;
-            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo, layer);
+            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x,
+                blockInfo, layer);
             rethrow;
           }
         } else {
           try {
             ehs.seek(currentOffset);
           } on EOFException {
-            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo, layer);
+            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x,
+                blockInfo, layer);
             rethrow;
           }
         }
@@ -659,7 +688,8 @@ class PktDecoder {
 
         if (isTruncMode) {
           if (stopReading || payloadLength > remainingBytesPerTile[tileIdx]) {
-            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo, layer);
+            _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x,
+                blockInfo, layer);
             stopReading = true;
             currentOffset = blockInfo.off[layer];
           } else {
@@ -676,7 +706,8 @@ class PktDecoder {
             coordIdx.y == _yQuit &&
             tileIdx == _tileQuit &&
             component == _compQuit) {
-          _discardCodeBlock(subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo);
+          _discardCodeBlock(
+              subbandBlocks, subband, coordIdx.y, coordIdx.x, blockInfo);
           stopReading = true;
         }
       }
@@ -686,7 +717,8 @@ class PktDecoder {
     return stopReading;
   }
 
-  bool readSOPMarker(List<int> remainingBytesPerTile, int precinct, int component, int resolution) {
+  bool readSOPMarker(List<int> remainingBytesPerTile, int precinct,
+      int component, int resolution) {
     final mins = resolution == 0 ? 0 : 1;
     final maxs = resolution == 0 ? 1 : 4;
 
@@ -731,20 +763,24 @@ class PktDecoder {
 
     final marker = ((buffer[0] & 0xff) << 8) | (buffer[1] & 0xff);
     if (marker != Markers.SOP) {
-      throw StateError('Corrupted bitstream: expected SOP marker, found $marker');
+      throw StateError(
+          'Corrupted bitstream: expected SOP marker, found $marker');
     }
 
     final length = ((buffer[2] & 0xff) << 8) | (buffer[3] & 0xff);
     if (length != 4) {
-      throw StateError('Corrupted bitstream: invalid SOP marker length $length');
+      throw StateError(
+          'Corrupted bitstream: invalid SOP marker length $length');
     }
 
     final sequence = ((buffer[4] & 0xff) << 8) | (buffer[5] & 0xff);
     if (!_usingPackedHeaders && sequence != _packetIndex) {
-      throw StateError('Corrupted bitstream: SOP marker out of sequence (expected $_packetIndex, got $sequence)');
+      throw StateError(
+          'Corrupted bitstream: SOP marker out of sequence (expected $_packetIndex, got $sequence)');
     }
     if (_usingPackedHeaders && sequence != _packetIndex - 1) {
-      throw StateError('Corrupted bitstream: SOP marker out of sequence for packed headers (expected ${_packetIndex - 1}, got $sequence)');
+      throw StateError(
+          'Corrupted bitstream: SOP marker out of sequence for packed headers (expected ${_packetIndex - 1}, got $sequence)');
     }
 
     return false;
@@ -762,7 +798,8 @@ class PktDecoder {
       for (var tp = info.ctp - newTruncPoints; tp < info.ctp - 1; tp++) {
         if (tp >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
           final passType =
-              (tp + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) % StdEntropyCoderOptions.NUM_PASSES;
+              (tp + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
+                  StdEntropyCoderOptions.NUM_PASSES;
           if (passType == 0 || passType == 1 || passType == 2) {
             segments++;
           }
@@ -825,7 +862,9 @@ class PktDecoder {
     int x,
     CBlkInfo info,
   ) {
-    info.ctp -= info.ntp.where((value) => value > 0).fold<int>(0, (sum, value) => sum + value);
+    info.ctp -= info.ntp
+        .where((value) => value > 0)
+        .fold<int>(0, (sum, value) => sum + value);
     if (subbandBlocks == null || subband >= subbandBlocks.length) {
       return;
     }
@@ -855,7 +894,8 @@ class PktDecoder {
   void debugInitializeForPacketBody({required int numLayers, int tileIdx = 0}) {
     _numLayers = numLayers;
     _currentTileIdx = tileIdx;
-    _includedCodeBlocks = List<List<CBlkCoordInfo>>.generate(4, (_) => <CBlkCoordInfo>[]);
+    _includedCodeBlocks =
+        List<List<CBlkCoordInfo>>.generate(4, (_) => <CBlkCoordInfo>[]);
   }
 
   void _readEphMarker(PktHeaderBitReader reader) {
@@ -864,11 +904,13 @@ class PktDecoder {
     final value = ((buffer[0] & 0xff) << 8) | (buffer[1] & 0xff);
     if (value != Markers.EPH) {
       // print('PktDecoder: Expected EPH, found $value at pos ${ehs.getPos()}');
-      throw StateError('Corrupted bitstream: expected EPH marker, found $value');
+      throw StateError(
+          'Corrupted bitstream: expected EPH marker, found $value');
     }
   }
 
-  void _fillPrecinctInfo(int component, int resolution, int maxDecompositionLevel) {
+  void _fillPrecinctInfo(
+      int component, int resolution, int maxDecompositionLevel) {
     final precincts = _precinctInfo[component][resolution];
     if (precincts.isEmpty) {
       return;
@@ -889,8 +931,11 @@ class PktDecoder {
 
     final tcx0 = src.getResULX(component, maxDecompositionLevel);
     final tcy0 = src.getResULY(component, maxDecompositionLevel);
-    final tcx1 = tcx0 + src.getTileCompWidth(_currentTileIdx, component, maxDecompositionLevel);
-    final tcy1 = tcy0 + src.getTileCompHeight(_currentTileIdx, component, maxDecompositionLevel);
+    final tcx1 = tcx0 +
+        src.getTileCompWidth(_currentTileIdx, component, maxDecompositionLevel);
+    final tcy1 = tcy0 +
+        src.getTileCompHeight(
+            _currentTileIdx, component, maxDecompositionLevel);
 
     final ndl = maxDecompositionLevel - resolution;
     final trx0 = _ceilDivInt(tcx0, 1 << ndl);
@@ -1034,12 +1079,15 @@ class PktDecoder {
     final height = kend - kstart + 1;
     final width = lend - lstart + 1;
     precinct.nblk[0] = height * width;
-    _ttIncl[component][resolution][precinctIndex][0] = TagTreeDecoder(height, width);
-    _ttMaxBP[component][resolution][precinctIndex][0] = TagTreeDecoder(height, width);
+    _ttIncl[component][resolution][precinctIndex][0] =
+        TagTreeDecoder(height, width);
+    _ttMaxBP[component][resolution][precinctIndex][0] =
+        TagTreeDecoder(height, width);
 
     final rows = List.generate(
       height,
-      (_) => List<CBlkCoordInfo>.filled(width, CBlkCoordInfo(), growable: false),
+      (_) =>
+          List<CBlkCoordInfo>.filled(width, CBlkCoordInfo(), growable: false),
       growable: false,
     );
     precinct.cblk[0] = rows;
@@ -1076,7 +1124,11 @@ class PktDecoder {
     int cb0y,
     int precinctIndex,
   ) {
-    final bands = [root.getSubbandByIdx(resolution, 1), root.getSubbandByIdx(resolution, 2), root.getSubbandByIdx(resolution, 3)];
+    final bands = [
+      root.getSubbandByIdx(resolution, 1),
+      root.getSubbandByIdx(resolution, 2),
+      root.getSubbandByIdx(resolution, 3)
+    ];
     final offsets = [
       [0, cb0y],
       [cb0x, 0],
@@ -1087,8 +1139,10 @@ class PktDecoder {
       final sb = bands[band] as SubbandSyn?;
       if (sb == null) {
         precinct.nblk[band + 1] = 0;
-        _ttIncl[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(0, 0);
-        _ttMaxBP[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(0, 0);
+        _ttIncl[component][resolution][precinctIndex][band + 1] =
+            TagTreeDecoder(0, 0);
+        _ttMaxBP[component][resolution][precinctIndex][band + 1] =
+            TagTreeDecoder(0, 0);
         continue;
       }
 
@@ -1107,8 +1161,10 @@ class PktDecoder {
 
       if (s1x - s0x <= 0 || s1y - s0y <= 0) {
         precinct.nblk[band + 1] = 0;
-        _ttIncl[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(0, 0);
-        _ttMaxBP[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(0, 0);
+        _ttIncl[component][resolution][precinctIndex][band + 1] =
+            TagTreeDecoder(0, 0);
+        _ttMaxBP[component][resolution][precinctIndex][band + 1] =
+            TagTreeDecoder(0, 0);
         continue;
       }
 
@@ -1124,12 +1180,15 @@ class PktDecoder {
       final height = kend - kstart + 1;
       final width = lend - lstart + 1;
       precinct.nblk[band + 1] = height * width;
-      _ttIncl[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(height, width);
-      _ttMaxBP[component][resolution][precinctIndex][band + 1] = TagTreeDecoder(height, width);
+      _ttIncl[component][resolution][precinctIndex][band + 1] =
+          TagTreeDecoder(height, width);
+      _ttMaxBP[component][resolution][precinctIndex][band + 1] =
+          TagTreeDecoder(height, width);
 
       final rows = List.generate(
         height,
-        (_) => List<CBlkCoordInfo>.filled(width, CBlkCoordInfo(), growable: false),
+        (_) =>
+            List<CBlkCoordInfo>.filled(width, CBlkCoordInfo(), growable: false),
         growable: false,
       );
       precinct.cblk[band + 1] = rows;
@@ -1168,8 +1227,9 @@ class PktDecoder {
     return (value / divisor).floor();
   }
 
-  int getPPX(int tile, int component, int resolution) => decSpec.pss.getPPX(tile, component, resolution);
+  int getPPX(int tile, int component, int resolution) =>
+      decSpec.pss.getPPX(tile, component, resolution);
 
-  int getPPY(int tile, int component, int resolution) => decSpec.pss.getPPY(tile, component, resolution);
+  int getPPY(int tile, int component, int resolution) =>
+      decSpec.pss.getPPY(tile, component, resolution);
 }
-

@@ -126,5 +126,3 @@ abstract class ForwardWT extends ImgDataAdapter
     return ForwWTFull(src, encSpec, cb0x, cb0y);
   }
 }
-
-

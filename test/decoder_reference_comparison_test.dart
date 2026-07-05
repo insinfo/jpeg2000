@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
@@ -16,20 +17,18 @@ ParameterList _baseDecoderParameters() {
 
 void main() {
   group('Decoder Reference Comparison Tests', () {
-
-
     test('Decode multiple test images successfully', () {
       final testImages = [
-        'test_images/barras_rgb.jp2',
-        'test_images/simple.jp2',
-        'test_images/generated/gradient_horizontal_openjpeg.jp2',
-        'test_images/generated/gradient_vertical_openjpeg.jp2',
-        'test_images/generated/checkerboard_openjpeg.jp2',
-        'test_images/generated/solid_red_openjpeg.jp2',
-        'test_images/generated/solid_green_openjpeg.jp2',
-        'test_images/generated/solid_blue_openjpeg.jp2',
-        'test_images/generated/rainbow_stripes_openjpeg.jp2',
-        'test_images/generated/circles_openjpeg.jp2',
+        'test/fixtures/test_images/barras_rgb.jp2',
+        'test/fixtures/test_images/simple.jp2',
+        'test/fixtures/test_images/generated/gradient_horizontal_openjpeg.jp2',
+        'test/fixtures/test_images/generated/gradient_vertical_openjpeg.jp2',
+        'test/fixtures/test_images/generated/checkerboard_openjpeg.jp2',
+        'test/fixtures/test_images/generated/solid_red_openjpeg.jp2',
+        'test/fixtures/test_images/generated/solid_green_openjpeg.jp2',
+        'test/fixtures/test_images/generated/solid_blue_openjpeg.jp2',
+        'test/fixtures/test_images/generated/rainbow_stripes_openjpeg.jp2',
+        'test/fixtures/test_images/generated/circles_openjpeg.jp2',
       ];
 
       var successCount = 0;
@@ -73,8 +72,8 @@ void main() {
     test('Entropy decoder handles various code-block configurations', () {
       // This test verifies that the entropy decoder (with our new implementations)
       // can handle different JPEG2000 encoding parameters
-      
-      final inputPath = 'test_images/barras_rgb.jp2';
+
+      final inputPath = 'test/fixtures/test_images/barras_rgb.jp2';
       final inputFile = File(inputPath);
       if (!inputFile.existsSync()) {
         // print('⚠ Input file missing: $inputPath');
@@ -99,7 +98,7 @@ void main() {
         expect(outputFile.existsSync(), isTrue);
 
         final data = _parsePPM(outputFile.readAsBytesSync());
-        
+
         // Verify the output has reasonable pixel values
         var nonZeroPixels = 0;
         var pixelSum = 0;
@@ -108,8 +107,9 @@ void main() {
           pixelSum += data.pixels[i];
         }
 
-        expect(nonZeroPixels, greaterThan(data.pixels.length ~/ 2),
-            reason: 'Expected most pixels to be non-zero');
+        expect(nonZeroPixels, greaterThanOrEqualTo(data.pixels.length ~/ 3),
+            reason:
+                'Expected at least one third of samples to be non-zero (pure R/G/B bars)');
 
         final avgPixelValue = pixelSum / data.pixels.length;
         expect(avgPixelValue, greaterThan(10),
@@ -121,13 +121,10 @@ void main() {
         // print('  Image: ${data.width}x${data.height}');
         // print('  Non-zero pixels: ${(nonZeroPixels / data.pixels.length * 100).toStringAsFixed(1)}%');
         // print('  Average pixel value: ${avgPixelValue.toStringAsFixed(1)}');
-
       } finally {
         outputDir.deleteSync(recursive: true);
       }
     });
-
-
   });
 }
 
@@ -185,4 +182,3 @@ _PPMData _parsePPM(Uint8List bytes) {
 
   return _PPMData(width, height, pixels);
 }
-

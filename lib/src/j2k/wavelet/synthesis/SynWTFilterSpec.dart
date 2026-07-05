@@ -10,7 +10,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
   int getWTDataType(int tile, int component) {
     final filters = _getFilters(tile, component);
     if (filters.isEmpty || filters[0].isEmpty) {
-      throw StateError('Missing synthesis filter configuration for tile=$tile component=$component');
+      throw StateError(
+          'Missing synthesis filter configuration for tile=$tile component=$component');
     }
     return filters[0][0].getDataType();
   }
@@ -19,7 +20,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
   List<SynWTFilter> getHFilters(int tile, int component) {
     final filters = _getFilters(tile, component);
     if (filters.isEmpty) {
-      throw StateError('No synthesis filters configured for tile=$tile component=$component');
+      throw StateError(
+          'No synthesis filters configured for tile=$tile component=$component');
     }
     return filters[0];
   }
@@ -28,7 +30,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
   List<SynWTFilter> getVFilters(int tile, int component) {
     final filters = _getFilters(tile, component);
     if (filters.length < 2) {
-      throw StateError('Incomplete synthesis filter pair for tile=$tile component=$component');
+      throw StateError(
+          'Incomplete synthesis filter pair for tile=$tile component=$component');
     }
     return filters[1];
   }
@@ -37,7 +40,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
   bool isReversible(int tile, int component) {
     final hFilters = getHFilters(tile, component);
     final vFilters = getVFilters(tile, component);
-    final length = hFilters.length < vFilters.length ? hFilters.length : vFilters.length;
+    final length =
+        hFilters.length < vFilters.length ? hFilters.length : vFilters.length;
     for (var i = 0; i < length; i++) {
       if (!hFilters[i].isReversible() || !vFilters[i].isReversible()) {
         return false;
@@ -49,7 +53,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
   List<List<SynWTFilter>> _getFilters(int tile, int component) {
     final filters = getSpec(tile, component);
     if (filters == null) {
-      throw StateError('Synthesis filter specification missing for tile=$tile component=$component');
+      throw StateError(
+          'Synthesis filter specification missing for tile=$tile component=$component');
     }
     return filters;
   }
@@ -66,7 +71,8 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
         buffer
           ..writeln('(t:$t,c:$c)')
           ..write('\tH:');
-        for (final filter in filters.isNotEmpty ? filters[0] : const <SynWTFilter>[]) {
+        for (final filter
+            in filters.isNotEmpty ? filters[0] : const <SynWTFilter>[]) {
           buffer.write(' $filter');
         }
         buffer.write('\n\tV:');
@@ -81,4 +87,3 @@ class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
     return buffer.toString();
   }
 }
-

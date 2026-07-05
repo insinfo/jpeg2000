@@ -12,11 +12,11 @@ import '../../colorspace/ColorSpaceMapper.dart';
 import '../entropy/decoder/EntropyDecoder.dart';
 import '../entropy/decoder/StdEntropyDecoder.dart';
 import '../fileformat/FileFormatReader.dart';
-import '../io/BeBufferedRandomAccessFile.dart';
+import '../io/BEBufferedRandomAccessFile.dart';
 import '../io/RandomAccessIO.dart';
-import '../quantization/dequantizer/Dequantizer.dart';
+import '../quantization/dequantizer/dequantizer.dart';
 import '../quantization/dequantizer/StdDequantizer.dart';
-import '../roi/RoiDeScaler.dart';
+import '../roi/ROIDeScaler.dart';
 import '../util/DecoderInstrumentation.dart';
 
 import '../util/FacilityManager.dart';
@@ -37,18 +37,16 @@ import '../image/invcomptransf/InvCompTransf.dart';
 import '../image/output/CompositeImgWriter.dart';
 import '../image/output/ImgWriter.dart';
 import '../image/output/ImgWriterBmp.dart';
-import '../image/output/ImgWriterPgm.dart';
-import '../image/output/ImgWriterPgx.dart';
-import '../image/output/ImgWriterPpm.dart';
+import '../image/output/ImgWriterPGM.dart';
+import '../image/output/ImgWriterPGX.dart';
+import '../image/output/ImgWriterPPM.dart';
 import 'DecoderSpecs.dart';
 
-/// Minimal port of JJ2000's `Decoder` orchestration.
+/// Port of JJ2000's `Decoder` orchestration.
 ///
-/// TODO The Dart version currently instantiates the core decoding stages up to
-/// the inverse wavelet transform and sample conversion. Future work should wire
-/// colour management, component transforms beyond reversible/irreversible
-/// lifting, output image writers, and full tile decoding to produce raster
-/// imagery.
+/// The pipeline parses the codestream, performs entropy decoding, ROI
+/// de-scaling, dequantization, inverse wavelet reconstruction, component/color
+/// transforms, and writes supported raster outputs.
 class Decoder implements Runnable {
   Decoder(this.pl)
       : defpl = pl.getDefaultParameterList(),
@@ -112,7 +110,7 @@ class Decoder implements Runnable {
   bool _jp2WrapperUsed = false;
 
   /// Provides the current image data source after all instantiated stages.
-    BlkImgDataSrc? get imageDataSource =>
+  BlkImgDataSrc? get imageDataSource =>
       writerDataConverter ??
       _colorSpaceMapperStage ??
       _palettizedMapper ??
@@ -141,7 +139,12 @@ class Decoder implements Runnable {
       'Reconstructs up to the specified resolution level (0 = lowest available).',
       null,
     ],
-    <String?>['i', '<filename or url>', 'Input JPEG 2000 codestream/JP2.', null],
+    <String?>[
+      'i',
+      '<filename or url>',
+      'Input JPEG 2000 codestream/JP2.',
+      null
+    ],
     <String?>['o', '<filename>', 'Output image filename.', null],
     <String?>[
       'rate',
@@ -219,7 +222,12 @@ class Decoder implements Runnable {
       'Print debugging messages when the JP2 colorspace mapper is configured.',
       'off',
     ],
-    <String?>['instrument', '[on|off]', 'Emits decoder instrumentation logs.', 'off'],
+    <String?>[
+      'instrument',
+      '[on|off]',
+      'Emits decoder instrumentation logs.',
+      'off'
+    ],
     <String?>[
       'inst_block',
       '<tile,comp,res,band,cblkY,cblkX>',
@@ -492,7 +500,8 @@ class Decoder implements Runnable {
     );
     entropyDecoder?.configureDebug(
       traceFilter: _traceFilter,
-      mqTraceSink: _mqTraceSink == null ? null : (line) => _mqTraceSink!.writeln(line),
+      mqTraceSink:
+          _mqTraceSink == null ? null : (line) => _mqTraceSink!.writeln(line),
     );
 
     final roiParams = _subsetParametersByPrefix(pl, ROIDeScaler.optionPrefix);
@@ -544,12 +553,18 @@ class Decoder implements Runnable {
       'Instantiated image data converter (fixed-point=$initialFixedPoint).',
     );
 
-    final componentTransformEnabled = _getBooleanOption(pl, 'comp_transf', true);
+    final componentTransformEnabled =
+        _getBooleanOption(pl, 'comp_transf', true);
     if (decSpec!.cts.isCompTransfUsed()) {
       componentTransformer = InvCompTransfImgDataSrc(
         imageDataConverter!,
         decSpec!.cts,
         enableComponentTransforms: componentTransformEnabled,
+        originalBitDepths: List<int>.generate(
+          decoder.getNumComps(),
+          decoder.getOriginalBitDepth,
+          growable: false,
+        ),
       );
       final transform = decSpec!.cts.getSpec(0, 0) ?? InvCompTransf.none;
       final label = transform == InvCompTransf.invRct
@@ -580,16 +595,17 @@ class Decoder implements Runnable {
       final colourSpace = _loadColorSpace(input, decoder);
       _colorSpace = colourSpace;
 
-        var colourPipelineSource = pipelineSource;
-        _channelDefinitionMapper =
-          decoder.createChannelDefinitionMapper(colourPipelineSource, colourSpace);
-        colourPipelineSource = _channelDefinitionMapper!;
+      var colourPipelineSource = pipelineSource;
+      _channelDefinitionMapper = decoder.createChannelDefinitionMapper(
+          colourPipelineSource, colourSpace);
+      colourPipelineSource = _channelDefinitionMapper!;
       _logger.printmsg(
         MsgLogger.info,
         'Instantiated channel definition mapper.',
       );
 
-      _resamplerStage = decoder.createResampler(colourPipelineSource, colourSpace);
+      _resamplerStage =
+          decoder.createResampler(colourPipelineSource, colourSpace);
       colourPipelineSource = _resamplerStage!;
       _logger.printmsg(
         MsgLogger.info,
@@ -619,7 +635,8 @@ class Decoder implements Runnable {
         _palettizedMapper = null;
       }
 
-      final mapped = decoder.createColorSpaceMapper(colourPipelineSource, colourSpace);
+      final mapped =
+          decoder.createColorSpaceMapper(colourPipelineSource, colourSpace);
       if (mapped != null) {
         _colorSpaceMapperStage = mapped;
         colourPipelineSource = _colorSpaceMapperStage!;
@@ -699,7 +716,8 @@ class Decoder implements Runnable {
   ImgWriter _createWriter(String outputPath) {
     final source = imageDataSource;
     if (source == null) {
-      throw StateError('Image data source not initialised; cannot write output.');
+      throw StateError(
+          'Image data source not initialised; cannot write output.');
     }
 
     final lower = outputPath.toLowerCase();
@@ -864,7 +882,8 @@ class Decoder implements Runnable {
     }
   }
 
-  List<List<SynWTFilter>> _createDefaultFilters(int decompositionLevels, bool reversible) {
+  List<List<SynWTFilter>> _createDefaultFilters(
+      int decompositionLevels, bool reversible) {
     final levelCount = decompositionLevels <= 0 ? 0 : decompositionLevels;
     if (levelCount == 0) {
       return <List<SynWTFilter>>[
@@ -876,12 +895,13 @@ class Decoder implements Runnable {
     SynWTFilter _factory() =>
         reversible ? SynWTFilterIntLift5x3() : SynWTFilterFloatLift9x7();
 
-    final horizontal =
-        List<SynWTFilter>.generate(levelCount, (_) => _factory(), growable: false);
-    final vertical =
-        List<SynWTFilter>.generate(levelCount, (_) => _factory(), growable: false);
+    final horizontal = List<SynWTFilter>.generate(levelCount, (_) => _factory(),
+        growable: false);
+    final vertical = List<SynWTFilter>.generate(levelCount, (_) => _factory(),
+        growable: false);
     return <List<SynWTFilter>>[horizontal, vertical];
   }
+
   ParameterList _subsetParametersByPrefix(ParameterList source, String prefix) {
     ParameterList? filteredDefaults;
     final defaults = source.getDefaultParameterList();
@@ -954,7 +974,8 @@ class Decoder implements Runnable {
       final file = File(path);
       file.parent.createSync(recursive: true);
       _mqTraceSink = file.openWrite(mode: FileMode.write)
-        ..writeln('# MQ trace generated ${DateTime.now().toUtc().toIso8601String()}');
+        ..writeln(
+            '# MQ trace generated ${DateTime.now().toUtc().toIso8601String()}');
       _logger.printmsg(MsgLogger.info, 'Writing MQ traces to ${file.path}.');
     } on IOException catch (error) {
       _logger.printmsg(
@@ -1019,10 +1040,10 @@ class Decoder implements Runnable {
     }
 
     _llSnapshotBasePath = base;
-    _llSnapshotTileIndex =
-        _parseIntOption(pl.getParameter('inst_ll_tile_index'), 0, 'inst_ll_tile_index');
-    _llSnapshotComponent =
-        _parseIntOption(pl.getParameter('inst_ll_component'), 0, 'inst_ll_component');
+    _llSnapshotTileIndex = _parseIntOption(
+        pl.getParameter('inst_ll_tile_index'), 0, 'inst_ll_tile_index');
+    _llSnapshotComponent = _parseIntOption(
+        pl.getParameter('inst_ll_component'), 0, 'inst_ll_component');
 
     final stage = (pl.getParameter('inst_ll_stage') ?? 'post').toLowerCase();
     switch (stage) {
@@ -1064,7 +1085,9 @@ class Decoder implements Runnable {
   }
 
   void _capturePostLlSnapshot() {
-    if (_llSnapshotBasePath == null || !_captureLlPost || _llPostSnapshotWritten) {
+    if (_llSnapshotBasePath == null ||
+        !_captureLlPost ||
+        _llPostSnapshotWritten) {
       return;
     }
     final inv = inverseWT;
@@ -1168,7 +1191,8 @@ class Decoder implements Runnable {
     };
   }
 
-  void _writeLlSnapshot(Map<String, dynamic> snapshot, {required String suffix}) {
+  void _writeLlSnapshot(Map<String, dynamic> snapshot,
+      {required String suffix}) {
     final base = _llSnapshotBasePath;
     if (base == null || base.isEmpty) {
       return;
@@ -1179,7 +1203,8 @@ class Decoder implements Runnable {
       file.parent.createSync(recursive: true);
       final encoder = const JsonEncoder.withIndent('  ');
       file.writeAsStringSync(encoder.convert(snapshot));
-      _logger.printmsg(MsgLogger.info, 'Wrote LL $suffix snapshot to ${file.path}.');
+      _logger.printmsg(
+          MsgLogger.info, 'Wrote LL $suffix snapshot to ${file.path}.');
     } on IOException catch (error) {
       _logger.printmsg(
         MsgLogger.warning,
@@ -1223,4 +1248,3 @@ class Decoder implements Runnable {
 abstract class Runnable {
   void run();
 }
-

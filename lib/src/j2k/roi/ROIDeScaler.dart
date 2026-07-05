@@ -152,7 +152,7 @@ class ROIDeScaler extends MultiResImgDataAdapter
 
     final roiMask = Int32Utils.mask32(((1 << magBits) - 1) << (31 - magBits));
     final overflowMask =
-      Int32Utils.mask32(Int32Utils.invert32(roiMask) & 0x7fffffff);
+        Int32Utils.mask32(Int32Utils.invert32(roiMask) & 0x7fffffff);
     final baseX = block.ulx;
     final baseY = block.uly;
     final divisor = 1 << shift;
@@ -311,5 +311,3 @@ class ROIDeScaler extends MultiResImgDataAdapter
     return ROIDeScaler(source, spec, rectSpec: rectSpec);
   }
 }
-
-

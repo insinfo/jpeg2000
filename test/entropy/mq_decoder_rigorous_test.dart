@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/MqDecoder.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/MQDecoder.dart';
 import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
 import 'package:jpeg2000/src/j2k/entropy/encoder/MQCoder.dart';
 import 'package:jpeg2000/src/j2k/entropy/encoder/ByteOutputBuffer.dart';

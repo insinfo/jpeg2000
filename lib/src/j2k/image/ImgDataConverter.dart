@@ -9,7 +9,8 @@ import 'ImgDataAdapter.dart';
 import '../util/DecoderInstrumentation.dart';
 
 class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
-  ImgDataConverter(BlkImgDataSrc source, [int fixedPoint = 0, String? debugLabel])
+  ImgDataConverter(BlkImgDataSrc source,
+      [int fixedPoint = 0, String? debugLabel])
       : _source = source,
         _fixedPoint = fixedPoint,
         _debugLabel = debugLabel ?? 'ImgDataConverter',
@@ -117,7 +118,8 @@ class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
       srcIndex += source.scanw - width;
     }
 
-    if (DecoderInstrumentation.isEnabled() && _intToFloatLogs < _maxLogsPerDirection) {
+    if (DecoderInstrumentation.isEnabled() &&
+        _intToFloatLogs < _maxLogsPerDirection) {
       _intToFloatLogs++;
       _logIntToFloatStats(
         component: component,
@@ -183,7 +185,8 @@ class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
       srcIndex += source.scanw - width;
     }
 
-    if (DecoderInstrumentation.isEnabled() && _floatToIntLogs < _maxLogsPerDirection) {
+    if (DecoderInstrumentation.isEnabled() &&
+        _floatToIntLogs < _maxLogsPerDirection) {
       _floatToIntLogs++;
       _logFloatToIntStats(
         component: component,
@@ -218,14 +221,15 @@ class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
       );
       return;
     }
-    final intSummary = _summarizeIntBlock(intData, intOffset, intScanw, width, height);
+    final intSummary =
+        _summarizeIntBlock(intData, intOffset, intScanw, width, height);
     final floatSummary = _summarizeFloatBlock(floatData, width, height);
     DecoderInstrumentation.log(
       'ImgDataConverter',
       '$_debugLabel int->float comp=$component shift=$shift scale=${scale.toStringAsFixed(6)} '
-      'block=${width}x$height int[min=${intSummary.min}, max=${intSummary.max}, preview=${intSummary.preview}] '
-      'float[min=${floatSummary.min.toStringAsFixed(4)}, max=${floatSummary.max.toStringAsFixed(4)}, '
-      'preview=${floatSummary.preview}]',
+          'block=${width}x$height int[min=${intSummary.min}, max=${intSummary.max}, preview=${intSummary.preview}] '
+          'float[min=${floatSummary.min.toStringAsFixed(4)}, max=${floatSummary.max.toStringAsFixed(4)}, '
+          'preview=${floatSummary.preview}]',
     );
   }
 
@@ -246,13 +250,14 @@ class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
       );
       return;
     }
-    final floatSummary = _summarizeFloatBlock(floatData, width, height, offset: floatOffset, scanw: floatScanw);
+    final floatSummary = _summarizeFloatBlock(floatData, width, height,
+        offset: floatOffset, scanw: floatScanw);
     final intSummary = _summarizeIntBlock(intData, 0, width, width, height);
     DecoderInstrumentation.log(
       'ImgDataConverter',
       '$_debugLabel float->int comp=$component shift=$shift block=${width}x$height '
-      'float[min=${floatSummary.min.toStringAsFixed(4)}, max=${floatSummary.max.toStringAsFixed(4)}, preview=${floatSummary.preview}] '
-      'int[min=${intSummary.min}, max=${intSummary.max}, preview=${intSummary.preview}]',
+          'float[min=${floatSummary.min.toStringAsFixed(4)}, max=${floatSummary.max.toStringAsFixed(4)}, preview=${floatSummary.preview}] '
+          'int[min=${intSummary.min}, max=${intSummary.max}, preview=${intSummary.preview}]',
     );
   }
 
@@ -325,4 +330,3 @@ class _BlockSummary<T extends num> {
   final T max;
   final List<String> preview;
 }
-

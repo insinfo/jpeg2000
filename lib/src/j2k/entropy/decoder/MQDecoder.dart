@@ -243,7 +243,8 @@ class MQDecoder {
     var idx = _states[context];
     var q = _qe[idx];
 
-    if (q < 0x4000 && n <= (_interval - (_codeRegister >>> 16) - 1) ~/ q &&
+    if (q < 0x4000 &&
+        n <= (_interval - (_codeRegister >>> 16) - 1) ~/ q &&
         n <= (_interval - 0x8000) ~/ q + 1) {
       _interval -= n * q;
       if (_interval >= 0x8000) {
@@ -544,7 +545,8 @@ class MQDecoder {
       return 'label=$label count=0';
     }
     final buffer = StringBuffer()
-      ..write('label=$label count=${data.length ~/ 2} truncated=$_traceTruncated entries=');
+      ..write(
+          'label=$label count=${data.length ~/ 2} truncated=$_traceTruncated entries=');
     for (var i = 0; i < data.length; i += 2) {
       if (i > 0) {
         buffer.write(' ');
@@ -572,7 +574,9 @@ class MQDecoder {
       _traceTruncated = true;
       return;
     }
-    data..add(context)..add(decision & 1);
+    data
+      ..add(context)
+      ..add(decision & 1);
   }
 
   /// Validates predictable termination (Annex D.4.2). Returns true when an
@@ -651,7 +655,7 @@ class MQDecoder {
     _codeRegister = (_lastByte ^ 0xFF) << 16;
     _byteIn();
     _codeRegister = Int32Utils.mask32(_codeRegister << 7);
-    _codeBits = _codeBits - 7;  // _codeBits foi definido por _byteIn() acima
+    _codeBits = _codeBits - 7; // _codeBits foi definido por _byteIn() acima
     _interval = 0x8000;
   }
 
@@ -685,4 +689,3 @@ class MQDecoder {
     return b == -1 ? 0xFF : b;
   }
 }
-

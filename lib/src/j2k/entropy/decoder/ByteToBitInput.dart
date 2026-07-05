@@ -70,4 +70,3 @@ class ByteToBitInput {
     _bitPosition = -1;
   }
 }
-

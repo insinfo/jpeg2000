@@ -21,4 +21,3 @@ class ICCXYZTypeReverse extends ICCXYZType {
     return "[${super.toString()}($x, $y, $z)]";
   }
 }
-

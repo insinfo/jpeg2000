@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import '../subband.dart';
 import '../WaveletFilter.dart';
-import 'AnWtFilter.dart';
+import 'AnWTFilter.dart';
 
 /// Analysis-side specialization of [Subband] with energy weighting support.
 class SubbandAn extends Subband {
@@ -153,7 +153,10 @@ class SubbandAn extends Subband {
       if (h == null || v == null) {
         throw StateError('Analysis filters must be set before computing norms');
       }
-      if (subbLL == null || subbHL == null || subbLH == null || subbHH == null) {
+      if (subbLL == null ||
+          subbHL == null ||
+          subbLH == null ||
+          subbHH == null) {
         throw StateError('Child subbands must be initialized');
       }
 
@@ -190,7 +193,10 @@ class SubbandAn extends Subband {
     }
 
     if (isNode) {
-      if (subbLL == null || subbHL == null || subbLH == null || subbHH == null) {
+      if (subbLL == null ||
+          subbHL == null ||
+          subbLH == null ||
+          subbHH == null) {
         throw StateError('Child subbands must be initialized');
       }
       if (subbLL!.l2Norm < 0.0) {
@@ -212,4 +218,3 @@ class SubbandAn extends Subband {
     }
   }
 }
-

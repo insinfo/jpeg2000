@@ -91,7 +91,8 @@ class MsgPrinter {
     if (index >= length) {
       return _isEndOfString;
     }
-    while (index < length && !_isWhitespaceCodeUnit(message.codeUnitAt(index))) {
+    while (
+        index < length && !_isWhitespaceCodeUnit(message.codeUnitAt(index))) {
       index++;
     }
     return index;

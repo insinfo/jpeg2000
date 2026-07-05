@@ -18,4 +18,3 @@ class StdDequantizerParams extends DequantizerParams {
   @override
   int getDequantizerType() => QuantizationType.qTypeScalarDz;
 }
-

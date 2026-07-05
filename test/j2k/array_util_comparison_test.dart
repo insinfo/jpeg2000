@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
@@ -19,30 +20,31 @@ void main() {
         final size = int.parse(parts[1]);
         final val = int.parse(parts[2]);
         final expectedStr = parts.length > 3 ? parts[3] : '';
-        
+
         if (type == 'int') {
-          final expected = expectedStr.isEmpty 
-              ? <int>[] 
+          final expected = expectedStr.isEmpty
+              ? <int>[]
               : expectedStr.split(' ').map(int.parse).toList();
-          
+
           // Use Int32List to match Java int[]
           final actual = Int32List(size);
           ArrayUtil.intArraySet(actual, val);
-          
-          expect(actual, equals(expected), reason: 'Failed for int array size $size');
+
+          expect(actual, equals(expected),
+              reason: 'Failed for int array size $size');
         } else if (type == 'byte') {
-           final expected = expectedStr.isEmpty 
-              ? <int>[] 
+          final expected = expectedStr.isEmpty
+              ? <int>[]
               : expectedStr.split(' ').map(int.parse).toList();
-          
+
           // Use Int8List to match Java byte[] (signed)
           final actual = Int8List(size);
           ArrayUtil.byteArraySet(actual, val);
-          
-          expect(actual, equals(expected), reason: 'Failed for byte array size $size');
+
+          expect(actual, equals(expected),
+              reason: 'Failed for byte array size $size');
         }
       }
     });
   });
 }
-

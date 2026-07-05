@@ -1,5 +1,5 @@
 import '../../decoder/DecoderSpecs.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import 'InvWT.dart';
 import 'MultiResImgData.dart';
 import 'SubbandSyn.dart';
@@ -155,4 +155,3 @@ abstract class InvWTAdapter implements InvWT {
   SubbandSyn getSynSubbandTree(int tile, int component) =>
       mresSrc.getSynSubbandTree(tile, component);
 }
-

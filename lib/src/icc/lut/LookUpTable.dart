@@ -17,4 +17,3 @@ abstract class LookUpTable {
   ///   @param dwNumInput Number of values in created lut
   LookUpTable(this.curve, this.dwNumInput);
 }
-

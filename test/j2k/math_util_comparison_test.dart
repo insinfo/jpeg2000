@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 
 import 'package:test/test.dart';
@@ -10,7 +11,8 @@ void main() {
     setUpAll(() async {
       final fixtureFile = File('test/fixtures/math_util.csv');
       if (!fixtureFile.existsSync()) {
-        throw Exception('Fixture file not found: ${fixtureFile.path}. Run the Java test generator first.');
+        throw Exception(
+            'Fixture file not found: ${fixtureFile.path}. Run the Java test generator first.');
       }
       javaOutputLines = await fixtureFile.readAsLines();
     });
@@ -62,4 +64,3 @@ void main() {
     });
   });
 }
-

@@ -96,4 +96,3 @@ abstract class SynWTFilterFloat extends SynWTFilter {
   @override
   int getDataType() => DataBlk.typeFloat;
 }
-

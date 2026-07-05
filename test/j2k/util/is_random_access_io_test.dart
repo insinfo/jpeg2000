@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-
 import 'package:jpeg2000/src/j2k/io/EndianType.dart';
 import 'package:jpeg2000/src/j2k/io/exceptions.dart';
 import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
@@ -49,6 +48,27 @@ void main() {
       expect(io.getPos(), 2);
       expect(io.readUnsignedByte(), 0xCC);
     });
+
+    test('fromStream creates seekable chunk-backed input', () async {
+      final io = await ISRandomAccessIO.fromStream(
+        Stream<List<int>>.fromIterable(<List<int>>[
+          Uint8List.fromList([0, 1, 2, 3]),
+          Uint8List.fromList([4, 5]),
+          Uint8List.fromList([6, 7, 8, 9]),
+        ]),
+      );
+
+      expect(io.length(), 10);
+      io.seek(6);
+      expect(io.readUnsignedShort(), 0x0607);
+
+      io.seek(2);
+      final buffer = Uint8List(5);
+      io.readFully(buffer, 0, buffer.length);
+      expect(buffer, [2, 3, 4, 5, 6]);
+
+      io.close();
+      expect(io.getPos, throwsStateError);
+    });
   });
 }
-

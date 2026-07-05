@@ -82,4 +82,3 @@ abstract class RestrictedICCProfile {
     colorant![BLUE] = bcolorant;
   }
 }
-

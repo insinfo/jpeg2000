@@ -55,7 +55,8 @@ void main() {
         ..put('LocalOnly', 'b');
 
       final names = params.propertyNames().toList();
-      expect(names, containsAll(<String>['DefaultOnly', 'Shared', 'LocalOnly']));
+      expect(
+          names, containsAll(<String>['DefaultOnly', 'Shared', 'LocalOnly']));
       expect(params.getParameter('Shared'), equals('local'));
     });
 
@@ -70,6 +71,34 @@ beta=value
 
       expect(params.getParameter('alpha'), equals('1 2'));
       expect(params.getParameter('beta'), equals('value'));
+    });
+
+    test('loadFromString follows Java properties separators and escapes', () {
+      final params = ParameterList();
+      params.loadFromString(r'''
+! bang comment
+escaped\ key: value\ with\ spaces
+unicode = Ol\u00E1
+path = C:\\temp\\file.jp2
+newline = line\nnext
+spaceSeparated value
+colon\:key : colon\:value
+''');
+
+      expect(params.getParameter('escaped key'), 'value with spaces');
+      expect(params.getParameter('unicode'), 'Olá');
+      expect(params.getParameter('path'), r'C:\temp\file.jp2');
+      expect(params.getParameter('newline'), 'line\nnext');
+      expect(params.getParameter('spaceSeparated'), 'value');
+      expect(params.getParameter('colon:key'), 'colon:value');
+    });
+
+    test('loadFromString rejects malformed unicode escapes', () {
+      final params = ParameterList();
+      expect(
+        () => params.loadFromString(r'bad = \u12x4'),
+        throwsA(isA<StringFormatException>()),
+      );
     });
 
     test('checkListSingle accepts valid prefixed options', () {
@@ -94,7 +123,8 @@ beta=value
         ..put('Xalpha', '1')
         ..put('Bbeta', '2');
 
-      params.checkList(['Z'.codeUnitAt(0), 'Y'.codeUnitAt(0)], ['Xalpha', 'Bbeta']);
+      params.checkList(
+          ['Z'.codeUnitAt(0), 'Y'.codeUnitAt(0)], ['Xalpha', 'Bbeta']);
     });
 
     test('checkList rejects unexpected option outside prefixes', () {
@@ -103,7 +133,8 @@ beta=value
         ..put('Bbeta', '2');
 
       expect(
-        () => params.checkList(['Z'.codeUnitAt(0), 'Y'.codeUnitAt(0)], ['Bbeta']),
+        () =>
+            params.checkList(['Z'.codeUnitAt(0), 'Y'.codeUnitAt(0)], ['Bbeta']),
         throwsArgumentError,
       );
     });
@@ -118,4 +149,3 @@ beta=value
     });
   });
 }
-

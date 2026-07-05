@@ -1,7 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../../ModuleSpec.dart';
-import '../../image/input/ImgReaderPgm.dart';
+import '../../image/input/ImgReaderPGM.dart';
 import 'roi.dart';
 
 /// Parses command-line style ROI specifications used by JJ2000's encoder.
@@ -109,4 +109,3 @@ List<ROI> parseRoiOptions(String roiSpecification, int numComponents) {
 
   return rois;
 }
-

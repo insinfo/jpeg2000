@@ -102,7 +102,8 @@ class StdDequantizer extends Dequantizer {
     final tileIdx = src.getTileIdx();
     final reversible = qts.isReversible(tileIdx, component);
     final derived = qts.isDerived(tileIdx, component);
-    final params = qsss.getTileCompVal(tileIdx, component);
+    final params =
+        qsss.getTileCompVal(tileIdx, component) as StdDequantizerParams?;
     if (params == null) {
       throw StateError(
         'Missing quantization step sizes for tile=$tileIdx component=$component',
@@ -153,9 +154,8 @@ class StdDequantizer extends Dequantizer {
           _intBuffer,
         ) as DataBlkInt;
         final quantized = _intBuffer!;
-        final outBlock =
-            (block is DataBlkFloat ? block : DataBlkFloat())
-              ..progressive = quantized.progressive;
+        final outBlock = (block is DataBlkFloat ? block : DataBlkFloat())
+          ..progressive = quantized.progressive;
         _prepareFloatBlock(outBlock, quantized);
         _ensureSubbandMagBits(
           subband,
@@ -259,7 +259,6 @@ class StdDequantizer extends Dequantizer {
       throw StateError('Quantized block missing payload');
     }
 
-
     _logIntBlockStats(block, subband, component);
     final shiftBits = 31 - subband.magBits;
     _logShiftInfo(component, subband, shiftBits);
@@ -296,9 +295,8 @@ class StdDequantizer extends Dequantizer {
     for (var i = data.length - 1; i >= 0; i--) {
       final temp = Int32Utils.mask32(data[i]);
       final magnitude = temp & _magnitudeMask;
-      final value = (temp & _signMask) == 0
-          ? magnitude * step
-          : -magnitude * step;
+      final value =
+          (temp & _signMask) == 0 ? magnitude * step : -magnitude * step;
       data[i] = value.toInt();
     }
 
@@ -370,12 +368,12 @@ class StdDequantizer extends Dequantizer {
       for (var idx = 0; idx < math.min(4, width * height); idx++) {
         final temp = Int32Utils.mask32(inData[idx]);
         final magnitude = temp & _magnitudeMask;
-        final double value = (temp & _signMask) == 0
-            ? magnitude * step
-            : -magnitude * step;
+        final double value =
+            (temp & _signMask) == 0 ? magnitude * step : -magnitude * step;
         preview.add(value);
       }
-      _log('StdDequantizer float preview: comp=$component res=${subband.resLvl} '
+      _log(
+          'StdDequantizer float preview: comp=$component res=${subband.resLvl} '
           'band=${subband.sbandIdx} values=${preview.map((v) => v.toStringAsFixed(6)).join(', ')}');
       _dequantDebug--;
     } else if (_isInstrumentationEnabled() &&
@@ -386,12 +384,12 @@ class StdDequantizer extends Dequantizer {
         for (var idx = 0; idx < math.min(4, width * height); idx++) {
           final temp = Int32Utils.mask32(inData[idx]);
           final magnitude = temp & _magnitudeMask;
-          final double value = (temp & _signMask) == 0
-              ? magnitude * step
-              : -magnitude * step;
+          final double value =
+              (temp & _signMask) == 0 ? magnitude * step : -magnitude * step;
           preview.add(value);
         }
-        _log('StdDequantizer float preview [unique]: comp=$component res=${subband.resLvl} '
+        _log(
+            'StdDequantizer float preview [unique]: comp=$component res=${subband.resLvl} '
             'band=${subband.sbandIdx} values=${preview.map((v) => v.toStringAsFixed(6)).join(', ')}');
       }
     }
@@ -402,9 +400,8 @@ class StdDequantizer extends Dequantizer {
       for (var col = 0; col < width; col++) {
         final temp = Int32Utils.mask32(inData[inBase + col]);
         final magnitude = temp & _magnitudeMask;
-        final double value = (temp & _signMask) == 0
-            ? magnitude * step
-            : -magnitude * step;
+        final double value =
+            (temp & _signMask) == 0 ? magnitude * step : -magnitude * step;
         outData[outBase + col] = value;
       }
     }
@@ -443,7 +440,6 @@ class StdDequantizer extends Dequantizer {
       }
     }
   }
-
 
   double _computeStep(
     StdDequantizerParams params,
@@ -639,6 +635,7 @@ class StdDequantizer extends Dequantizer {
       '[${preview.join(', ')}]',
     );
   }
+
   void _logShiftInfo(int component, SubbandSyn subband, int shiftBits) {
     if (!_isInstrumentationEnabled()) {
       return;
@@ -764,8 +761,10 @@ class _LlBandBuffer {
     required this.uly,
     required this.dataType,
   })  : totalPixels = width * height,
-        _intData = dataType == DataBlk.typeFloat ? null : Int32List(width * height),
-        _floatData = dataType == DataBlk.typeFloat ? Float32List(width * height) : null;
+        _intData =
+            dataType == DataBlk.typeFloat ? null : Int32List(width * height),
+        _floatData =
+            dataType == DataBlk.typeFloat ? Float32List(width * height) : null;
 
   final int width;
   final int height;
@@ -853,5 +852,3 @@ class _BlockStats {
   final String maxLabel;
   final String preview;
 }
-
-

@@ -14,7 +14,8 @@ class FileFormatWriter implements FileFormatBoxes {
     this.codestreamLength,
   ) : bitsPerComponent = List<int>.unmodifiable(bitsPerComponent) {
     if (numComponents <= 0) {
-      throw ArgumentError.value(numComponents, 'numComponents', 'Must be positive');
+      throw ArgumentError.value(
+          numComponents, 'numComponents', 'Must be positive');
     }
     if (bitsPerComponent.length != numComponents) {
       throw ArgumentError(
@@ -22,7 +23,8 @@ class FileFormatWriter implements FileFormatBoxes {
       );
     }
     if (codestreamLength < 0) {
-      throw ArgumentError.value(codestreamLength, 'codestreamLength', 'Must be non-negative');
+      throw ArgumentError.value(
+          codestreamLength, 'codestreamLength', 'Must be non-negative');
     }
     _bitsPerComponentVary = !_hasUniformBpc(bitsPerComponent);
   }
@@ -74,7 +76,12 @@ class FileFormatWriter implements FileFormatBoxes {
             _bitsPerComponentBoxBaseLength +
             numComponents +
             8
-        : 12 + _fileTypeBoxLength + 8 + _imageHeaderBoxLength + _colourSpecificationBoxLength + 8;
+        : 12 +
+            _fileTypeBoxLength +
+            8 +
+            _imageHeaderBoxLength +
+            _colourSpecificationBoxLength +
+            8;
   }
 
   static bool _hasUniformBpc(List<int> values) {
@@ -110,7 +117,9 @@ class FileFormatWriter implements FileFormatBoxes {
     final length = 8 +
         _imageHeaderBoxLength +
         _colourSpecificationBoxLength +
-        (_bitsPerComponentVary ? _bitsPerComponentBoxBaseLength + numComponents : 0);
+        (_bitsPerComponentVary
+            ? _bitsPerComponentBoxBaseLength + numComponents
+            : 0);
     file
       ..writeInt(length)
       ..writeInt(FileFormatBoxes.jp2HeaderBox);
@@ -141,7 +150,9 @@ class FileFormatWriter implements FileFormatBoxes {
       ..writeByte(FileFormatBoxes.csbMeth)
       ..writeByte(FileFormatBoxes.csbPrec)
       ..writeByte(FileFormatBoxes.csbApprox)
-      ..writeInt(numComponents > 1 ? FileFormatBoxes.csbEnumSrgb : FileFormatBoxes.csbEnumGrey);
+      ..writeInt(numComponents > 1
+          ? FileFormatBoxes.csbEnumSrgb
+          : FileFormatBoxes.csbEnumGrey);
   }
 
   void _writeBitsPerComponentBox(BEBufferedRandomAccessFile file) {

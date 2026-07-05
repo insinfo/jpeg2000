@@ -106,4 +106,3 @@ class _RecordingProgressWatch implements ProgressWatch {
     events.add('terminate');
   }
 }
-

@@ -31,7 +31,8 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
       throw ArgumentError('$optionName option not specified');
     }
 
-    final tokens = param.split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toList();
+    final tokens =
+        param.split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toList();
     var index = 0;
     var firstValue = true;
     var currentType = SPEC_DEF;
@@ -77,11 +78,13 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
       switch (word[0]) {
         case 't':
           tileSpec = parseIdx(word, nTiles);
-          currentType = currentType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
+          currentType =
+              currentType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
           break;
         case 'c':
           compSpec = parseIdx(word, nComp);
-          currentType = currentType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
+          currentType =
+              currentType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
           break;
         default:
           final dims = takeDims(word);
@@ -248,4 +251,3 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
     }
   }
 }
-

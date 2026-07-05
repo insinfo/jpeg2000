@@ -34,4 +34,3 @@ class Progression {
     return 'type=$typeLabel, comp: $cs-$ce, res: $rs-$re, layer < $lye';
   }
 }
-

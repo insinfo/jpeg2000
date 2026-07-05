@@ -75,7 +75,8 @@ class ChannelDefinitionMapper extends ColorSpaceMapper {
 
   @override
   String toString() {
-    StringBuffer rep = StringBuffer('[ChannelDefinitionMapper nchannels= $ncomps');
+    StringBuffer rep =
+        StringBuffer('[ChannelDefinitionMapper nchannels= $ncomps');
     for (int i = 0; i < ncomps; ++i) {
       rep
         ..write(ColorSpaceMapper.eol)

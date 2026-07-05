@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/wavelet/analysis/AnWtFilterIntLift5x3.dart';
+import 'package:jpeg2000/src/j2k/wavelet/analysis/AnWTFilterIntLift5x3.dart';
 import 'package:jpeg2000/src/j2k/wavelet/FilterTypes.dart';
 import 'package:jpeg2000/src/j2k/wavelet/WaveletFilter.dart';
 import 'package:test/test.dart';
@@ -34,13 +34,15 @@ void main() {
       final inSig = <int>[3, 5, 7, 9, 11];
       final lowLpf = List<int>.filled(3, 0);
       final highLpf = List<int>.filled(2, 0);
-      filter.analyzeLpfInt(inSig, 0, inSig.length, 1, lowLpf, 0, 1, highLpf, 0, 1);
+      filter.analyzeLpfInt(
+          inSig, 0, inSig.length, 1, lowLpf, 0, 1, highLpf, 0, 1);
       expect(lowLpf, equals(<int>[3, 7, 11]));
       expect(highLpf, equals(<int>[0, 0]));
 
       final lowHpf = List<int>.filled(2, 0);
       final highHpf = List<int>.filled(3, 0);
-      filter.analyzeHpfInt(inSig, 0, inSig.length, 1, lowHpf, 0, 1, highHpf, 0, 1);
+      filter.analyzeHpfInt(
+          inSig, 0, inSig.length, 1, lowHpf, 0, 1, highHpf, 0, 1);
       expect(lowHpf, equals(<int>[5, 10]));
       expect(highHpf, equals(<int>[-2, 0, 2]));
     });
@@ -68,4 +70,3 @@ void main() {
     });
   });
 }
-

@@ -122,4 +122,3 @@ abstract class CodestreamWriter {
   /// Returns End of last ROI packet
   int getOffLastROIPkt();
 }
-

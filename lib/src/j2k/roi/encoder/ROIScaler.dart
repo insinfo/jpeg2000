@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../../quantization/quantizer/Quantizer.dart';
 import '../../wavelet/analysis/SubbandAn.dart';
-import '../../image/input/ImgReaderPgm.dart';
+import '../../image/input/ImgReaderPGM.dart';
 import '../../wavelet/analysis/CBlkWTData.dart';
 import '../../encoder/EncoderSpecs.dart';
 import '../../image/ImgDataAdapter.dart';
@@ -10,9 +10,9 @@ import '../../util/ParameterList.dart';
 import 'roi.dart';
 import '../../ModuleSpec.dart';
 import '../MaxShiftSpec.dart';
-import 'RoiMaskGenerator.dart';
-import 'RectRoiMaskGenerator.dart';
-// import 'arb_RoiMaskGenerator.dart'; // Missing
+import 'ArbROIMaskGenerator.dart';
+import 'ROIMaskGenerator.dart';
+import 'RectROIMaskGenerator.dart';
 
 import '../../quantization/quantizer/CBlkQuantDataSrcEnc.dart';
 
@@ -123,8 +123,8 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   /// [uba] Flag indicating whether block aligning is used.
   ///
   /// [encSpec] The encoder specifications for addition of roi specs
-  ROIScaler(this.src, this.mg, this.roi, int sLev, bool uba,
-      EncoderSpecs encSpec)
+  ROIScaler(
+      this.src, this.mg, this.roi, int sLev, bool uba, EncoderSpecs encSpec)
       : useStartLevel = sLev,
         super(src) {
     if (roi) {
@@ -199,7 +199,8 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
     ROIMaskGenerator? maskGen;
 
     // Check parameters
-    pl.checkList([OPT_PREFIX.codeUnitAt(0)], ParameterList.toNameArray(pinfo));
+    pl.checkListSingle(
+        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     // Get parameters and check if there are and ROIs specified
     String? roiopt = pl.getParameter("Rroi");
@@ -239,8 +240,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
       maskGen = RectROIMaskGenerator(roiArray, src.getNumComps());
     } else {
       // It's necessary to use the generic mask generation
-      // maskGen = ArbROIMaskGenerator(roiArray,src.getNumComps(),src);
-      throw UnimplementedError("ArbROIMaskGenerator not implemented yet");
+      maskGen = ArbROIMaskGenerator(roiArray, src.getNumComps(), src);
     }
     return ROIScaler(src, maskGen, true, sLev, useBlockAligned, encSpec);
   }
@@ -290,23 +290,24 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             word = stok[idx++];
             h = int.parse(word);
           } catch (e) {
-            throw ArgumentError("Bad parameter for " +
-                "'-Rroi R' option : " +
-                word);
+            throw ArgumentError(
+                "Bad parameter for " + "'-Rroi R' option : " + word);
           }
 
           // If the ROI is component-specific, check which comps.
           if (roiInComp != null) {
             for (int i = 0; i < nc; i++) {
               if (roiInComp[i]) {
-                roi = ROI.rectangular(component: i, ulx: ulx, uly: uly, w: w, h: h);
+                roi = ROI.rectangular(
+                    component: i, ulx: ulx, uly: uly, w: w, h: h);
                 roiVector.add(roi);
               }
             }
           } else {
             // Otherwise add ROI for all components
             for (int i = 0; i < nc; i++) {
-              roi = ROI.rectangular(component: i, ulx: ulx, uly: uly, w: w, h: h);
+              roi =
+                  ROI.rectangular(component: i, ulx: ulx, uly: uly, w: w, h: h);
               roiVector.add(roi);
             }
           }
@@ -321,9 +322,8 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             word = stok[idx++];
             rad = int.parse(word);
           } catch (e) {
-            throw ArgumentError("Bad parameter for " +
-                "'-Rroi C' option : " +
-                word);
+            throw ArgumentError(
+                "Bad parameter for " + "'-Rroi C' option : " + word);
           }
 
           // If the ROI is component-specific, check which comps.
@@ -350,9 +350,8 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
           try {
             filename = stok[idx++];
           } catch (e) {
-            throw ArgumentError("Wrong number of " +
-                "parameters for " +
-                "'-Rroi A' option.");
+            throw ArgumentError(
+                "Wrong number of " + "parameters for " + "'-Rroi A' option.");
           }
           try {
             maskPGM = ImgReaderPGM(filename);
@@ -645,5 +644,3 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
     src.setTile(0, 0);
   }
 }
-
-

@@ -1,4 +1,4 @@
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import 'MultiResImgData.dart';
 import 'SubbandSyn.dart';
 
@@ -51,8 +51,8 @@ abstract class MultiResImgDataAdapter implements MultiResImgData {
   int getCompImgHeight(int component, int resLevel) =>
       source.getCompImgHeight(component, resLevel);
 
-    @override
-    int getNomRangeBits(int component) => source.getNomRangeBits(component);
+  @override
+  int getNomRangeBits(int component) => source.getNomRangeBits(component);
 
   @override
   void setTile(int x, int y) => source.setTile(x, y);
@@ -96,4 +96,3 @@ abstract class MultiResImgDataAdapter implements MultiResImgData {
   SubbandSyn getSynSubbandTree(int tile, int component) =>
       source.getSynSubbandTree(tile, component);
 }
-

@@ -16,8 +16,12 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
     BlkImgDataSrc source,
     this.compTransfSpec, {
     bool enableComponentTransforms = true,
+    List<int>? originalBitDepths,
   })  : _source = source,
         _componentTransformEnabled = enableComponentTransforms,
+        _utdepth = originalBitDepths == null
+            ? null
+            : List<int>.from(originalBitDepths, growable: false),
         super(source);
 
   static final List<int> _componentDebugCountdown = <int>[5, 5, 5];
@@ -26,14 +30,37 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
   final CompTransfSpec compTransfSpec;
   final bool _componentTransformEnabled;
 
+  /// Original (untransformed) component bit depths from the SIZ marker.
+  /// Mirrors JJ2000's `InvCompTransf.utdepth`: after the inverse component
+  /// transform the samples are back in their original range, so this class
+  /// must report the original depths, not the mixed depths of the source.
+  final List<int>? _utdepth;
+
+  @override
+  int getNomRangeBits(int component) {
+    final utdepth = _utdepth;
+    if (utdepth != null && component < utdepth.length) {
+      return utdepth[component];
+    }
+    return _source.getNomRangeBits(component);
+  }
+
   final List<DataBlkInt?> _intScratch = List<DataBlkInt?>.filled(3, null);
   final List<DataBlkFloat?> _floatScratch = List<DataBlkFloat?>.filled(3, null);
 
-  static const double _ictRedCrFactor = 1.402;
-  static const double _ictGreenCbFactor = 0.344136;
-  static const double _ictGreenCrFactor = 0.714136;
-  static const double _ictBlueCbFactor = 1.7720907830451322;
-  static const double _ictBlueCrFactor = 0.00006723594218332702;
+  // ICT constants exactly as in JJ2000's InvCompTransf (float literals).
+  static final double _ictRedCrFactor = _asFloat32(1.402);
+  static final double _ictGreenCbFactor = _asFloat32(0.34413);
+  static final double _ictGreenCrFactor = _asFloat32(0.71414);
+  static final double _ictBlueCbFactor = _asFloat32(1.772);
+
+  static final Float32List _f32Scratch = Float32List(1);
+
+  /// Rounds [value] to float32 precision, mirroring Java `float` arithmetic.
+  static double _asFloat32(double value) {
+    _f32Scratch[0] = value;
+    return _f32Scratch[0];
+  }
 
   int get _numComponents => _source.getNumComps();
 
@@ -49,7 +76,8 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
   @override
   DataBlk getCompData(DataBlk block, int component) {
     final result = _maybeTransform(block, component, false);
-    if (!identical(result, block)) {
+    if (!identical(result, block) &&
+        result.getDataType() == block.getDataType()) {
       block
         ..ulx = result.ulx
         ..uly = result.uly
@@ -61,6 +89,9 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
         ..setData(result.getData());
       return block;
     }
+    // As in JJ2000, the returned block may be of a different type than the
+    // one passed in (the ICT always produces integer samples); callers must
+    // use the returned instance.
     return result;
   }
 
@@ -71,10 +102,12 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
           : _source.getCompData(block, component);
     }
     final tileIdx = getTileIdx();
-    final transform = compTransfSpec.getSpec(tileIdx, component) ?? InvCompTransf.none;
+    final transform =
+        compTransfSpec.getSpec(tileIdx, component) ?? InvCompTransf.none;
     if (_componentDebugCountdown[component] > 0) {
       _componentDebugCountdown[component]--;
-      _log('InvCompTransf: tile=$tileIdx component=$component transform=$transform');
+      _log(
+          'InvCompTransf: tile=$tileIdx component=$component transform=$transform');
     }
     if (transform == InvCompTransf.none ||
         _numComponents < 3 ||
@@ -172,7 +205,8 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
             );
           }
           _componentDebugCountdown[component]--;
-          _log('RCT debug c=$component y=$yVal cb=$cbVal cr=$crVal -> r=$r g=$g b=$b');
+          _log(
+              'RCT debug c=$component y=$yVal cb=$cbVal cr=$crVal -> r=$r g=$g b=$b');
         }
 
         buffer[destIndex++] = isR ? r : (isG ? g : b);
@@ -190,7 +224,9 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
   }
 
   DataBlk _applyICT(DataBlk block, int component, bool intern) {
-    final DataBlkFloat target = block is DataBlkFloat ? block : DataBlkFloat();
+    // JJ2000's invICT always produces integer samples, rounding each float
+    // result with `(int)(x + 0.5f)` and float32 arithmetic throughout.
+    final DataBlkInt target = block is DataBlkInt ? block : DataBlkInt();
     if (!identical(target, block)) {
       target
         ..ulx = block.ulx
@@ -215,14 +251,14 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
       ..h = height
       ..offset = 0
       ..scanw = width
-      ..progressive = y.progressive;
+      ..progressive = y.progressive || cb.progressive || cr.progressive;
 
     final required = width * height;
-    final existing = target.getDataFloat();
-    late final Float32List buffer;
+    final existing = target.getDataInt();
+    late final List<int> buffer;
     if (existing == null || existing.length < required) {
-      final newData = Float32List(required);
-      target.setDataFloat(newData);
+      final newData = Int32List(required);
+      target.setDataInt(newData);
       buffer = newData;
     } else {
       buffer = existing;
@@ -254,28 +290,25 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
         final double cbVal = cbData[cbPos];
         final double crVal = crData[crPos];
 
-        final double r = yVal + _ictRedCrFactor * crVal;
-        final double g =
-          yVal - _ictGreenCbFactor * cbVal - _ictGreenCrFactor * crVal;
-        final double b =
-          yVal + _ictBlueCbFactor * cbVal + _ictBlueCrFactor * crVal;
-
-        if (_componentDebugCountdown[component] > 0) {
-          if (_componentDebugCountdown[component] == 5) {
-            _log(
-              'ICT geometry c=$component y.off=${y.offset} y.scan=${y.scanw} '
-              'cb.off=${cb.offset} cb.scan=${cb.scanw} cr.off=${cr.offset} cr.scan=${cr.scanw}',
-            );
-          }
-          _componentDebugCountdown[component]--;
-          _log(
-            'ICT debug c=$component y=${yVal.toStringAsFixed(3)} '
-            'cb=${cbVal.toStringAsFixed(3)} cr=${crVal.toStringAsFixed(3)} '
-            '-> r=${r.toStringAsFixed(3)} g=${g.toStringAsFixed(3)} b=${b.toStringAsFixed(3)}',
-          );
+        // Mirrors: (int)(y + K*c + 0.5f) with float32 rounding at every step.
+        final int sample;
+        if (isR) {
+          sample = _asFloat32(
+                  _asFloat32(yVal + _asFloat32(_ictRedCrFactor * crVal)) + 0.5)
+              .truncate();
+        } else if (isG) {
+          sample = _asFloat32(_asFloat32(
+                      _asFloat32(yVal - _asFloat32(_ictGreenCbFactor * cbVal)) -
+                          _asFloat32(_ictGreenCrFactor * crVal)) +
+                  0.5)
+              .truncate();
+        } else {
+          sample = _asFloat32(
+                  _asFloat32(yVal + _asFloat32(_ictBlueCbFactor * cbVal)) + 0.5)
+              .truncate();
         }
 
-        buffer[destIndex++] = isR ? r : (isG ? g : b);
+        buffer[destIndex++] = sample;
 
         yPos++;
         cbPos++;
@@ -314,7 +347,7 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
 
   DataBlkFloat _fetchFloatBlock({
     required int component,
-    required DataBlkFloat template,
+    required DataBlk template,
     required bool intern,
   }) {
     final cache = _floatScratch[component] ?? DataBlkFloat();
@@ -343,4 +376,3 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
     }
   }
 }
-

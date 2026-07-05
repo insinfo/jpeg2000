@@ -7,6 +7,7 @@ abstract class InvCompTransf {
   static const int none = 0;
   static const int invRct = 1;
   static const int invIct = 2;
+
   /// JJ2000 option prefix reserved for inverse component transform toggles.
   static const String optionPrefix = 'M';
 
@@ -21,7 +22,8 @@ abstract class InvCompTransf {
       throw ArgumentError('At least three components required for ICT/RCT');
     }
 
-    final result = reuse ?? List<int>.filled(utDepth.length, 0, growable: false);
+    final result =
+        reuse ?? List<int>.filled(utDepth.length, 0, growable: false);
 
     switch (ttype) {
       case none:
@@ -35,7 +37,8 @@ abstract class InvCompTransf {
             result[i] = utDepth[i];
           }
         }
-        final term0 = (1 << utDepth[0]) + (2 << utDepth[1]) + (1 << utDepth[2]) - 1;
+        final term0 =
+            (1 << utDepth[0]) + (2 << utDepth[1]) + (1 << utDepth[2]) - 1;
         final term1 = (1 << utDepth[2]) + (1 << utDepth[1]) - 1;
         final term2 = (1 << utDepth[0]) + (1 << utDepth[1]) - 1;
         result[0] = MathUtil.log2(math.max(1, term0)) - 2 + 1;
@@ -71,4 +74,3 @@ abstract class InvCompTransf {
     return result;
   }
 }
-

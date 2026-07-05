@@ -193,7 +193,9 @@ class TagTreeEncoder {
           // level
           bi = m * lw + n;
           treeV[k + 1][(m >> 1) * ((lw + 1) >> 1) + (n >> 1)] =
-              (treeV[k][bi] < treeV[k][bi + 1]) ? treeV[k][bi] : treeV[k][bi + 1];
+              (treeV[k][bi] < treeV[k][bi + 1])
+                  ? treeV[k][bi]
+                  : treeV[k][bi + 1];
         }
         // Now we may have quad with 1 column, 1 line
         if (lw % 2 != 0) {
@@ -404,4 +406,3 @@ class TagTreeEncoder {
     saved = false;
   }
 }
-

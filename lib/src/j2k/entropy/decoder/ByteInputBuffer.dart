@@ -37,7 +37,8 @@ class ByteInputBuffer {
     }
 
     if (offset < 0 || length < 0 || offset + length > buffer.length) {
-      throw ArgumentError('Invalid offset/length ($offset,$length) for new buffer');
+      throw ArgumentError(
+          'Invalid offset/length ($offset,$length) for new buffer');
     }
     _buffer = buffer;
     _pos = offset;

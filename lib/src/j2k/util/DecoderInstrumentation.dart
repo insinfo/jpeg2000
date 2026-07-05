@@ -25,11 +25,15 @@ class DecoderInstrumentation {
     final logger = FacilityManager.getMsgLogger();
     final buffer = StringBuffer('[INST]');
     if (source != null && source.isNotEmpty) {
-      buffer..write('[')..write(source)..write(']');
+      buffer
+        ..write('[')
+        ..write(source)
+        ..write(']');
     }
-    buffer..write(' ')
-        ..write(' ' * (_indent < 0 ? 0 : _indent))
-        ..write(message);
+    buffer
+      ..write(' ')
+      ..write(' ' * (_indent < 0 ? 0 : _indent))
+      ..write(message);
     logger.printmsg(MsgLogger.info, buffer.toString());
   }
 
@@ -66,4 +70,3 @@ class _NoopSection implements InstrumentationSection {
     // no-op
   }
 }
-

@@ -36,7 +36,8 @@ class MatrixBasedRestrictedProfile extends RestrictedICCProfile {
   @override
   String toString() {
     StringBuffer rep =
-        StringBuffer("[Matrix-Based Input Restricted ICC profile")..write(RestrictedICCProfile.eol);
+        StringBuffer("[Matrix-Based Input Restricted ICC profile")
+          ..write(RestrictedICCProfile.eol);
 
     rep
       ..write("trc[RED]:")
@@ -70,4 +71,3 @@ class MatrixBasedRestrictedProfile extends RestrictedICCProfile {
     return (rep..write("]")).toString();
   }
 }
-

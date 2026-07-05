@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
 import 'package:jpeg2000/src/j2k/image/CompTransfSpec.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkFloat.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
@@ -252,46 +252,42 @@ void main() {
 
       // Check Component 0 (R)
       // Java: 128
-      var blk = DataBlkFloat();
+      var blk = DataBlkInt();
       blk.w = w;
       blk.h = h;
-      
-      // In Dart implementation, ICT returns DataBlkFloat.
+
+      // Mirrors JJ2000: invICT produces integer samples via (int)(x + 0.5f).
       var result = trans.getCompData(blk, 0);
-      
-      if (result is DataBlkFloat) {
-         var data = result.getDataFloat()!;
-         // print("R: ${data[0]}");
-         // Java expects 128.
-         // 128.04 -> 128
-         expect(data[0], closeTo(128.0, 0.5));
+
+      if (result is DataBlkInt) {
+        var data = result.getDataInt()!;
+        // 100 + 1.402*20 = 128.04 -> 128
+        expect(data[0], equals(128));
       } else {
-         fail("ICT should return DataBlkFloat");
+        fail("ICT should return DataBlkInt");
       }
 
       // Check Component 1 (G)
       // Java: 82
       result = trans.getCompData(blk, 1);
-      if (result is DataBlkFloat) {
-         var data = result.getDataFloat()!;
-         // print("G: ${data[0]}");
-         expect(data[0], closeTo(82.0, 0.5));
+      if (result is DataBlkInt) {
+        var data = result.getDataInt()!;
+        // 100 - 0.34413*10 - 0.71414*20 = 82.27 -> 82
+        expect(data[0], equals(82));
       } else {
-         fail("ICT should return DataBlkFloat");
+        fail("ICT should return DataBlkInt");
       }
 
       // Check Component 2 (B)
       // Java: 118
       result = trans.getCompData(blk, 2);
-      if (result is DataBlkFloat) {
-         var data = result.getDataFloat()!;
-         // print("B: ${data[0]}");
-         expect(data[0], closeTo(118.0, 0.5));
+      if (result is DataBlkInt) {
+        var data = result.getDataInt()!;
+        // 100 + 1.772*10 = 117.72 -> 118
+        expect(data[0], equals(118));
       } else {
-         fail("ICT should return DataBlkFloat");
+        fail("ICT should return DataBlkInt");
       }
     });
   });
 }
-
-

@@ -60,5 +60,3 @@ class CBlkWTDataFloat extends CBlkWTData {
     data = arr;
   }
 }
-
-

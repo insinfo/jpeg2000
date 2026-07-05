@@ -94,4 +94,3 @@ abstract class SynWTFilterInt extends SynWTFilter {
   @override
   int getDataType() => DataBlk.typeInt;
 }
-

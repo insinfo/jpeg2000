@@ -9,21 +9,38 @@ import 'Int32Utils.dart';
 /// Read-only implementation that mirrors JJ2000's `ISRandomAccessIO`.
 class ISRandomAccessIO implements RandomAccessIO {
   ISRandomAccessIO(Uint8List data)
-      : _buffer = data,
+      : _storage = _ContiguousInputStorage(data),
         _pos = 0,
         _closed = false;
 
-  /// Creates an instance by eagerly reading all bytes from [stream].
+  ISRandomAccessIO._withStorage(_InputStorage storage)
+      : _storage = storage,
+        _pos = 0,
+        _closed = false;
+
+  /// Creates a seekable instance from [stream] without requiring `dart:io`.
+  ///
+  /// Stream chunks are retained as separate byte arrays instead of being
+  /// concatenated into a single large [Uint8List]. This keeps the synchronous
+  /// [RandomAccessIO] contract intact on Dart VM and Dart Web, while avoiding
+  /// the extra full-buffer copy that a `BytesBuilder.takeBytes()` path needs.
   static Future<ISRandomAccessIO> fromStream(Stream<List<int>> stream) async {
-    // TODO(jj2000): Implement incremental buffering to avoid loading full streams in memory.
-    final builder = BytesBuilder(copy: false);
+    final chunks = <Uint8List>[];
+    var totalLength = 0;
     await for (final chunk in stream) {
-      builder.add(chunk);
+      if (chunk.isEmpty) {
+        continue;
+      }
+      final bytes = chunk is Uint8List ? chunk : Uint8List.fromList(chunk);
+      chunks.add(bytes);
+      totalLength += bytes.length;
     }
-    return ISRandomAccessIO(Uint8List.fromList(builder.takeBytes()));
+    return ISRandomAccessIO._withStorage(
+      _ChunkedInputStorage(chunks, totalLength),
+    );
   }
 
-  Uint8List _buffer;
+  _InputStorage? _storage;
   int _pos;
   bool _closed;
 
@@ -34,12 +51,13 @@ class ISRandomAccessIO implements RandomAccessIO {
   }
 
   void _ensureAvailable(int length) {
-    if (_pos + length > _buffer.length) {
-      if (_pos == _buffer.length) {
+    final storage = _storage!;
+    if (_pos + length > storage.length) {
+      if (_pos == storage.length) {
         throw EOFException();
       }
       throw EOFException('Requested $length bytes from $_pos but only '
-          '${_buffer.length - _pos} remain');
+          '${storage.length - _pos} remain');
     }
   }
 
@@ -47,15 +65,20 @@ class ISRandomAccessIO implements RandomAccessIO {
     _ensureOpen();
     _ensureAvailable(length);
     var value = 0;
+    final storage = _storage!;
     for (var i = 0; i < length; i++) {
-      value = (value << 8) | _buffer[_pos++];
+      value = (value << 8) | storage.readByte(_pos++);
     }
     return value;
   }
 
   @override
   void close() {
-    _buffer = Uint8List(0);
+    if (_closed) {
+      return;
+    }
+    _storage?.close();
+    _storage = null;
     _pos = 0;
     _closed = true;
   }
@@ -69,13 +92,13 @@ class ISRandomAccessIO implements RandomAccessIO {
   @override
   int length() {
     _ensureOpen();
-    return _buffer.length;
+    return _storage!.length;
   }
 
   @override
   void seek(int offset) {
     _ensureOpen();
-    if (offset < 0 || offset > _buffer.length) {
+    if (offset < 0 || offset > _storage!.length) {
       throw EOFException('Seek beyond range: $offset');
     }
     _pos = offset;
@@ -85,7 +108,9 @@ class ISRandomAccessIO implements RandomAccessIO {
   int read() {
     _ensureOpen();
     _ensureAvailable(1);
-    return _buffer[_pos++];
+    final value = _storage!.readByte(_pos);
+    _pos++;
+    return value;
   }
 
   @override
@@ -93,7 +118,7 @@ class ISRandomAccessIO implements RandomAccessIO {
     _ensureOpen();
     RangeError.checkValidRange(offset, offset + length, buffer.length);
     _ensureAvailable(length);
-    buffer.setRange(offset, offset + length, _buffer, _pos);
+    _storage!.readRange(_pos, buffer, offset, length);
     _pos += length;
   }
 
@@ -138,13 +163,9 @@ class ISRandomAccessIO implements RandomAccessIO {
   ByteData _byteData(int count) {
     _ensureOpen();
     _ensureAvailable(count);
-    final data = ByteData.view(
-      _buffer.buffer,
-      _buffer.offsetInBytes + _pos,
-      count,
-    );
-    _pos += count;
-    return data;
+    final bytes = Uint8List(count);
+    readFully(bytes, 0, count);
+    return ByteData.view(bytes.buffer);
   }
 
   @override
@@ -153,7 +174,7 @@ class ISRandomAccessIO implements RandomAccessIO {
     if (count < 0) {
       throw ArgumentError.value(count, 'count', 'Cannot skip negative bytes');
     }
-    final remaining = _buffer.length - _pos;
+    final remaining = _storage!.length - _pos;
     final skipped = count < remaining ? count : remaining;
     _pos += skipped;
     return skipped;
@@ -165,21 +186,141 @@ class ISRandomAccessIO implements RandomAccessIO {
   }
 
   @override
-  void writeByte(int value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeByte(int value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 
   @override
-  void writeShort(int value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeShort(int value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 
   @override
-  void writeInt(int value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeInt(int value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 
   @override
-  void writeLong(int value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeLong(int value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 
   @override
-  void writeFloat(double value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeFloat(double value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 
   @override
-  void writeDouble(double value) => throw UnsupportedError('ISRandomAccessIO is read-only');
+  void writeDouble(double value) =>
+      throw UnsupportedError('ISRandomAccessIO is read-only');
 }
 
+abstract class _InputStorage {
+  int get length;
+
+  int readByte(int position);
+
+  void readRange(int position, List<int> target, int offset, int length);
+
+  void close();
+}
+
+class _ContiguousInputStorage implements _InputStorage {
+  _ContiguousInputStorage(this._bytes);
+
+  Uint8List _bytes;
+
+  @override
+  int get length => _bytes.length;
+
+  @override
+  int readByte(int position) => _bytes[position];
+
+  @override
+  void readRange(int position, List<int> target, int offset, int length) {
+    target.setRange(offset, offset + length, _bytes, position);
+  }
+
+  @override
+  void close() {
+    _bytes = Uint8List(0);
+  }
+}
+
+class _ChunkedInputStorage implements _InputStorage {
+  _ChunkedInputStorage(this._chunks, this.length)
+      : _starts = List<int>.filled(_chunks.length, 0) {
+    var offset = 0;
+    for (var i = 0; i < _chunks.length; i++) {
+      _starts[i] = offset;
+      offset += _chunks[i].length;
+    }
+  }
+
+  List<Uint8List> _chunks;
+  List<int> _starts;
+  int _lastChunkIndex = 0;
+
+  @override
+  final int length;
+
+  @override
+  int readByte(int position) {
+    final chunkIndex = _findChunk(position);
+    return _chunks[chunkIndex][position - _starts[chunkIndex]];
+  }
+
+  @override
+  void readRange(int position, List<int> target, int offset, int length) {
+    var remaining = length;
+    var sourcePosition = position;
+    var targetOffset = offset;
+
+    while (remaining > 0) {
+      final chunkIndex = _findChunk(sourcePosition);
+      final chunk = _chunks[chunkIndex];
+      final chunkOffset = sourcePosition - _starts[chunkIndex];
+      final count = remaining < chunk.length - chunkOffset
+          ? remaining
+          : chunk.length - chunkOffset;
+      target.setRange(
+        targetOffset,
+        targetOffset + count,
+        chunk,
+        chunkOffset,
+      );
+      remaining -= count;
+      sourcePosition += count;
+      targetOffset += count;
+    }
+  }
+
+  int _findChunk(int position) {
+    if (_lastChunkIndex < _chunks.length) {
+      final start = _starts[_lastChunkIndex];
+      final end = start + _chunks[_lastChunkIndex].length;
+      if (position >= start && position < end) {
+        return _lastChunkIndex;
+      }
+    }
+
+    var low = 0;
+    var high = _starts.length - 1;
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      final start = _starts[mid];
+      final end = start + _chunks[mid].length;
+      if (position < start) {
+        high = mid - 1;
+      } else if (position >= end) {
+        low = mid + 1;
+      } else {
+        _lastChunkIndex = mid;
+        return mid;
+      }
+    }
+    throw EOFException('Position beyond range: $position');
+  }
+
+  @override
+  void close() {
+    _chunks = <Uint8List>[];
+    _starts = <int>[];
+    _lastChunkIndex = 0;
+  }
+}

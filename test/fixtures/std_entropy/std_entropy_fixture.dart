@@ -176,4 +176,3 @@ class StdEntropyBlock {
   final int dl;
   final int options;
 }
-

@@ -1,10 +1,11 @@
+@TestOn('vm')
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
 import 'package:jpeg2000/src/j2k/image/output/ImgWriterBmp.dart';
@@ -24,7 +25,8 @@ void main() {
         fixedPoints: const <int>[0, 0, 0],
       );
 
-      final tempDir = Directory.systemTemp.createTempSync('img_writer_bmp_rgb_');
+      final tempDir =
+          Directory.systemTemp.createTempSync('img_writer_bmp_rgb_');
       addTearDown(() => tempDir.deleteSync(recursive: true));
       final outputPath = '${tempDir.path}/output.bmp';
 
@@ -36,7 +38,8 @@ void main() {
       writer.close();
 
       final bytes = File(outputPath).readAsBytesSync();
-      final header = ByteData.sublistView(Uint8List.fromList(bytes.sublist(0, 54)));
+      final header =
+          ByteData.sublistView(Uint8List.fromList(bytes.sublist(0, 54)));
 
       expect(header.getUint16(0, Endian.little), equals(0x4d42));
       expect(header.getUint32(2, Endian.little), equals(54 + 8));
@@ -67,7 +70,8 @@ void main() {
         fixedPoints: const <int>[0],
       );
 
-      final tempDir = Directory.systemTemp.createTempSync('img_writer_bmp_gray_');
+      final tempDir =
+          Directory.systemTemp.createTempSync('img_writer_bmp_gray_');
       addTearDown(() => tempDir.deleteSync(recursive: true));
       final outputPath = '${tempDir.path}/output.bmp';
 
@@ -79,7 +83,8 @@ void main() {
       writer.close();
 
       final bytes = File(outputPath).readAsBytesSync();
-      final header = ByteData.sublistView(Uint8List.fromList(bytes.sublist(0, 54)));
+      final header =
+          ByteData.sublistView(Uint8List.fromList(bytes.sublist(0, 54)));
 
       expect(header.getUint16(0, Endian.little), equals(0x4d42));
       expect(header.getUint32(2, Endian.little), equals(1078 + 4));
@@ -89,8 +94,10 @@ void main() {
 
       final paletteStart = 54;
       final paletteEnd = 1078;
-      expect(bytes.sublist(paletteStart, paletteStart + 4), equals(<int>[0, 0, 0, 0]));
-      expect(bytes.sublist(paletteEnd - 4, paletteEnd), equals(<int>[255, 255, 255, 0]));
+      expect(bytes.sublist(paletteStart, paletteStart + 4),
+          equals(<int>[0, 0, 0, 0]));
+      expect(bytes.sublist(paletteEnd - 4, paletteEnd),
+          equals(<int>[255, 255, 255, 0]));
 
       final pixelData = bytes.sublist(1078, 1078 + 4);
       expect(pixelData, equals(<int>[0, 127, 128, 255]));
@@ -264,4 +271,3 @@ class _StaticImageSource implements BlkImgDataSrc {
   @override
   int getNumTiles() => 1;
 }
-

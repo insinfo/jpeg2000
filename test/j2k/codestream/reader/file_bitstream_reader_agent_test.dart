@@ -8,7 +8,7 @@ import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/BitstreamReaderAgent.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/quantization/dequantizer/StdDequantizerParams.dart';
 
 import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
@@ -27,10 +27,15 @@ void main() {
       decSpec.dls.setTileCompVal(0, 0, 0);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
@@ -79,10 +84,12 @@ void main() {
       );
 
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
       );
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
       );
       headerDecoder.registerTilePartDataOffset(0, 0, 16);
       headerDecoder.registerTilePartBodyLength(0, 0, 20);
@@ -90,8 +97,7 @@ void main() {
       headerDecoder.registerTilePartBodyLength(0, 1, 28);
 
       final input = ISRandomAccessIO(Uint8List(128));
-      final parameters = ParameterList()
-        ..put('trunc', 'off');
+      final parameters = ParameterList()..put('trunc', 'off');
       final agent = FileBitstreamReaderAgent(
         headerDecoder,
         input,
@@ -108,7 +114,8 @@ void main() {
 
       agent.debugSetPacketSimulation(
         consumptions.length,
-        (int layer, int resolution, int component, int precinct, List<int> remainingBytes) {
+        (int layer, int resolution, int component, int precinct,
+            List<int> remainingBytes) {
           final tileBudget = remainingBytes[agent.getTileIdx()];
           final consumption = consumptions[packetIndex++];
           final updated = tileBudget - consumption;
@@ -123,7 +130,8 @@ void main() {
         },
       );
 
-      headerDecoder.registerPackedPacketHeaders(0, Uint8List.fromList(<int>[1, 2, 3]));
+      headerDecoder.registerPackedPacketHeaders(
+          0, Uint8List.fromList(<int>[1, 2, 3]));
 
       // Ensure tile budgets observed during decoding.
       agent.setTile(0, 0);
@@ -153,10 +161,15 @@ void main() {
       decSpec.dls.setTileCompVal(0, 0, 0);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
@@ -200,10 +213,12 @@ void main() {
       );
 
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
       );
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
       );
       headerDecoder.registerTilePartDataOffset(0, 0, 16);
       headerDecoder.registerTilePartBodyLength(0, 0, 20);
@@ -235,9 +250,11 @@ void main() {
 
       agent.debugSetPacketSimulation(
         consumptions.length,
-        (int layer, int resolution, int component, int precinct, List<int> remainingBytes) {
+        (int layer, int resolution, int component, int precinct,
+            List<int> remainingBytes) {
           expect(packetIndex < consumptions.length, isTrue,
-              reason: 'Decoder requested more packets than provided by the test.');
+              reason:
+                  'Decoder requested more packets than provided by the test.');
           final tileBudget = remainingBytes[agent.getTileIdx()];
           final consumption = consumptions[packetIndex++];
           final updated = tileBudget - consumption;
@@ -266,10 +283,15 @@ void main() {
         decSpec.dls.setTileCompVal(tile, 0, 0);
         final defaultQuant = decSpec.qsss.getDefault();
         if (defaultQuant == null) {
-          fail('DecoderSpecs.basic should provide default quantization parameters');
+          fail(
+              'DecoderSpecs.basic should provide default quantization parameters');
         }
         final quantParams = StdDequantizerParams(
-          exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+          exp: defaultQuant.exp.isNotEmpty
+              ? defaultQuant.exp
+              : <List<int>>[
+                  <int>[0]
+                ],
           nStep: defaultQuant.nStep,
         );
         decSpec.qsss.setTileCompVal(tile, 0, quantParams);
@@ -363,7 +385,8 @@ void main() {
 
       agent.debugSetPacketSimulation(
         consumptions.length,
-        (int layer, int resolution, int component, int precinct, List<int> remainingBytes) {
+        (int layer, int resolution, int component, int precinct,
+            List<int> remainingBytes) {
           tilesVisited.add(agent.getTileIdx());
           final tileBudget = remainingBytes[agent.getTileIdx()];
           final consumption = consumptions[packetIndex++];
@@ -396,10 +419,15 @@ void main() {
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
@@ -409,14 +437,16 @@ void main() {
       final headerDecoder = _createHeaderDecoder(decSpec, headerInfo);
 
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x02]),
       );
       headerDecoder.registerTilePartHeaderLength(0, 0, 4);
       headerDecoder.registerTilePartBodyLength(0, 0, 20);
       headerDecoder.registerTilePartDataOffset(0, 0, 16);
 
       headerDecoder.parseSotMarker(
-        Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
+        Uint8List.fromList(
+            <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1E, 0x01, 0x02]),
       );
       headerDecoder.registerTilePartHeaderLength(0, 1, 4);
       headerDecoder.registerTilePartBodyLength(0, 1, 28);
@@ -499,73 +529,83 @@ void main() {
       input.close();
     });
 
-      test('ncb_quit stops decoding when max code-blocks reached', () {
-        final decSpec = DecoderSpecs.basic(1, 1);
-        decSpec.nls.setTileDef(0, 2);
-        decSpec.dls.setTileCompVal(0, 0, 0);
-        final reversibleFilter = SynWTFilterIntLift5x3();
-        decSpec.wfs.setTileCompVal(0, 0, <List<SynWTFilter>>[
-          <SynWTFilter>[reversibleFilter],
-          <SynWTFilter>[reversibleFilter],
-        ]);
-        final defaultQuant = decSpec.qsss.getDefault();
-        if (defaultQuant == null) {
-          fail('DecoderSpecs.basic should provide default quantization parameters');
-        }
-        final quantParams = StdDequantizerParams(
-          exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
-          nStep: defaultQuant.nStep,
-        );
-        decSpec.qsss.setTileCompVal(0, 0, quantParams);
-        decSpec.gbs.setTileCompVal(0, 0, 1);
+    test('ncb_quit stops decoding when max code-blocks reached', () {
+      final decSpec = DecoderSpecs.basic(1, 1);
+      decSpec.nls.setTileDef(0, 2);
+      decSpec.dls.setTileCompVal(0, 0, 0);
+      final reversibleFilter = SynWTFilterIntLift5x3();
+      decSpec.wfs.setTileCompVal(0, 0, <List<SynWTFilter>>[
+        <SynWTFilter>[reversibleFilter],
+        <SynWTFilter>[reversibleFilter],
+      ]);
+      final defaultQuant = decSpec.qsss.getDefault();
+      if (defaultQuant == null) {
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
+      }
+      final quantParams = StdDequantizerParams(
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
+        nStep: defaultQuant.nStep,
+      );
+      decSpec.qsss.setTileCompVal(0, 0, quantParams);
+      decSpec.gbs.setTileCompVal(0, 0, 1);
 
-        final headerInfo = HeaderInfo();
-        final headerDecoder = _createHeaderDecoder(decSpec, headerInfo);
-        _registerSingleTilePart(headerDecoder, 0);
+      final headerInfo = HeaderInfo();
+      final headerDecoder = _createHeaderDecoder(decSpec, headerInfo);
+      _registerSingleTilePart(headerDecoder, 0);
 
-        final parameters = _buildBaseParameters(ncbQuit: '2');
-        final input = ISRandomAccessIO(Uint8List(64));
+      final parameters = _buildBaseParameters(ncbQuit: '2');
+      final input = ISRandomAccessIO(Uint8List(64));
 
-        late PktDecoderHarness harness;
-        final agent = FileBitstreamReaderAgent(
-          headerDecoder,
-          input,
-          decSpec,
-          parameters,
-          false,
-          headerInfo,
-          pktDecoderFactory: (reader) {
-            harness = PktDecoderHarness(
-              decSpec,
-              headerDecoder,
-              input,
-              reader,
-              true,
-              reader.debugGetNcbQuitTarget(),
-              codeBlocksPerPacket: 1,
-            );
-            return harness;
-          },
-        );
+      late PktDecoderHarness harness;
+      final agent = FileBitstreamReaderAgent(
+        headerDecoder,
+        input,
+        decSpec,
+        parameters,
+        false,
+        headerInfo,
+        pktDecoderFactory: (reader) {
+          harness = PktDecoderHarness(
+            decSpec,
+            headerDecoder,
+            input,
+            reader,
+            true,
+            reader.debugGetNcbQuitTarget(),
+            codeBlocksPerPacket: 1,
+          );
+          return harness;
+        },
+      );
 
-        agent.setTile(0, 0);
+      agent.setTile(0, 0);
 
-        expect(harness.quitTriggered, isTrue);
-        expect(harness.packetsDecoded, equals(2));
+      expect(harness.quitTriggered, isTrue);
+      expect(harness.packetsDecoded, equals(2));
 
-        input.close();
-      });
+      input.close();
+    });
 
     test('ncb_quit persists across tiles', () {
       final decSpec = DecoderSpecs.basic(2, 1);
       final reversibleFilter = SynWTFilterIntLift5x3();
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       for (var tile = 0; tile < 2; tile++) {
         final quantParams = StdDequantizerParams(
-          exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+          exp: defaultQuant.exp.isNotEmpty
+              ? defaultQuant.exp
+              : <List<int>>[
+                  <int>[0]
+                ],
           nStep: defaultQuant.nStep,
         );
         decSpec.nls.setTileDef(tile, 2);
@@ -631,7 +671,8 @@ void main() {
       final reversibleFilter = SynWTFilterIntLift5x3();
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
 
       for (var comp = 0; comp < 2; comp++) {
@@ -791,7 +832,8 @@ void main() {
       final segmentsOn = agentOn.debugDescribeProgressionSegments();
       expect(segmentsOn.length, equals(1));
       expect(segmentsOn.first['layerEnd'], equals(1));
-      expect(segmentsOn.first['progression'], equals(ProgressionType.LY_RES_COMP_POS_PROG));
+      expect(segmentsOn.first['progression'],
+          equals(ProgressionType.LY_RES_COMP_POS_PROG));
 
       inputOff.close();
       inputOn.close();
@@ -807,7 +849,8 @@ void main() {
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
         exp: <List<int>>[
@@ -881,21 +924,26 @@ void main() {
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
       decSpec.gbs.setTileCompVal(0, 0, 1);
 
       final headerInfoWithin = HeaderInfo();
-      final headerDecoderWithin = _createHeaderDecoder(decSpec, headerInfoWithin);
+      final headerDecoderWithin =
+          _createHeaderDecoder(decSpec, headerInfoWithin);
       _registerSingleTilePart(headerDecoderWithin, 0);
 
-      final unrestrictedParams = _buildBaseParameters()
-        ..put('res', '2');
+      final unrestrictedParams = _buildBaseParameters()..put('res', '2');
       final inputWithin = ISRandomAccessIO(Uint8List(64));
       final agentWithin = FileBitstreamReaderAgent(
         headerDecoderWithin,
@@ -912,8 +960,7 @@ void main() {
       final headerDecoderClamp = _createHeaderDecoder(decSpec, headerInfoClamp);
       _registerSingleTilePart(headerDecoderClamp, 0);
 
-      final clampParams = _buildBaseParameters()
-        ..put('res', '5');
+      final clampParams = _buildBaseParameters()..put('res', '5');
       final inputClamp = ISRandomAccessIO(Uint8List(64));
       final agentClamp = FileBitstreamReaderAgent(
         headerDecoderClamp,
@@ -940,10 +987,15 @@ void main() {
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
@@ -986,10 +1038,15 @@ void main() {
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {
-        fail('DecoderSpecs.basic should provide default quantization parameters');
+        fail(
+            'DecoderSpecs.basic should provide default quantization parameters');
       }
       final quantParams = StdDequantizerParams(
-        exp: defaultQuant.exp.isNotEmpty ? defaultQuant.exp : <List<int>>[<int>[0]],
+        exp: defaultQuant.exp.isNotEmpty
+            ? defaultQuant.exp
+            : <List<int>>[
+                <int>[0]
+              ],
         nStep: defaultQuant.nStep,
       );
       decSpec.qsss.setTileCompVal(0, 0, quantParams);
@@ -1127,4 +1184,3 @@ ParameterList _buildBaseParameters({
   }
   return parameters;
 }
-

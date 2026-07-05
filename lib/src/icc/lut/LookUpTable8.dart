@@ -10,13 +10,11 @@ abstract class LookUpTable8 extends LookUpTable {
   /// Lookup values.
   late final Uint8List lut;
 
-  LookUpTable8(int dwNumInput, this.dwMaxOutput)
-      : super(null, dwNumInput) {
+  LookUpTable8(int dwNumInput, this.dwMaxOutput) : super(null, dwNumInput) {
     lut = Uint8List(dwNumInput);
   }
 
-  LookUpTable8.fromCurve(
-      ICCCurveType curve, int dwNumInput, this.dwMaxOutput)
+  LookUpTable8.fromCurve(ICCCurveType curve, int dwNumInput, this.dwMaxOutput)
       : super(curve, dwNumInput) {
     lut = Uint8List(dwNumInput);
   }

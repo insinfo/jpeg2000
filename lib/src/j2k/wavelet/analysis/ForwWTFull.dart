@@ -5,7 +5,7 @@ import '../../encoder/EncoderSpecs.dart';
 import '../../entropy/CBlkSizeSpec.dart';
 import '../../entropy/PrecinctSizeSpec.dart';
 import '../../image/BlkImgDataSrc.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import '../../image/DataBlk.dart';
 import '../../image/DataBlkFloat.dart';
 import '../../image/DataBlkInt.dart';
@@ -13,8 +13,8 @@ import '../../IntegerSpec.dart';
 import '../../ModuleSpec.dart';
 import '../../util/MathUtil.dart';
 import '../WaveletTransform.dart';
-import 'AnWtFilter.dart';
-import 'AnWtFilterSpec.dart';
+import 'AnWTFilter.dart';
+import 'AnWTFilterSpec.dart';
 import 'CBlkWTData.dart';
 import 'CBlkWTDataFloat.dart';
 import 'CBlkWTDataInt.dart';
@@ -106,7 +106,8 @@ class ForwWTFull extends ForwardWT {
 
     currentSubband = List<SubbandAn?>.filled(ncomp, null);
     decomposedComps = List<DataBlk?>.filled(ncomp, null);
-    subbTrees = List.generate(ntiles, (_) => List<SubbandAn?>.filled(ncomp, null));
+    subbTrees =
+        List.generate(ntiles, (_) => List<SubbandAn?>.filled(ncomp, null));
     lastn = List.filled(ncomp, 0);
     lastm = List.filled(ncomp, 0);
   }
@@ -315,17 +316,11 @@ class ForwWTFull extends ForwardWT {
         bufblk = src.getInternCompData(bufblk, c);
         // System.arraycopy(bufblk.getData(),bufblk.offset, dst_data,k*w,w);
         if (intData) {
-          (dst_data as Int32List).setRange(
-              k * w,
-              k * w + w,
-              (bufblk as DataBlkInt).getDataInt()!,
-              bufblk.offset);
+          (dst_data as Int32List).setRange(k * w, k * w + w,
+              (bufblk as DataBlkInt).getDataInt()!, bufblk.offset);
         } else {
-          (dst_data as Float32List).setRange(
-              k * w,
-              k * w + w,
-              (bufblk as DataBlkFloat).getDataFloat()!,
-              bufblk.offset);
+          (dst_data as Float32List).setRange(k * w, k * w + w,
+              (bufblk as DataBlkFloat).getDataFloat()!, bufblk.offset);
         }
       }
 
@@ -778,8 +773,8 @@ class ForwWTFull extends ForwardWT {
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
-          subband.hFilter!.analyzeHpf(tmpVector, 0, w, 1, data, offset, 1, data,
-              offset + w ~/ 2, 1);
+          subband.hFilter!.analyzeHpf(
+              tmpVector, 0, w, 1, data, offset, 1, data, offset + w ~/ 2, 1);
         }
       }
     } else {
@@ -830,8 +825,8 @@ class ForwWTFull extends ForwardWT {
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
-          subband.hFilter!.analyzeHpf(tmpVector, 0, w, 1, data, offset, 1, data,
-              offset + w ~/ 2, 1);
+          subband.hFilter!.analyzeHpf(
+              tmpVector, 0, w, 1, data, offset, 1, data, offset + w ~/ 2, 1);
         }
       }
     }
@@ -994,9 +989,11 @@ class ForwWTFull extends ForwardWT {
         // adding the divisor to the dividend and then substracting 1
         // to the result of the division
         tmp = sb.ulcx - acb0x + sb.nomCBlkW;
-        sb.numCb!.x = (tmp + sb.w - 1) ~/ sb.nomCBlkW - (tmp ~/ sb.nomCBlkW - 1);
+        sb.numCb!.x =
+            (tmp + sb.w - 1) ~/ sb.nomCBlkW - (tmp ~/ sb.nomCBlkW - 1);
         tmp = sb.ulcy - acb0y + sb.nomCBlkH;
-        sb.numCb!.y = (tmp + sb.h - 1) ~/ sb.nomCBlkH - (tmp ~/ sb.nomCBlkH - 1);
+        sb.numCb!.y =
+            (tmp + sb.h - 1) ~/ sb.nomCBlkH - (tmp ~/ sb.nomCBlkH - 1);
       } else {
         sb.numCb!.x = sb.numCb!.y = 0;
       }
@@ -1008,5 +1005,3 @@ class ForwWTFull extends ForwardWT {
     }
   }
 }
-
-

@@ -1,10 +1,14 @@
 import 'package:test/test.dart';
+import 'package:jpeg2000/src/j2k/util/Int32Utils.dart';
 
 int _asInt32(int value) => value.toSigned(32);
 
 int _mask32(int value) => value & 0xFFFFFFFF;
 
 int _logicalShift32(int value, int shift) => _mask32(_mask32(value) >>> shift);
+
+int _arithmeticShift32(int value, int shift) =>
+    Int32Utils.arithmeticShiftRight(value, shift);
 
 int _refineMagnitude(int current, int bitPlane, int symbol) {
   final setmask = (1 << bitPlane) | ((1 << bitPlane) >> 1);
@@ -37,8 +41,9 @@ void main() {
 
     test('shift aritmético conserva sinal como em Java >>', () {
       final signedValue = _asInt32(-0x12345678);
-      final dartShift = signedValue >> 1;
-      expect(dartShift, equals(_asInt32(0xF6E5D4C4)));
+      final shifted = _arithmeticShift32(signedValue, 1);
+      expect(shifted, equals(_asInt32(0xF6E5D4C4)));
+      expect(_arithmeticShift32(-3, 1), equals(-2));
     });
 
     test('shift lógico reproduz Java >>>', () {

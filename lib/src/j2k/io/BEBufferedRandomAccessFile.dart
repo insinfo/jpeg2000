@@ -111,4 +111,3 @@ class BEBufferedRandomAccessFile extends BufferedRandomAccessFile {
     return data.getFloat64(0, Endian.big);
   }
 }
-

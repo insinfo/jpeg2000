@@ -34,8 +34,8 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
     ik += iStep;
 
     for (var i = 2; i < outLen - 1; i += 2) {
-      outSig[ik] = lowSig[lk] -
-          ((highSig[hk - highStep] + highSig[hk] + 2) >> 2);
+      outSig[ik] =
+          lowSig[lk] - ((highSig[hk - highStep] + highSig[hk] + 2) >> 2);
       lk += lowStep;
       hk += highStep;
       ik += iStep;
@@ -49,8 +49,8 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
     ik = outOff + outStep;
 
     for (var i = 1; i < outLen - 1; i += 2) {
-      outSig[ik] = highSig[hk] +
-          ((outSig[ik - outStep] + outSig[ik + outStep]) >> 1);
+      outSig[ik] =
+          highSig[hk] + ((outSig[ik - outStep] + outSig[ik + outStep]) >> 1);
       hk += highStep;
       ik += iStep;
     }
@@ -81,8 +81,8 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
     var ik = outOff + outStep;
 
     for (var i = 1; i < outLen - 1; i += 2) {
-      outSig[ik] = lowSig[lk] -
-          ((highSig[hk] + highSig[hk + highStep] + 2) >> 2);
+      outSig[ik] =
+          lowSig[lk] - ((highSig[hk] + highSig[hk + highStep] + 2) >> 2);
       lk += lowStep;
       hk += highStep;
       ik += iStep;
@@ -105,8 +105,8 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
     ik += iStep;
 
     for (var i = 2; i < outLen - 1; i += 2) {
-      outSig[ik] = highSig[hk] +
-          ((outSig[ik - outStep] + outSig[ik + outStep]) >> 1);
+      outSig[ik] =
+          highSig[hk] + ((outSig[ik - outStep] + outSig[ik + outStep]) >> 1);
       hk += highStep;
       ik += iStep;
     }
@@ -157,4 +157,3 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
   @override
   String toString() => 'w5x3 (lifting)';
 }
-

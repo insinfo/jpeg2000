@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/CBlkWTDataSrcDec.dart';
@@ -248,5 +248,3 @@ class _StubCBlkWTDataSrcDec extends CBlkWTDataSrcDec {
     return result;
   }
 }
-
-

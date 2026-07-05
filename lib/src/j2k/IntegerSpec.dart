@@ -7,7 +7,7 @@ class IntegerSpec extends ModuleSpec<int> {
   static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
   static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
   static const int SPEC_TILE_COMP = ModuleSpec.SPEC_TILE_COMP;
-    static List<bool> parseIdx(String token, int max) =>
+  static List<bool> parseIdx(String token, int max) =>
       ModuleSpec.parseIdx(token, max);
 
   IntegerSpec(int numTiles, int numComps, int specType)
@@ -28,7 +28,8 @@ class IntegerSpec extends ModuleSpec<int> {
       }
       param = defaults.getParameter(optionName);
       if (param == null) {
-        throw ArgumentError('Non recognized value for option -$optionName: null');
+        throw ArgumentError(
+            'Non recognized value for option -$optionName: null');
       }
       try {
         setDefault(int.parse(param));
@@ -154,7 +155,8 @@ class IntegerSpec extends ModuleSpec<int> {
       }
       final param = defaults.getParameter(optionName);
       if (param == null) {
-        throw ArgumentError('Non recognized value for option -$optionName: null');
+        throw ArgumentError(
+            'Non recognized value for option -$optionName: null');
       }
       try {
         setDefault(int.parse(param));
@@ -272,4 +274,3 @@ class IntegerSpec extends ModuleSpec<int> {
     return min;
   }
 }
-

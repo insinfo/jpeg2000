@@ -3,7 +3,9 @@ import '../../codestream/writer/HeaderEncoder.dart';
 import '../../encoder/EncoderSpecs.dart';
 import '../../image/ImgDataAdapter.dart';
 import '../../util/ParameterList.dart';
+import '../ProgressionSpec.dart';
 import 'CodedCBlkDataSrcEnc.dart';
+import 'EBCOTRateAllocator.dart';
 import 'LayersInfo.dart';
 
 /// This is the abstract class from which post-compression rate allocators
@@ -108,8 +110,7 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
   /// [bw] The packet bit stream writer.
   ///
   /// [encSpec] The encoder specifications.
-  PostCompRateAllocator(
-      this.src, int nl, this.bsWriter, this.encSpec)
+  PostCompRateAllocator(this.src, int nl, this.bsWriter, this.encSpec)
       : numLayers = nl,
         super(src);
 
@@ -177,21 +178,22 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
       CodestreamWriter bw,
       EncoderSpecs encSpec) {
     // Check parameters
-    // pl.checkList(OPT_PREFIX, pl.toNameArray(pinfo));
+    pl.checkListSingle(
+        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     // Construct the layer specification from the 'Alayers' option
-    // LayersInfo lyrs = parseAlayers(pl.getParameter("Alayers"), rate);
+    final lyrs =
+        parseAlayers(pl.getParameter('Alayers') ?? '0.015 +20 2.0 +10', rate);
 
-    // int nTiles = encSpec.nTiles;
-    // int nComp = encSpec.nComp;
-    // int numLayers = lyrs.getTotNumLayers();
+    final nTiles = encSpec.nTiles;
+    final nComp = encSpec.nComp;
+    final numLayers = lyrs.getTotNumLayers();
 
     // Parse the progressive type
-    // encSpec.pocs = new ProgressionSpec(nTiles, nComp, numLayers, encSpec.dls,
-    //     ModuleSpec.SPEC_TYPE_TILE_COMP, pl);
+    encSpec.pocs = ProgressionSpec.fromParameters(
+        nTiles, nComp, numLayers, encSpec.dls, pl);
 
-    // return new EBCOTRateAllocator(src, lyrs, bw, encSpec, pl);
-    throw UnimplementedError("EBCOTRateAllocator not implemented yet");
+    return EBCOTRateAllocator(src, lyrs, bw, encSpec, pl);
   }
 
   /// Convenience method that parses the 'Alayers' option.
@@ -242,5 +244,3 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
     return lyrs;
   }
 }
-
-

@@ -148,4 +148,3 @@ abstract class CBlkWTData {
     return "ulx=$ulx, uly=$uly, idx=($m,$n), w=$w, h=$h, off=$offset, scanw=$scanw, wmseScaling=$wmseScaling, convertFactor=$convertFactor, stepSize=$stepSize, type=$typeString, magbits=$magbits, nROIcoeff=$nROIcoeff, nROIbp=$nROIbp";
   }
 }
-

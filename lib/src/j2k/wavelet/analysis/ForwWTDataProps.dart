@@ -38,4 +38,3 @@ abstract class ForwWTDataProps implements ImgData {
   /// values are 0 and 1, nothing else.
   int getCbULY();
 }
-

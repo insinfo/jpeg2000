@@ -1,4 +1,4 @@
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import 'SubbandSyn.dart';
 
 /// Contract for data sources that expose multi-resolution imagery to the inverse wavelet stage.
@@ -31,4 +31,3 @@ abstract class MultiResImgData {
   int getNumTilesTotal();
   SubbandSyn getSynSubbandTree(int tile, int component);
 }
-

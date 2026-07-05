@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'types/XyzNumber.dart';
+import 'types/XYZNumber.dart';
 import 'types/ICCProfileVersion.dart';
 import 'types/ICCDateTime.dart';
 import 'types/ICCProfileHeader.dart';
@@ -67,7 +67,8 @@ abstract class ICCProfile {
     FileFormatBoxes.colourSpecificationBox: "COLOUR_SPECIFICATION_BOX",
     FileFormatBoxes.componentMappingBox: "COMPONENT_MAPPING_BOX",
     FileFormatBoxes.contiguousCodestreamBox: "CONTIGUOUS_CODESTREAM_BOX",
-    FileFormatBoxes.defaultDisplayResolutionBox: "DEFAULT_DISPLAY_RESOLUTION_BOX",
+    FileFormatBoxes.defaultDisplayResolutionBox:
+        "DEFAULT_DISPLAY_RESOLUTION_BOX",
     FileFormatBoxes.fileTypeBox: "FILE_TYPE_BOX",
     FileFormatBoxes.imageHeaderBox: "IMAGE_HEADER_BOX",
     FileFormatBoxes.intellectualPropertyBox: "INTELLECTUAL_PROPERTY_BOX",
@@ -145,8 +146,8 @@ abstract class ICCProfile {
     int wYear = getShort(data, offset); // Number of the actual year (i.e. 1994)
     int wMonth = getShort(
         data, offset + ICCProfile.short_size); // Number of the month (1-12)
-    int wDay = getShort(
-        data, offset + 2 * ICCProfile.short_size); // Number of the day
+    int wDay =
+        getShort(data, offset + 2 * ICCProfile.short_size); // Number of the day
     int wHours = getShort(
         data, offset + 3 * ICCProfile.short_size); // Number of hours (0-23)
     int wMinutes = getShort(
@@ -166,8 +167,7 @@ abstract class ICCProfile {
    *   @param swap swap adjacent bytes?
    * @return String rep of data
    */
-  static String getString(
-      Uint8List bfr, int offset, int length, bool swap) {
+  static String getString(Uint8List bfr, int offset, int length, bool swap) {
     Uint8List result = Uint8List(length);
     int incr = swap ? -1 : 1;
     int start = swap ? offset + length - 1 : offset;
@@ -230,8 +230,8 @@ abstract class ICCProfile {
    * @return native type from representation.
    */
   static int getInt(Uint8List bfr, int off, [bool swap = false]) {
-    int tmp0 =
-        getShort(bfr, off, swap) & 0xffff; // Clear the sign extended bits in the int.
+    int tmp0 = getShort(bfr, off, swap) &
+        0xffff; // Clear the sign extended bits in the int.
     int tmp1 = getShort(bfr, off + 2, swap) & 0xffff;
 
     return (swap
@@ -246,8 +246,8 @@ abstract class ICCProfile {
    * @return native type from representation.
    */
   static int getLong(Uint8List bfr, int off) {
-    int tmp0 =
-        getInt(bfr, off) & 0xffffffff; // Clear the sign extended bits in the int.
+    int tmp0 = getInt(bfr, off) &
+        0xffffffff; // Clear the sign extended bits in the int.
     int tmp1 = getInt(bfr, off + 4) & 0xffffffff;
 
     return (tmp0 << BITS_PER_INT | tmp1);
@@ -259,17 +259,13 @@ abstract class ICCProfile {
   // codes required for Restricted ICC use are defined here
 
   /** signature    */
-  static final int kdwProfileSignature =
-      ICCProfile.getIntFromString("acsp");
+  static final int kdwProfileSignature = ICCProfile.getIntFromString("acsp");
   /** signature    */
-  static final int kdwProfileSigReverse =
-      ICCProfile.getIntFromString("psca");
+  static final int kdwProfileSigReverse = ICCProfile.getIntFromString("psca");
   /** profile type */
-  static final int kdwInputProfile =
-      ICCProfile.getIntFromString("scnr");
+  static final int kdwInputProfile = ICCProfile.getIntFromString("scnr");
   /** tag type     */
-  static final int kdwDisplayProfile =
-      ICCProfile.getIntFromString("mntr");
+  static final int kdwDisplayProfile = ICCProfile.getIntFromString("mntr");
   /** tag type     */
   static final int kdwRGBData = ICCProfile.getIntFromString("RGB ");
   /** tag type     */
@@ -284,14 +280,11 @@ abstract class ICCProfile {
   /** tag signature */
   static final int kdwGrayTRCTag = ICCProfile.getIntFromString("kTRC");
   /** tag signature */
-  static final int kdwRedColorantTag =
-      ICCProfile.getIntFromString("rXYZ");
+  static final int kdwRedColorantTag = ICCProfile.getIntFromString("rXYZ");
   /** tag signature */
-  static final int kdwGreenColorantTag =
-      ICCProfile.getIntFromString("gXYZ");
+  static final int kdwGreenColorantTag = ICCProfile.getIntFromString("gXYZ");
   /** tag signature */
-  static final int kdwBlueColorantTag =
-      ICCProfile.getIntFromString("bXYZ");
+  static final int kdwBlueColorantTag = ICCProfile.getIntFromString("bXYZ");
   /** tag signature */
   static final int kdwRedTRCTag = ICCProfile.getIntFromString("rTRC");
   /** tag signature */
@@ -301,11 +294,9 @@ abstract class ICCProfile {
   /** tag signature */
   static final int kdwCopyrightTag = ICCProfile.getIntFromString("cprt");
   /** tag signature */
-  static final int kdwMediaWhiteTag =
-      ICCProfile.getIntFromString("wtpt");
+  static final int kdwMediaWhiteTag = ICCProfile.getIntFromString("wtpt");
   /** tag signature */
-  static final int kdwProfileDescTag =
-      ICCProfile.getIntFromString("desc");
+  static final int kdwProfileDescTag = ICCProfile.getIntFromString("desc");
 
   /**
    * Create a two character hex representation of a byte
@@ -537,14 +528,17 @@ abstract class ICCProfile {
       ICCXYZType? rColorantTag = tags.get(kdwRedColorantTag) as ICCXYZType?;
       ICCXYZType? gColorantTag = tags.get(kdwGreenColorantTag) as ICCXYZType?;
       ICCXYZType? bColorantTag = tags.get(kdwBlueColorantTag) as ICCXYZType?;
-      
-      if (gTRCTag != null && bTRCTag != null && rColorantTag != null && gColorantTag != null && bColorantTag != null) {
-          return RestrictedICCProfile.createInstance3Comp(
-              rTRCTag, gTRCTag, bTRCTag, rColorantTag, gColorantTag, bColorantTag);
+
+      if (gTRCTag != null &&
+          bTRCTag != null &&
+          rColorantTag != null &&
+          gColorantTag != null &&
+          bColorantTag != null) {
+        return RestrictedICCProfile.createInstance3Comp(rTRCTag, gTRCTag,
+            bTRCTag, rColorantTag, gColorantTag, bColorantTag);
       }
     }
 
     throw ICCProfileInvalidException("curve data not found in profile");
   }
 }
-

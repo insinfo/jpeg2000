@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
 import 'package:jpeg2000/src/j2k/quantization/dequantizer/CBlkQuantDataSrcDec.dart';
@@ -19,8 +19,12 @@ void main() {
         0,
         0,
         StdDequantizerParams(
-          exp: <List<int>>[<int>[7]],
-          nStep: <List<double>>[<double>[1.0]],
+          exp: <List<int>>[
+            <int>[7]
+          ],
+          nStep: <List<double>>[
+            <double>[1.0]
+          ],
         ),
       );
       specs.gbs.setTileCompVal(0, 0, 1);
@@ -62,8 +66,7 @@ void main() {
       );
       specs.gbs.setTileCompVal(0, 0, 1);
 
-      final dequantizer = StdDequantizer(src, <int>[8], specs)
-        ..setTile(0, 0);
+      final dequantizer = StdDequantizer(src, <int>[8], specs)..setTile(0, 0);
 
       final subband = _makeSubband(resLvl: 1, sbandIdx: 1);
       expect(subband.magBits, equals(0));
@@ -91,8 +94,7 @@ void main() {
       );
       specs.gbs.setTileCompVal(0, 0, 2);
 
-      final dequantizer = StdDequantizer(src, <int>[7], specs)
-        ..setTile(0, 0);
+      final dequantizer = StdDequantizer(src, <int>[7], specs)..setTile(0, 0);
 
       final subband = _makeSubband(resLvl: 2, sbandIdx: 3, anGainExp: 1);
       expect(subband.magBits, equals(0));
@@ -293,5 +295,3 @@ class _StubQuantDataSrcDec extends CBlkQuantDataSrcDec {
   @override
   SubbandSyn getSynSubbandTree(int tile, int component) => root;
 }
-
-

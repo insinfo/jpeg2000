@@ -21,9 +21,9 @@ class ICCTextDescriptionType extends ICCTag {
       : type = ICCProfile.getInt(data, offset),
         reserved = ICCProfile.getInt(data, offset + ICCProfile.int_size),
         size = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
-        ascii = Uint8List(ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size) - 1),
+        ascii = Uint8List(
+            ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size) - 1),
         super(signature, data, offset, length) {
-    
     int currentOffset = offset + 3 * ICCProfile.int_size;
     // System.arraycopy (data,offset,ascii,0,size-1);
     // In Dart:
@@ -38,4 +38,3 @@ class ICCTextDescriptionType extends ICCTag {
     return "[${super.toString()} \"${String.fromCharCodes(ascii)}\"]";
   }
 }
-

@@ -1,4 +1,4 @@
-import 'Coord.dart';
+import 'coord.dart';
 import 'ImgData.dart';
 
 /// Default [ImgData] implementation that forwards calls to an underlying source.
@@ -95,4 +95,3 @@ class ImgDataAdapter implements ImgData {
   @override
   int getNumTiles() => source.getNumTiles();
 }
-

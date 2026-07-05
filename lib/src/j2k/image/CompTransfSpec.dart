@@ -24,4 +24,3 @@ class CompTransfSpec extends ModuleSpec<int> {
     return false;
   }
 }
-

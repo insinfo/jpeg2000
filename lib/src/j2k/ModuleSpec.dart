@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'image/Coord.dart';
+import 'image/coord.dart';
 
 /// Generic container for tile/component module specifications.
 class ModuleSpec<T> {
@@ -39,9 +39,8 @@ class ModuleSpec<T> {
       ..def = def
       ..compDef = compDef == null ? null : List<T?>.from(compDef!)
       ..tileDef = tileDef == null ? null : List<T?>.from(tileDef!)
-      ..tileCompVal = tileCompVal == null
-          ? null
-          : HashMap<String, T>.from(tileCompVal!);
+      ..tileCompVal =
+          tileCompVal == null ? null : HashMap<String, T>.from(tileCompVal!);
     for (var t = 0; t < nTiles; t++) {
       copy.specValType[t] = List<int>.from(specValType[t]);
     }
@@ -59,7 +58,8 @@ class ModuleSpec<T> {
       for (var bx = 0; bx < rotatedCoord.x; bx++) {
         final ay = bx;
         final ax = rotatedCoord.y - by - 1;
-        rotatedType[ay * newTiles.x + ax] = specValType[by * rotatedCoord.x + bx];
+        rotatedType[ay * newTiles.x + ax] =
+            specValType[by * rotatedCoord.x + bx];
       }
     }
     specValType = rotatedType;
@@ -70,7 +70,8 @@ class ModuleSpec<T> {
         for (var bx = 0; bx < rotatedCoord.x; bx++) {
           final ay = bx;
           final ax = rotatedCoord.y - by - 1;
-          rotatedTileDef[ay * newTiles.x + ax] = tileDef![by * rotatedCoord.x + bx];
+          rotatedTileDef[ay * newTiles.x + ax] =
+              tileDef![by * rotatedCoord.x + bx];
         }
       }
       tileDef = rotatedTileDef;
@@ -192,7 +193,8 @@ class ModuleSpec<T> {
 
   int getSpecValType(int tile, int component) => specValType[tile][component];
 
-  bool isCompSpecified(int component) => compDef != null && compDef![component] != null;
+  bool isCompSpecified(int component) =>
+      compDef != null && compDef![component] != null;
 
   bool isTileSpecified(int tile) => tileDef != null && tileDef![tile] != null;
 
@@ -213,13 +215,15 @@ class ModuleSpec<T> {
       final codeUnit = token.codeUnitAt(i);
       final char = String.fromCharCode(codeUnit);
       if (codeUnit >= 0x30 && codeUnit <= 0x39) {
-        current = current == -1 ? codeUnit - 0x30 : current * 10 + (codeUnit - 0x30);
+        current =
+            current == -1 ? codeUnit - 0x30 : current * 10 + (codeUnit - 0x30);
       } else {
         if (current == -1 || (char != ',' && char != '-')) {
           throw ArgumentError('Bad construction for parameter: $token');
         }
         if (current < 0 || current >= maxIdx) {
-          throw ArgumentError('Index out of range in parameter $token: $current');
+          throw ArgumentError(
+              'Index out of range in parameter $token: $current');
         }
         if (char == ',') {
           if (dash) {

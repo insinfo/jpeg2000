@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,7 +8,6 @@ import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/fileformat/FileFormatBoxes.dart';
 import 'package:jpeg2000/src/j2k/fileformat/FileFormatReader.dart';
 import 'package:jpeg2000/src/j2k/fileformat/writer/FileFormatWriter.dart';
-
 
 void main() {
   group('FileFormatReader', () {
@@ -75,7 +75,8 @@ void main() {
         reader.readFileFormat();
 
         expect(reader.JP2FFUsed, isTrue);
-        expect(reader.getFirstCodeStreamLength(), equals(codestream.length + 8));
+        expect(
+            reader.getFirstCodeStreamLength(), equals(codestream.length + 8));
 
         final restored = Uint8List(codestream.length);
         io.seek(reader.getFirstCodeStreamPos());
@@ -126,5 +127,5 @@ Uint8List _buildMinimalJp2() {
   return builder.takeBytes();
 }
 
-Uint8List _buildRawCodestream() => Uint8List.fromList(<int>[0xff, 0x4f, 0xff, 0xd9]);
-
+Uint8List _buildRawCodestream() =>
+    Uint8List.fromList(<int>[0xff, 0x4f, 0xff, 0xd9]);

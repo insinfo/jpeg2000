@@ -1,5 +1,5 @@
 import '../../image/DataBlk.dart';
-import 'AnWtFilter.dart';
+import 'AnWTFilter.dart';
 
 /// Integer-specialized analysis wavelet filter contract.
 abstract class AnWTFilterInt extends AnWTFilter {
@@ -86,4 +86,3 @@ abstract class AnWTFilterInt extends AnWTFilter {
   @override
   int getDataType() => DataBlk.typeInt;
 }
-

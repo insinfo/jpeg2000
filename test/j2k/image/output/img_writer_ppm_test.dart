@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,10 +6,10 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/image/output/ImgWriterPpm.dart';
+import 'package:jpeg2000/src/j2k/image/output/ImgWriterPPM.dart';
 
 void main() {
   group('ImgWriterPpm', () {
@@ -59,13 +60,15 @@ class _FakeRgbSource implements BlkImgDataSrc {
     required this.width,
     required this.height,
     required List<List<int>> samples,
-  }) : _samples = samples.map((component) => List<int>.from(component)).toList() {
+  }) : _samples =
+            samples.map((component) => List<int>.from(component)).toList() {
     if (_samples.length != 3) {
       throw ArgumentError('Fake RGB source expects exactly 3 components.');
     }
     for (final component in _samples) {
       if (component.length != width * height) {
-        throw ArgumentError('Component sample count does not match image size.');
+        throw ArgumentError(
+            'Component sample count does not match image size.');
       }
     }
   }
@@ -165,7 +168,8 @@ class _FakeRgbSource implements BlkImgDataSrc {
 
   @override
   void nextTile() {
-    throw UnsupportedError('Tile iteration is not supported by the fake source.');
+    throw UnsupportedError(
+        'Tile iteration is not supported by the fake source.');
   }
 
   @override
@@ -210,4 +214,3 @@ class _FakeRgbSource implements BlkImgDataSrc {
   @override
   int getNumTiles() => 1;
 }
-

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
 import '../ColorSpaceException.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 import 'JP2Box.dart';
 
 class PaletteBox extends JP2Box {
@@ -125,4 +125,3 @@ class PaletteBox extends JP2Box {
     return (bd / 8).floor() + (bd % 8 == 0 ? 0 : 1);
   }
 }
-

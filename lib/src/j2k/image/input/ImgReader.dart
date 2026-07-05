@@ -1,6 +1,6 @@
 import '../../NoNextElementException.dart';
 import '../BlkImgDataSrc.dart';
-import '../Coord.dart';
+import '../coord.dart';
 
 /// This is the generic interface to be implemented by all image file (or other
 /// resource) readers for different image file formats.
@@ -327,4 +327,3 @@ abstract class ImgReader implements BlkImgDataSrc {
   /// @return true if the data was originally signed, false if not.
   bool isOrigSigned(int c);
 }
-

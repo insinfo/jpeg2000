@@ -1,9 +1,9 @@
 import '../../ModuleSpec.dart';
 import '../../quantization/QuantTypeSpec.dart';
 import '../../util/ParameterList.dart';
-import 'AnWtFilter.dart';
-import 'AnWtFilterIntLift5x3.dart';
-import 'AnWtFilterFloatLift9x7.dart';
+import 'AnWTFilter.dart';
+import 'AnWTFilterIntLift5x3.dart';
+import 'AnWTFilterFloatLift9x7.dart';
 
 /// This class extends ModuleSpec class for analysis filters specification
 /// holding purpose.
@@ -29,8 +29,7 @@ class AnWTFilterSpec extends ModuleSpec {
   /// [qts] Quantization specifications
   ///
   /// [pl] The ParameterList
-  AnWTFilterSpec(
-      int nt, int nc, int type, QuantTypeSpec qts, ParameterList pl)
+  AnWTFilterSpec(int nt, int nc, int type, QuantTypeSpec qts, ParameterList pl)
       : super(nt, nc, type) {
     // Check parameters
     pl.checkListSingle(AnWTFilter.optionPrefix.codeUnitAt(0),
@@ -40,7 +39,6 @@ class AnWTFilterSpec extends ModuleSpec {
 
     // No parameter specified
     if (param == null) {
-
       // If lossless compression, uses the reversible filters in each
       // tile-components
       if (pl.getBooleanParameter("lossless")) {
@@ -107,8 +105,9 @@ class AnWTFilterSpec extends ModuleSpec {
 
     // Parse argument
     // StringTokenizer stk = new StringTokenizer(param);
-    List<String> tokens = param.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
-    
+    List<String> tokens =
+        param.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+
     String word; // current word
     int curSpecType = ModuleSpec.SPEC_DEF; // Specification type of the
     // current parameter
@@ -143,7 +142,8 @@ class AnWTFilterSpec extends ModuleSpec {
         case 'W': // WT filters specification
           if (pl.getBooleanParameter("lossless") &&
               word.toLowerCase() == "w9x7") {
-            throw ArgumentError("Cannot use non reversible wavelet transform with '-lossless' option");
+            throw ArgumentError(
+                "Cannot use non reversible wavelet transform with '-lossless' option");
           }
 
           filter = parseFilters(word);
@@ -266,7 +266,8 @@ class AnWTFilterSpec extends ModuleSpec {
   /// Returns Analysis wavelet filter (first dimension: by direction,
   /// second dimension: by decomposition levels)
   List<List<AnWTFilter>> parseFilters(String word) {
-    List<List<AnWTFilter>> filt = List.generate(2, (_) => List.filled(1, AnWTFilterIntLift5x3())); // Dummy init
+    List<List<AnWTFilter>> filt = List.generate(
+        2, (_) => List.filled(1, AnWTFilterIntLift5x3())); // Dummy init
     if (word.toLowerCase() == "w5x3") {
       filt[0][0] = AnWTFilterIntLift5x3();
       filt[1][0] = AnWTFilterIntLift5x3();
@@ -389,4 +390,3 @@ class AnWTFilterSpec extends ModuleSpec {
     return true;
   }
 }
-

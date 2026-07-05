@@ -70,4 +70,3 @@ class CompositeImgWriter extends ImgWriter {
   @override
   int get height => _primary.height;
 }
-

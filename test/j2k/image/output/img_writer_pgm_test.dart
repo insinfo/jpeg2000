@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,10 +6,10 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 
 import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
 import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/image/output/ImgWriterPgm.dart';
+import 'package:jpeg2000/src/j2k/image/output/ImgWriterPGM.dart';
 
 typedef _ComponentSamples = List<int>;
 
@@ -220,4 +221,3 @@ class _SingleTileSource implements BlkImgDataSrc {
   @override
   int getNumTiles() => 1;
 }
-

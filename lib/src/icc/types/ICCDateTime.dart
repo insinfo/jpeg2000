@@ -26,4 +26,3 @@ class ICCDateTime {
     return "$wYear/$wMonth/$wDay $wHours:$wMinutes:$wSeconds";
   }
 }
-

@@ -64,7 +64,8 @@ class FileFormatReader implements FileFormatBoxes {
       // signature box.
       _input.seek(12); // Move to the start of the second box after signature.
       if (!readFileTypeBox()) {
-        throw StateError('Invalid JP2 file: missing or malformed File Type box');
+        throw StateError(
+            'Invalid JP2 file: missing or malformed File Type box');
       }
 
       // Iterate over the remaining boxes until the stream ends.
@@ -117,8 +118,8 @@ class FileFormatReader implements FileFormatBoxes {
             readUUIDInfoBox(lp);
             break;
           default:
-            FacilityManager.getMsgLogger()
-                .printmsg(MsgLogger.warning, 'Unknown JP2 box type: 0x${boxType.toRadixString(16)}');
+            FacilityManager.getMsgLogger().printmsg(MsgLogger.warning,
+                'Unknown JP2 box type: 0x${boxType.toRadixString(16)}');
         }
 
         if (!lastBoxFound) {
@@ -225,4 +226,3 @@ class FileFormatReader implements FileFormatBoxes {
     return _codestreamLengths.first;
   }
 }
-

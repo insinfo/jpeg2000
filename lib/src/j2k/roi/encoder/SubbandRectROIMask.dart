@@ -1,6 +1,6 @@
 import '../../wavelet/subband.dart';
 import '../../wavelet/WaveletFilter.dart';
-import 'SubbandRoiMask.dart';
+import 'SubbandROIMask.dart';
 
 /// Concrete mask node for scenarios where only rectangular ROIs exist.
 class SubbandRectROIMask extends SubbandROIMask {
@@ -131,4 +131,3 @@ class SubbandRectROIMask extends SubbandROIMask {
   /// Bottom edges (inclusive) for all active ROIs intersecting the subband.
   final List<int> lrys;
 }
-

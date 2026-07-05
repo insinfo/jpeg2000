@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
@@ -21,7 +22,7 @@ void main() {
 
     for (final image in images) {
       test('$image decodes successfully', () {
-        final probe = _decodeAndProbe('test_images/$image');
+        final probe = _decodeAndProbe('test/fixtures/test_images/$image');
         expect(probe.pixelCount, greaterThan(0));
       });
     }
@@ -49,10 +50,12 @@ PpmProbe _decodeAndProbe(String inputPath) {
     final decoder = Decoder(params);
     decoder.run();
 
-    expect(decoder.exitCode, 0, reason: 'Decoder exited with non-zero code for $inputPath');
+    expect(decoder.exitCode, 0,
+        reason: 'Decoder exited with non-zero code for $inputPath');
 
     final outputFile = File(outputPath);
-    expect(outputFile.existsSync(), isTrue, reason: 'Output file not created for $inputPath');
+    expect(outputFile.existsSync(), isTrue,
+        reason: 'Output file not created for $inputPath');
 
     final ppmBytes = outputFile.readAsBytesSync();
     return PpmProbe.fromBytes(ppmBytes);
@@ -60,4 +63,3 @@ PpmProbe _decodeAndProbe(String inputPath) {
     outputDir.deleteSync(recursive: true);
   }
 }
-

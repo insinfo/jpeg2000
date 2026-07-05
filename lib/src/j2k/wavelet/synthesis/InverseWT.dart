@@ -8,15 +8,11 @@ import 'InvWTFull.dart';
 abstract class InverseWT extends InvWTAdapter implements BlkImgDataSrc {
   InverseWT(CBlkWTDataSrcDec src, DecoderSpecs decSpec) : super(src, decSpec);
 
-  /// Factory matching JJ2000 behaviour. For now we always return the
-  /// full-frame implementation.
+  /// Factory matching JJ2000's default full-frame inverse transform path.
   static InverseWT createInstance(
     CBlkWTDataSrcDec src,
     DecoderSpecs decSpec,
   ) {
-    // TODO(jj2000): Honour additional implementation choices once available.
     return InvWTFull(src, decSpec);
   }
 }
-
-

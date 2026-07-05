@@ -1,3 +1,4 @@
+@TestOn('vm')
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
@@ -16,7 +17,7 @@ void main() {
 
   group('Conformance Tests', () {
     test('file1.jp2 decodes successfully', () {
-      final probe = _decodeAndProbe('test_images/file1.jp2');
+      final probe = _decodeAndProbe('test/fixtures/test_images/file1.jp2');
       expect(probe.pixelCount, greaterThan(0));
       // file1.jp2 is often a small test image.
     });
@@ -24,7 +25,7 @@ void main() {
     test('grad_final.jp2 decodes successfully', () {
       // grad_final.jp2 is a 16-bit image, which the PPM writer doesn't support yet.
       // We expect the decoder to fail (exitCode != 0) or we skip the probe.
-      final inputPath = 'test_images/grad_final.jp2';
+      final inputPath = 'test/fixtures/test_images/grad_final.jp2';
       final inputFile = File(inputPath);
       if (!inputFile.existsSync()) {
         fail('Input codestream missing: $inputPath');
@@ -47,14 +48,15 @@ void main() {
           decoder.run();
         } on StateError catch (e) {
           if (e.message.contains('PPM writer only supports up to 8 bits')) {
-             // print('Skipping grad_final.jp2: PPM writer limitation (16-bit image)');
-             return;
+            // print('Skipping grad_final.jp2: PPM writer limitation (16-bit image)');
+            return;
           }
           rethrow;
         }
 
         final outputFile = File(outputPath);
-        expect(outputFile.existsSync(), isTrue, reason: 'Output file not created for $inputPath');
+        expect(outputFile.existsSync(), isTrue,
+            reason: 'Output file not created for $inputPath');
 
         final ppmBytes = outputFile.readAsBytesSync();
         final probe = PpmProbe.fromBytes(ppmBytes);
@@ -66,13 +68,13 @@ void main() {
     });
 
     test('icon32.jp2 decodes successfully', () {
-      final probe = _decodeAndProbe('test_images/icon32.jp2');
+      final probe = _decodeAndProbe('test/fixtures/test_images/icon32.jp2');
       expect(probe.width, 32);
       expect(probe.height, 32);
     });
 
     test('relax.jp2 decodes successfully', () {
-      final probe = _decodeAndProbe('test_images/relax.jp2');
+      final probe = _decodeAndProbe('test/fixtures/test_images/relax.jp2');
       expect(probe.pixelCount, greaterThan(0));
       expect(probe.hasChrominance, isTrue, reason: 'Photo should have color');
     });
@@ -100,10 +102,12 @@ PpmProbe _decodeAndProbe(String inputPath) {
     final decoder = Decoder(params);
     decoder.run();
 
-    expect(decoder.exitCode, 0, reason: 'Decoder exited with non-zero code for $inputPath');
+    expect(decoder.exitCode, 0,
+        reason: 'Decoder exited with non-zero code for $inputPath');
 
     final outputFile = File(outputPath);
-    expect(outputFile.existsSync(), isTrue, reason: 'Output file not created for $inputPath');
+    expect(outputFile.existsSync(), isTrue,
+        reason: 'Output file not created for $inputPath');
 
     final ppmBytes = outputFile.readAsBytesSync();
     return PpmProbe.fromBytes(ppmBytes);
@@ -111,4 +115,3 @@ PpmProbe _decodeAndProbe(String inputPath) {
     outputDir.deleteSync(recursive: true);
   }
 }
-

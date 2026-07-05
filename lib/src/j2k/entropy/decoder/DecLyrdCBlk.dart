@@ -34,5 +34,3 @@ class DecLyrdCBlk extends CodedCBlk {
     return buffer.toString();
   }
 }
-
-

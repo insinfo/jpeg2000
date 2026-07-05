@@ -1,7 +1,7 @@
 import 'dart:collection';
-import 'dart:io';
 
 import 'StringFormatException.dart';
+import '../platform/platform.dart' as platform;
 
 /// Container for JJ2000-style parameters and options.
 class ParameterList {
@@ -37,40 +37,19 @@ class ParameterList {
   }
 
   /// Loads parameters from [file].
-  Future<void> loadFromFile(File file) async {
-    final contents = await file.readAsString();
+  Future<void> loadFromFile(Object file) async {
+    final contents = await platform.readTextSource(file);
     loadFromString(contents);
   }
 
   /// Loads parameters from the given [contents].
   void loadFromString(String contents) {
-    // TODO(jj2000): Support the full Java Properties escaping semantics.
-    final lines = contents.split(RegExp(r'\r?\n'));
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      if (line.isEmpty || line.startsWith('#')) {
+    for (final line in _logicalPropertyLines(contents)) {
+      final parsed = _parsePropertyLine(line);
+      if (parsed == null) {
         continue;
       }
-
-      while (line.endsWith('\\')) {
-        line = line.substring(0, line.length - 1);
-        if (i + 1 >= lines.length) {
-          break;
-        }
-        line += lines[++i].trim();
-      }
-
-      final combined = line;
-      final separator = combined.indexOf('=');
-      if (separator == -1) {
-        throw StringFormatException('Missing "=" in parameter: $combined');
-      }
-      final key = combined.substring(0, separator).trim();
-      final value = combined.substring(separator + 1).trim();
-      if (key.isEmpty) {
-        throw StringFormatException('Empty parameter name in: $combined');
-      }
-      put(key, value);
+      put(parsed.key, parsed.value);
     }
   }
 
@@ -248,5 +227,149 @@ class ParameterList {
     }
     return _isDigit(token.codeUnitAt(0));
   }
+
+  static Iterable<String> _logicalPropertyLines(String contents) sync* {
+    final physicalLines = contents.split(RegExp(r'\r\n?|\n'));
+    String? current;
+    var continuing = false;
+
+    for (var rawLine in physicalLines) {
+      var line =
+          continuing ? rawLine.replaceFirst(RegExp(r'^[ \t\f]*'), '') : rawLine;
+      current = (current ?? '') + line;
+
+      if (_continuesPropertyLine(current)) {
+        current = current.substring(0, current.length - 1);
+        continuing = true;
+        continue;
+      }
+
+      yield current;
+      current = null;
+      continuing = false;
+    }
+
+    if (current != null) {
+      yield current;
+    }
+  }
+
+  static bool _continuesPropertyLine(String line) {
+    var count = 0;
+    for (var i = line.length - 1; i >= 0 && line.codeUnitAt(i) == 0x5c; i--) {
+      count++;
+    }
+    return count.isOdd;
+  }
+
+  static _PropertyEntry? _parsePropertyLine(String line) {
+    var index = 0;
+    while (
+        index < line.length && _isPropertyWhitespace(line.codeUnitAt(index))) {
+      index++;
+    }
+    if (index == line.length) {
+      return null;
+    }
+    final first = line.codeUnitAt(index);
+    if (first == 0x23 || first == 0x21) {
+      return null;
+    }
+
+    final keyStart = index;
+    var escaped = false;
+    while (index < line.length) {
+      final code = line.codeUnitAt(index);
+      if (!escaped &&
+          (code == 0x3d || code == 0x3a || _isPropertyWhitespace(code))) {
+        break;
+      }
+      if (code == 0x5c && !escaped) {
+        escaped = true;
+      } else {
+        escaped = false;
+      }
+      index++;
+    }
+
+    final keyEnd = index;
+    while (
+        index < line.length && _isPropertyWhitespace(line.codeUnitAt(index))) {
+      index++;
+    }
+    if (index < line.length) {
+      final code = line.codeUnitAt(index);
+      if (code == 0x3d || code == 0x3a) {
+        index++;
+        while (index < line.length &&
+            _isPropertyWhitespace(line.codeUnitAt(index))) {
+          index++;
+        }
+      }
+    }
+
+    final key = _unescapeProperty(line.substring(keyStart, keyEnd));
+    if (key.isEmpty) {
+      throw StringFormatException('Empty parameter name in: $line');
+    }
+    final value = _unescapeProperty(line.substring(index));
+    return _PropertyEntry(key, value);
+  }
+
+  static bool _isPropertyWhitespace(int code) {
+    return code == 0x20 || code == 0x09 || code == 0x0c;
+  }
+
+  static String _unescapeProperty(String raw) {
+    final out = StringBuffer();
+    for (var i = 0; i < raw.length; i++) {
+      final code = raw.codeUnitAt(i);
+      if (code != 0x5c) {
+        out.writeCharCode(code);
+        continue;
+      }
+      if (i + 1 >= raw.length) {
+        out.writeCharCode(code);
+        continue;
+      }
+      final next = raw[++i];
+      switch (next) {
+        case 't':
+          out.write('\t');
+          break;
+        case 'r':
+          out.write('\r');
+          break;
+        case 'n':
+          out.write('\n');
+          break;
+        case 'f':
+          out.write('\f');
+          break;
+        case 'u':
+          if (i + 4 >= raw.length) {
+            throw StringFormatException('Malformed Unicode escape in: $raw');
+          }
+          final hex = raw.substring(i + 1, i + 5);
+          final value = int.tryParse(hex, radix: 16);
+          if (value == null) {
+            throw StringFormatException('Malformed Unicode escape in: $raw');
+          }
+          out.writeCharCode(value);
+          i += 4;
+          break;
+        default:
+          out.write(next);
+          break;
+      }
+    }
+    return out.toString();
+  }
 }
 
+class _PropertyEntry {
+  const _PropertyEntry(this.key, this.value);
+
+  final String key;
+  final String value;
+}

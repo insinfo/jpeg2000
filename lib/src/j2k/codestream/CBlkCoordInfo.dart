@@ -1,4 +1,4 @@
-import '../image/Coord.dart';
+import '../image/coord.dart';
 import 'CoordInfo.dart';
 
 /// Coordinates of a code-block within a subband.
@@ -12,4 +12,3 @@ class CBlkCoordInfo extends CoordInfo {
   @override
   String toString() => '${super.toString()},idx=$idx';
 }
-

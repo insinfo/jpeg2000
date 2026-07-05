@@ -19,7 +19,7 @@ import 'ByteToBitInput.dart';
 import 'CodedCBlkDataSrcDec.dart';
 import 'DecLyrdCBlk.dart';
 import 'EntropyDecoder.dart';
-import 'MqDecoder.dart';
+import 'MQDecoder.dart';
 
 /// JPEG 2000 entropy decoder mirroring the JJ2000 reference implementation.
 class StdEntropyDecoder extends EntropyDecoder {
@@ -329,7 +329,8 @@ class StdEntropyDecoder extends EntropyDecoder {
             subband.sbandIdx == 0 &&
             _shouldTraceMq(component));
     if (shouldTraceMq) {
-      final traceLabel = 'tile=$tileIndex comp=$component res=${subband.resLvl} '
+      final traceLabel =
+          'tile=$tileIndex comp=$component res=${subband.resLvl} '
           'band=${subband.sbandIdx} m=$verticalCodeBlockIndex '
           'n=$horizontalCodeBlockIndex bp=${30 - currentBlock.skipMSBP}';
       _mq!.startTrace(traceLabel, _debugMqTraceSymbolLimit);
@@ -711,9 +712,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     for (var i = 0; i < limit; i++) {
       final byte = payload[i];
       hex.add(byte.toRadixString(16).padLeft(2, '0'));
-      ascii.add(byte >= 32 && byte <= 126
-          ? String.fromCharCode(byte)
-          : '.');
+      ascii.add(byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.');
     }
     final trailer = payload.length > limit ? '...' : '';
     _log('Payload preview ctx=$_currentBlockLabel bytes=${payload.length} '
@@ -731,8 +730,9 @@ class StdEntropyDecoder extends EntropyDecoder {
           'len=$initialSegmentLength total=${block.dl}');
       return;
     }
-    final previewCount =
-        segments.length < _debugPreviewLimit ? segments.length : _debugPreviewLimit;
+    final previewCount = segments.length < _debugPreviewLimit
+        ? segments.length
+        : _debugPreviewLimit;
     final preview = segments.sublist(0, previewCount).join(', ');
     final suffix = segments.length > previewCount ? ', ...' : '';
     _log('Segment diag ctx=$_currentBlockLabel segments=${segments.length} '
@@ -766,7 +766,18 @@ class StdEntropyDecoder extends EntropyDecoder {
         'Pass $pass bitPlane=$bitPlane remaining=$remainingPasses segmentIndex=$segmentIndex segmentLength=$segLen');
   }
 
+  /// Debug hook invoked after every coding pass with the pass label, the
+  /// current bit-plane, the (partially) decoded block and the significance
+  /// state array.
+  static void Function(
+          String pass, int bitPlane, DataBlkInt block, List<int> state)?
+      passDumpHook;
+
   void _logPassResult(String pass, int bitPlane, DataBlkInt block) {
+    final hook = passDumpHook;
+    if (hook != null) {
+      hook(pass, bitPlane, block, state);
+    }
     if (!_isVerboseInstrumentationEnabled()) {
       return;
     }
@@ -951,16 +962,23 @@ class StdEntropyDecoder extends EntropyDecoder {
               if (tracing) {
                 traceSample('R1', k, sym, data[k]);
               }
-              state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
-              state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
+              if (!causal) {
+                // If in causal mode do not change contexts of previous stripe.
+                state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
+                state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
+              }
               if (sym != 0) {
                 csj |= _stateSigR1 |
                     _stateVisitedR1 |
                     _stateNzCtxtR2 |
                     _stateVuR2 |
                     _stateVuSignR2;
-                state[j - sscanw] |=
+                if (!causal) {
+                  // If in causal mode do not change contexts of previous
+                  // stripe.
+                  state[j - sscanw] |=
                       _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
+                }
                 state[j + 1] |= _stateNzCtxtR1 |
                     _stateNzCtxtR2 |
                     _stateHlR1 |
@@ -974,7 +992,11 @@ class StdEntropyDecoder extends EntropyDecoder {
               } else {
                 csj |=
                     _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
-                state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
+                if (!causal) {
+                  // If in causal mode do not change contexts of previous
+                  // stripe.
+                  state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
+                }
                 state[j + 1] |=
                     _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
                 state[j - 1] |=
@@ -1038,118 +1060,117 @@ class StdEntropyDecoder extends EntropyDecoder {
               csj |= _stateVisitedR2;
             }
           }
-          if (stripeHeight < 3) {
+          state[j] = csj;
+        }
+        // Do half bottom of column
+        if (stripeHeight < 3) {
+          continue;
+        }
+        j += sscanw;
+        csj = state[j];
+        if ((((~csj) & (csj << 2)) & _sigMaskR1R2) != 0) {
+          var k = sk + (dscanw << 1);
+          if ((csj & (_stateSigR1 | _stateNzCtxtR1)) == _stateNzCtxtR1) {
+            final zcCtxIndex = csj & _zcMask;
+            final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
+            trace('sigProgPass ZC R3 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (zcSym != 0) {
+              final signLut = _scLut[(csj >>> _scShiftR1) & _scMask];
+              final scCtx = signLut & ((1 << _scShiftR1) - 1);
+              final predictedSign = (signLut >>> _scSpredShift) & 1;
+              final rawSym = mq.decodeSymbol(scCtx);
+              final sym = rawSym ^ predictedSign;
+              trace(
+                  'sigProgPass SC R3 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              data[k] = _encodeSignSample(sym, setmask);
+              if (tracing) {
+                traceSample('R3', k, sym, data[k]);
+              }
+              state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
+              state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
+              if (sym != 0) {
+                csj |= _stateSigR1 |
+                    _stateVisitedR1 |
+                    _stateNzCtxtR2 |
+                    _stateVuR2 |
+                    _stateVuSignR2;
+                state[j - sscanw] |=
+                    _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHlR1 |
+                    _stateHlSignR1 |
+                    _stateDulR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHrR1 |
+                    _stateHrSignR1 |
+                    _stateDurR2;
+              } else {
+                csj |=
+                    _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
+                state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
+              }
+            } else {
+              csj |= _stateVisitedR1;
+            }
+          }
+          if (stripeHeight < 4) {
             state[j] = csj;
             continue;
           }
-          j += sscanw;
-          csj = state[j];
-          if ((((~csj) & (csj << 2)) & _sigMaskR1R2) != 0) {
-            var k = sk + (dscanw << 1);
-            if ((csj & (_stateSigR1 | _stateNzCtxtR1)) == _stateNzCtxtR1) {
-              final zcCtxIndex = csj & _zcMask;
-              final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-              trace('sigProgPass ZC R3 k=$k ctx=$zcCtxIndex sym=$zcSym');
-              if (zcSym != 0) {
-                final signLut = _scLut[(csj >>> _scShiftR1) & _scMask];
-                final scCtx = signLut & ((1 << _scShiftR1) - 1);
-                final predictedSign = (signLut >>> _scSpredShift) & 1;
-                final rawSym = mq.decodeSymbol(scCtx);
-                final sym = rawSym ^ predictedSign;
-                trace(
-                    'sigProgPass SC R3 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
-                data[k] = _encodeSignSample(sym, setmask);
-                if (tracing) {
-                  traceSample('R3', k, sym, data[k]);
-                }
-                if (!causal) {
-                  state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
-                  state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
-                }
-                if (sym != 0) {
-                  csj |= _stateSigR1 |
-                      _stateVisitedR1 |
-                      _stateNzCtxtR2 |
-                      _stateVuR2 |
-                      _stateVuSignR2;
-                  state[j - sscanw] |=
-                      _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
-                  state[j + 1] |= _stateNzCtxtR1 |
-                      _stateNzCtxtR2 |
-                      _stateHlR1 |
-                      _stateHlSignR1 |
-                      _stateDulR2;
-                  state[j - 1] |= _stateNzCtxtR1 |
-                      _stateNzCtxtR2 |
-                      _stateHrR1 |
-                      _stateHrSignR1 |
-                      _stateDurR2;
-                } else {
-                  csj |=
-                      _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
-                  state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
-                  state[j + 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
-                  state[j - 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
-                }
-              } else {
-                csj |= _stateVisitedR1;
+          if ((csj & (_stateSigR2 | _stateNzCtxtR2)) == _stateNzCtxtR2) {
+            k += dscanw;
+            final zcCtxIndex = (csj >>> _stateSep) & _zcMask;
+            final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
+            trace('sigProgPass ZC R4 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (zcSym != 0) {
+              final signLut = _scLut[(csj >>> _scShiftR2) & _scMask];
+              final scCtx = signLut & ((1 << _scShiftR1) - 1);
+              final predictedSign = (signLut >>> _scSpredShift) & 1;
+              final rawSym = mq.decodeSymbol(scCtx);
+              final sym = rawSym ^ predictedSign;
+              trace(
+                  'sigProgPass SC R4 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              data[k] = _encodeSignSample(sym, setmask);
+              if (tracing) {
+                traceSample('R4', k, sym, data[k]);
               }
-            }
-            if (stripeHeight < 4) {
-              state[j] = csj;
-              continue;
-            }
-            if ((csj & (_stateSigR2 | _stateNzCtxtR2)) == _stateNzCtxtR2) {
-              k += dscanw;
-              final zcCtxIndex = (csj >>> _stateSep) & _zcMask;
-              final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-              trace('sigProgPass ZC R4 k=$k ctx=$zcCtxIndex sym=$zcSym');
-              if (zcSym != 0) {
-                final signLut = _scLut[(csj >>> _scShiftR2) & _scMask];
-                final scCtx = signLut & ((1 << _scShiftR1) - 1);
-                final predictedSign = (signLut >>> _scSpredShift) & 1;
-                final rawSym = mq.decodeSymbol(scCtx);
-                final sym = rawSym ^ predictedSign;
-                trace(
-                    'sigProgPass SC R4 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
-                data[k] = _encodeSignSample(sym, setmask);
-                if (tracing) {
-                  traceSample('R4', k, sym, data[k]);
-                }
-                state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
-                state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
-                if (sym != 0) {
-                  csj |= _stateSigR2 |
-                      _stateVisitedR2 |
-                      _stateNzCtxtR1 |
-                      _stateVdR1 |
-                      _stateVdSignR1;
-                  state[j + sscanw] |=
-                      _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
-                  state[j + 1] |= _stateNzCtxtR1 |
-                      _stateNzCtxtR2 |
-                      _stateDdlR1 |
-                      _stateHlR2 |
-                      _stateHlSignR2;
-                  state[j - 1] |= _stateNzCtxtR1 |
-                      _stateNzCtxtR2 |
-                      _stateDdrR1 |
-                      _stateHrR2 |
-                      _stateHrSignR2;
-                } else {
-                  csj |=
-                      _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
-                  state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
-                  state[j + 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
-                  state[j - 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
-                }
+              state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
+              state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
+              if (sym != 0) {
+                csj |= _stateSigR2 |
+                    _stateVisitedR2 |
+                    _stateNzCtxtR1 |
+                    _stateVdR1 |
+                    _stateVdSignR1;
+                state[j + sscanw] |=
+                    _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdlR1 |
+                    _stateHlR2 |
+                    _stateHlSignR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdrR1 |
+                    _stateHrR2 |
+                    _stateHrSignR2;
               } else {
-                csj |= _stateVisitedR2;
+                csj |=
+                    _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
+                state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
               }
+            } else {
+              csj |= _stateVisitedR2;
             }
           }
           state[j] = csj;
@@ -1447,13 +1468,19 @@ class StdEntropyDecoder extends EntropyDecoder {
                       _stateHrSignR1 |
                       _stateDurR2;
                 } else {
-                  csj |=
-                      _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
+                  csj |= _stateSigR1 |
+                      _stateVisitedR1 |
+                      _stateNzCtxtR2 |
+                      _stateVuR2;
                   state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
-                  state[j + 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
-                  state[j - 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHlR1 |
+                      _stateDulR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHrR1 |
+                      _stateDurR2;
                 }
               } else {
                 csj |= _stateVisitedR1;
@@ -1489,13 +1516,19 @@ class StdEntropyDecoder extends EntropyDecoder {
                       _stateHrR2 |
                       _stateHrSignR2;
                 } else {
-                  csj |=
-                      _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
+                  csj |= _stateSigR2 |
+                      _stateVisitedR2 |
+                      _stateNzCtxtR1 |
+                      _stateVdR1;
                   state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
-                  state[j + 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
-                  state[j - 1] |=
-                      _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdlR1 |
+                      _stateHlR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdrR1 |
+                      _stateHrR2;
                 }
               } else {
                 csj |= _stateVisitedR2;
@@ -1645,7 +1678,9 @@ class StdEntropyDecoder extends EntropyDecoder {
     for (final d in twoBits) {
       lut[d] = 8;
     }
-    for (var h = 0; h < 16; h++) {
+    // Two diagonal significant, one or more horiz+vert significant
+    // (h starts at 1: with no horiz/vert significant the context stays 8).
+    for (var h = 1; h < 16; h++) {
       for (final d in twoBits) {
         lut[(h << 4) | d] = 9;
       }
@@ -1739,16 +1774,15 @@ class StdEntropyDecoder extends EntropyDecoder {
     final one = 1 << bitPlane;
     final half = one >> 1;
     final setmask = one | half;
-    final nstripes =
-        (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
+    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
         StdEntropyCoderOptions.STRIPE_HEIGHT;
     final causal = (_options & StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL) != 0;
 
     // Pre-calculate offsets in 'state' for diagonal neighbors
-    final offUl = -sscanw - 1;  // up-left
-    final offUr = -sscanw + 1;  // up-right
-    final offDr = sscanw + 1;   // down-right
-    final offDl = sscanw - 1;   // down-left
+    final offUl = -sscanw - 1; // up-left
+    final offUr = -sscanw + 1; // up-right
+    final offDr = sscanw + 1; // down-right
+    final offDl = sscanw - 1; // down-left
 
     // Decode stripe by stripe (top to bottom to mirror JJ2000 flow)
     var sk = cblk.offset;
@@ -1758,36 +1792,36 @@ class StdEntropyDecoder extends EntropyDecoder {
           ? StdEntropyCoderOptions.STRIPE_HEIGHT
           : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
       final stopsk = sk + cblk.w;
-      
+
       // Scan by set of 1 stripe column at a time
       for (; sk < stopsk; sk++, sj++) {
         // Start column
         var j = sj;
         var csj = state[j];
         var broken = false;
-        
+
         // Check for RLC: if all samples are not significant, not visited
         // and do not have a non-zero context, and column is full height
         if (csj == 0 &&
-          state[j + sscanw] == 0 &&
-          stripeHeight == StdEntropyCoderOptions.STRIPE_HEIGHT) {
+            state[j + sscanw] == 0 &&
+            stripeHeight == StdEntropyCoderOptions.STRIPE_HEIGHT) {
           final rlcSym = mq.decodeSymbol(_rlcCtxt);
           trace('cleanuppass RLC k=$sk sym=$rlcSym');
-          
+
           if (rlcSym != 0) {
             // run-length is significant, decode length
             final rlc1 = mq.decodeSymbol(_unifCtxt);
             final rlc2 = mq.decodeSymbol(_unifCtxt);
             final rlclen = (rlc1 << 1) | rlc2;
             trace('cleanuppass RLC len=$rlclen (bits $rlc1, $rlc2)');
-            
+
             // Set 'k' and 'j' accordingly
             var k = sk + rlclen * dscanw;
             if (rlclen > 1) {
               j += sscanw;
               csj = state[j];
             }
-            
+
             // We just decoded significant RLC - use sign coding
             if ((rlclen & 0x01) == 0) {
               // Sample that became significant is first row of its column half
@@ -1795,36 +1829,50 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace('cleanuppass SC RLC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-              
+              trace(
+                  'cleanuppass SC RLC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
-              
+
               // Update state information
               if (rlclen != 0 || !causal) {
                 state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
                 state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
               }
-              
+
               if (sym != 0) {
-                csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 |
-                    _stateVuR2 | _stateVuSignR2;
+                csj |= _stateSigR1 |
+                    _stateVisitedR1 |
+                    _stateNzCtxtR2 |
+                    _stateVuR2 |
+                    _stateVuSignR2;
                 if (rlclen != 0 || !causal) {
-                  state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
+                  state[j - sscanw] |=
+                      _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
                 }
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 |
-                    _stateHlSignR1 | _stateDulR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 |
-                    _stateHrSignR1 | _stateDurR2;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHlR1 |
+                    _stateHlSignR1 |
+                    _stateDulR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHrR1 |
+                    _stateHrSignR1 |
+                    _stateDurR2;
               } else {
-                csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
+                csj |=
+                    _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
                 if (rlclen != 0 || !causal) {
                   state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
                 }
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
               }
-              
+
               if ((rlclen >> 1) != 0) {
                 broken = true;
               }
@@ -1834,29 +1882,40 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace('cleanuppass SC RLC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-              
+              trace(
+                  'cleanuppass SC RLC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
-              
+
               // Update state information
               state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
               state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
-              
+
               if (sym != 0) {
-                csj |= _stateSigR2 | _stateNzCtxtR1 | _stateVdR1 | _stateVdSignR1;
-                state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 |
-                    _stateHlR2 | _stateHlSignR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 |
-                    _stateHrR2 | _stateHrSignR2;
+                csj |=
+                    _stateSigR2 | _stateNzCtxtR1 | _stateVdR1 | _stateVdSignR1;
+                state[j + sscanw] |=
+                    _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdlR1 |
+                    _stateHlR2 |
+                    _stateHlSignR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdrR1 |
+                    _stateHrR2 |
+                    _stateHrSignR2;
               } else {
                 csj |= _stateSigR2 | _stateNzCtxtR1 | _stateVdR1;
                 state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
               }
-              
+
               // Save changes to csj
               state[j] = csj;
               if ((rlclen >> 1) != 0) {
@@ -1871,195 +1930,266 @@ class StdEntropyDecoder extends EntropyDecoder {
             continue;
           }
         }
-        
+
         if (!broken) {
           // Do half top of column
           if ((((csj >> 1) | csj) & _vstdMaskR1R2) != _vstdMaskR1R2) {
             var k = sk;
-            
+
             // Scan first row
             if ((csj & (_stateSigR1 | _stateVisitedR1)) == 0) {
               final zcSym = mq.decodeSymbol(zcLut[csj & _zcMask]);
               trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
-              
+
               if (zcSym != 0) {
                 // Became significant - use sign coding
                 final signLut = _scLut[(csj >> _scShiftR1) & _scMask];
                 final ctxt = signLut & ((1 << _scShiftR1) - 1);
                 final rawSym = mq.decodeSymbol(ctxt);
                 final sym = rawSym ^ (signLut >>> _scSpredShift);
-                trace('cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-                
+                trace(
+                    'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
                 // Update the data
                 data[k] = _encodeSignSample(sym, setmask);
-                
+
                 // Update state information
                 if (!causal) {
                   state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
                   state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
                 }
-                
+
                 if (sym != 0) {
-                  csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 |
-                      _stateVuR2 | _stateVuSignR2;
+                  csj |= _stateSigR1 |
+                      _stateVisitedR1 |
+                      _stateNzCtxtR2 |
+                      _stateVuR2 |
+                      _stateVuSignR2;
                   if (!causal) {
-                    state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
+                    state[j - sscanw] |=
+                        _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
                   }
-                  state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 |
-                      _stateHlSignR1 | _stateDulR2;
-                  state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 |
-                      _stateHrSignR1 | _stateDurR2;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHlR1 |
+                      _stateHlSignR1 |
+                      _stateDulR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHrR1 |
+                      _stateHrSignR1 |
+                      _stateDurR2;
                 } else {
-                  csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
+                  csj |= _stateSigR1 |
+                      _stateVisitedR1 |
+                      _stateNzCtxtR2 |
+                      _stateVuR2;
                   if (!causal) {
                     state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
                   }
-                  state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
-                  state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHlR1 |
+                      _stateDulR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateHrR1 |
+                      _stateDurR2;
                 }
               }
             }
-            
+
             if (stripeHeight < 2) {
               csj &= ~(_stateVisitedR1 | _stateVisitedR2);
               state[j] = csj;
               continue;
             }
-            
+
             // Scan second row
             if ((csj & (_stateSigR2 | _stateVisitedR2)) == 0) {
               k += dscanw;
-              final zcSym = mq.decodeSymbol(zcLut[(csj >>> _stateSep) & _zcMask]);
-              trace('cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
-              
+              final zcSym =
+                  mq.decodeSymbol(zcLut[(csj >>> _stateSep) & _zcMask]);
+              trace(
+                  'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+
               if (zcSym != 0) {
                 // Became significant - use sign coding
                 final signLut = _scLut[(csj >> _scShiftR2) & _scMask];
                 final ctxt = signLut & ((1 << _scShiftR1) - 1);
                 final rawSym = mq.decodeSymbol(ctxt);
                 final sym = rawSym ^ (signLut >>> _scSpredShift);
-                trace('cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-                
+                trace(
+                    'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
                 // Update the data
                 data[k] = _encodeSignSample(sym, setmask);
-                
+
                 // Update state information
                 state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
                 state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
-                
+
                 if (sym != 0) {
-                  csj |= _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 |
-                      _stateVdR1 | _stateVdSignR1;
-                  state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
-                  state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 |
-                      _stateHlR2 | _stateHlSignR2;
-                  state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 |
-                      _stateHrR2 | _stateHrSignR2;
+                  csj |= _stateSigR2 |
+                      _stateVisitedR2 |
+                      _stateNzCtxtR1 |
+                      _stateVdR1 |
+                      _stateVdSignR1;
+                  state[j + sscanw] |=
+                      _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdlR1 |
+                      _stateHlR2 |
+                      _stateHlSignR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdrR1 |
+                      _stateHrR2 |
+                      _stateHrSignR2;
                 } else {
-                  csj |= _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
+                  csj |= _stateSigR2 |
+                      _stateVisitedR2 |
+                      _stateNzCtxtR1 |
+                      _stateVdR1;
                   state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
-                  state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
-                  state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
+                  state[j + 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdlR1 |
+                      _stateHlR2;
+                  state[j - 1] |= _stateNzCtxtR1 |
+                      _stateNzCtxtR2 |
+                      _stateDdrR1 |
+                      _stateHrR2;
                 }
               }
             }
           }
-          
+
           csj &= ~(_stateVisitedR1 | _stateVisitedR2);
           state[j] = csj;
-          
+
           // Do half bottom of column
           if (stripeHeight < 3) continue;
           j += sscanw;
           csj = state[j];
         }
-        
+
         // Bottom half of column
         if ((((csj >> 1) | csj) & _vstdMaskR1R2) != _vstdMaskR1R2) {
           var k = sk + (dscanw << 1);
-          
+
           // Scan first row
           if ((csj & (_stateSigR1 | _stateVisitedR1)) == 0) {
             final zcSym = mq.decodeSymbol(zcLut[csj & _zcMask]);
             trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
-            
+
             if (zcSym != 0) {
               // Became significant - use sign coding
               final signLut = _scLut[(csj >> _scShiftR1) & _scMask];
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace('cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-              
+              trace(
+                  'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
-              
+
               // Update state information
               state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
               state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
-              
+
               if (sym != 0) {
-                csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 |
-                    _stateVuR2 | _stateVuSignR2;
-                state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 |
-                    _stateHlSignR1 | _stateDulR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 |
-                    _stateHrSignR1 | _stateDurR2;
+                csj |= _stateSigR1 |
+                    _stateVisitedR1 |
+                    _stateNzCtxtR2 |
+                    _stateVuR2 |
+                    _stateVuSignR2;
+                state[j - sscanw] |=
+                    _stateNzCtxtR2 | _stateVdR2 | _stateVdSignR2;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHlR1 |
+                    _stateHlSignR1 |
+                    _stateDulR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateHrR1 |
+                    _stateHrSignR1 |
+                    _stateDurR2;
               } else {
-                csj |= _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
+                csj |=
+                    _stateSigR1 | _stateVisitedR1 | _stateNzCtxtR2 | _stateVuR2;
                 state[j - sscanw] |= _stateNzCtxtR2 | _stateVdR2;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHlR1 | _stateDulR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateHrR1 | _stateDurR2;
               }
             }
           }
-          
+
           if (stripeHeight < 4) {
             csj &= ~(_stateVisitedR1 | _stateVisitedR2);
             state[j] = csj;
             continue;
           }
-          
+
           // Scan second row
           if ((csj & (_stateSigR2 | _stateVisitedR2)) == 0) {
             k += dscanw;
             final zcSym = mq.decodeSymbol(zcLut[(csj >>> _stateSep) & _zcMask]);
-            trace('cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
-            
+            trace(
+                'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+
             if (zcSym != 0) {
               // Became significant - use sign coding
               final signLut = _scLut[(csj >> _scShiftR2) & _scMask];
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace('cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
-              
+              trace(
+                  'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
-              
+
               // Update state information
               state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
               state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
-              
+
               if (sym != 0) {
-                csj |= _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 |
-                    _stateVdR1 | _stateVdSignR1;
-                state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 |
-                    _stateHlR2 | _stateHlSignR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 |
-                    _stateHrR2 | _stateHrSignR2;
+                csj |= _stateSigR2 |
+                    _stateVisitedR2 |
+                    _stateNzCtxtR1 |
+                    _stateVdR1 |
+                    _stateVdSignR1;
+                state[j + sscanw] |=
+                    _stateNzCtxtR1 | _stateVuR1 | _stateVuSignR1;
+                state[j + 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdlR1 |
+                    _stateHlR2 |
+                    _stateHlSignR2;
+                state[j - 1] |= _stateNzCtxtR1 |
+                    _stateNzCtxtR2 |
+                    _stateDdrR1 |
+                    _stateHrR2 |
+                    _stateHrSignR2;
               } else {
-                csj |= _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
+                csj |=
+                    _stateSigR2 | _stateVisitedR2 | _stateNzCtxtR1 | _stateVdR1;
                 state[j + sscanw] |= _stateNzCtxtR1 | _stateVuR1;
-                state[j + 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
-                state[j - 1] |= _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
+                state[j + 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdlR1 | _stateHlR2;
+                state[j - 1] |=
+                    _stateNzCtxtR1 | _stateNzCtxtR2 | _stateDdrR1 | _stateHrR2;
               }
             }
           }
         }
-        
+
         csj &= ~(_stateVisitedR1 | _stateVisitedR2);
         state[j] = csj;
       }
@@ -2119,18 +2249,18 @@ class StdEntropyDecoder extends EntropyDecoder {
           ? StdEntropyCoderOptions.STRIPE_HEIGHT
           : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
       final stopsk = sk + cblk.w;
-      
+
       // Scan by set of 1 stripe column at a time
       for (; sk < stopsk; sk++, sj++) {
         // Do half top of column
         var j = sj;
         var csj = state[j];
-        
+
         // If any of the two samples is significant and not yet
         // visited in the current bit-plane we can not skip them
         if ((((csj >>> 1) & (~csj)) & _vstdMaskR1R2) != 0) {
           var k = sk;
-          
+
           // Scan first row
           if ((csj & (_stateSigR1 | _stateVisitedR1)) == _stateSigR1) {
             // Read raw bit (no MR primitive)
@@ -2138,12 +2268,12 @@ class StdEntropyDecoder extends EntropyDecoder {
             // Update the data
             data[k] &= resetmask;
             data[k] |= (sym << bitPlane) | setmask;
-            // No need to set STATE_PREV_MR_R1 since all magnitude 
+            // No need to set STATE_PREV_MR_R1 since all magnitude
             // refinement passes to follow are "raw"
           }
-          
+
           if (stripeHeight < 2) continue;
-          
+
           // Scan second row
           if ((csj & (_stateSigR2 | _stateVisitedR2)) == _stateSigR2) {
             k += dscanw;
@@ -2152,21 +2282,21 @@ class StdEntropyDecoder extends EntropyDecoder {
             // Update the data
             data[k] &= resetmask;
             data[k] |= (sym << bitPlane) | setmask;
-            // No need to set STATE_PREV_MR_R2 since all magnitude 
+            // No need to set STATE_PREV_MR_R2 since all magnitude
             // refinement passes to follow are "raw"
           }
         }
-        
+
         // Do half bottom of column
         if (stripeHeight < 3) continue;
         j += sscanw;
         csj = state[j];
-        
+
         // If any of the two samples is significant and not yet
         // visited in the current bit-plane we can not skip them
         if ((((csj >>> 1) & (~csj)) & _vstdMaskR1R2) != 0) {
           var k = sk + (dscanw << 1);
-          
+
           // Scan first row
           if ((csj & (_stateSigR1 | _stateVisitedR1)) == _stateSigR1) {
             // Read raw bit (no MR primitive)
@@ -2174,12 +2304,12 @@ class StdEntropyDecoder extends EntropyDecoder {
             // Update the data
             data[k] &= resetmask;
             data[k] |= (sym << bitPlane) | setmask;
-            // No need to set STATE_PREV_MR_R1 since all magnitude 
+            // No need to set STATE_PREV_MR_R1 since all magnitude
             // refinement passes to follow are "raw"
           }
-          
+
           if (stripeHeight < 4) continue;
-          
+
           // Scan second row
           if ((state[j] & (_stateSigR2 | _stateVisitedR2)) == _stateSigR2) {
             k += dscanw;
@@ -2188,7 +2318,7 @@ class StdEntropyDecoder extends EntropyDecoder {
             // Update the data
             data[k] &= resetmask;
             data[k] |= (sym << bitPlane) | setmask;
-            // No need to set STATE_PREV_MR_R2 since all magnitude 
+            // No need to set STATE_PREV_MR_R2 since all magnitude
             // refinement passes to follow are "raw"
           }
         }
@@ -2207,5 +2337,3 @@ class StdEntropyDecoder extends EntropyDecoder {
     return error;
   }
 }
-
-

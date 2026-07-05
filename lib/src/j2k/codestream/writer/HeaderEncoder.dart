@@ -3,23 +3,23 @@ import 'dart:typed_data';
 
 import '../../wavelet/analysis/ForwardWT.dart';
 import '../../entropy/encoder/PostCompRateAllocator.dart';
-import '../../roi/encoder/RoiScaler.dart';
+import '../../roi/encoder/ROIScaler.dart';
 import '../../encoder/EncoderSpecs.dart';
 import '../../entropy/StdEntropyCoderOptions.dart';
 import '../../image/ImgData.dart';
 import '../../util/ParameterList.dart';
 import '../../io/BinaryDataOutput.dart';
-import '../../Jj2kInfo.dart';
+import '../../JJ2KInfo.dart';
 import '../markers.dart';
 import '../../util/MathUtil.dart';
 import '../../image/tiler.dart';
-import '../../wavelet/analysis/AnWtFilter.dart';
+import '../../wavelet/analysis/AnWTFilter.dart';
 import '../../wavelet/analysis/SubbandAn.dart';
 import '../../quantization/quantizer/StdQuantizer.dart';
 
 import '../../entropy/progression.dart';
 import '../../ModuleSpec.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 
 /// This class writes almost of the markers and marker segments in main header
 /// and in tile-part headers.
@@ -87,17 +87,10 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
   EncoderSpecs encSpec;
 
   /// Initializes the header writer with the references to the coding chain.
-  HeaderEncoder(
-      this.origSrc,
-      this.isOrigSig,
-      this.dwt,
-      this.tiler,
-      this.encSpec,
-      this.roiSc,
-      this.ralloc,
-      ParameterList pl) {
-    pl.checkList(
-        [OPT_PREFIX.codeUnitAt(0)], ParameterList.toNameArray(pinfo));
+  HeaderEncoder(this.origSrc, this.isOrigSig, this.dwt, this.tiler,
+      this.encSpec, this.roiSc, this.ralloc, ParameterList pl) {
+    pl.checkListSingle(
+        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
     if (origSrc.getNumComps() != isOrigSig.length) {
       throw ArgumentError();
     }
@@ -299,14 +292,13 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Multiple component transform
     // CSsiz (Color transform)
-    String str = "";
-    if (mh) {
-      str = (encSpec.cts.getDefault() as String);
-    } else {
-      str = (encSpec.cts.getTileDef(tileIdx) as String);
-    }
+    // The Dart ForwCompTransfSpec stores the transform as the InvCompTransf
+    // integer constants (none=0, rct=1, ict=2) rather than the Java strings.
+    final int compTransf = mh
+        ? (encSpec.cts.getDefault() as int)
+        : (encSpec.cts.getTileDef(tileIdx) as int);
 
-    if (str == "none") {
+    if (compTransf == 0) {
       writeByte(0);
     } else {
       writeByte(1);
@@ -828,9 +820,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Lqcc (marker segment length (in bytes))
     // Lqcc(2 bytes)+Cqcc(1 or 2)+Sqcc(1)+ SPqcc (2*Nqcc)
-    int markSegLen = 3 +
-        ((nComp < 257) ? 1 : 2) +
-        ((isReversible) ? nqcc : 2 * nqcc);
+    int markSegLen =
+        3 + ((nComp < 257) ? 1 : 2) + ((isReversible) ? nqcc : 2 * nqcc);
     writeShort(markSegLen);
 
     // Cqcc
@@ -1116,9 +1107,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Lqcc (marker segment length (in bytes))
     // Lqcc(2 bytes)+Cqcc(1 or 2)+Sqcc(1)+ SPqcc (2*Nqcc)
-    int markSegLen = 3 +
-        ((nComp < 257) ? 1 : 2) +
-        ((isReversible) ? nqcc : 2 * nqcc);
+    int markSegLen =
+        3 + ((nComp < 257) ? 1 : 2) + ((isReversible) ? nqcc : 2 * nqcc);
     writeShort(markSegLen);
 
     // Cqcc
@@ -1516,5 +1506,3 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     writeByte(Markers.SOD);
   }
 }
-
-

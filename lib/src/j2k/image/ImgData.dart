@@ -1,4 +1,4 @@
-import 'Coord.dart';
+import 'coord.dart';
 
 /// Interface for sources that expose tiling and component metadata.
 abstract class ImgData {

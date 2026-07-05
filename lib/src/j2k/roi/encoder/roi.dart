@@ -1,4 +1,4 @@
-import '../../image/input/ImgReaderPgm.dart';
+import '../../image/input/ImgReaderPGM.dart';
 
 /// Describes a single region of interest used by the encoder.
 ///
@@ -101,4 +101,3 @@ class ROI {
 
 /// Enumerates the supported ROI geometries.
 enum ROIShapeType { arbitrary, rectangle, circle }
-

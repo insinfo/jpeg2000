@@ -66,4 +66,3 @@ class _RecordingLogger implements MsgLogger {
   @override
   void println(String message, int firstLineIndent, int indent) {}
 }
-

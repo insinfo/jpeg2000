@@ -1,4 +1,4 @@
-import '../../wavelet/synthesis/InvWtData.dart';
+import '../../wavelet/synthesis/InvWTData.dart';
 import '../../wavelet/synthesis/SubbandSyn.dart';
 import 'DecLyrdCBlk.dart';
 
@@ -20,4 +20,3 @@ abstract class CodedCBlkDataSrcDec extends InvWTData {
     DecLyrdCBlk? block,
   );
 }
-

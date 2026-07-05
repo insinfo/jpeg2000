@@ -57,5 +57,3 @@ class CBlkWTDataInt extends CBlkWTData {
     data = arr;
   }
 }
-
-

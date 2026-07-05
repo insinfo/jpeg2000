@@ -20,7 +20,10 @@ class FileCodestreamWriter extends CodestreamWriter {
   int tileIdx = 0;
 
   /// The file to write
-  IOSink out;
+  IOSink? out;
+
+  /// Synchronous file used by file-backed writers.
+  RandomAccessFile? _file;
 
   /// The default buffer length, 1024 bytes
   static const int DEF_BUF_LEN = 1024;
@@ -49,7 +52,8 @@ class FileCodestreamWriter extends CodestreamWriter {
   ///
   /// [mb] The maximum number of bytes that can be written to the bit
   /// stream.
-  FileCodestreamWriter.fromFile(File file, int mb) : out = file.openWrite(), super(mb) {
+  FileCodestreamWriter.fromFile(File file, int mb) : super(mb) {
+    _file = file.openSync(mode: FileMode.write);
     initSOP_EPHArrays();
   }
 
@@ -62,7 +66,8 @@ class FileCodestreamWriter extends CodestreamWriter {
   ///
   /// [mb] The maximum number of bytes that can be written to the bit
   /// stream.
-  FileCodestreamWriter.fromPath(String fname, int mb) : out = File(fname).openWrite(), super(mb) {
+  FileCodestreamWriter.fromPath(String fname, int mb) : super(mb) {
+    _file = File(fname).openSync(mode: FileMode.write);
     initSOP_EPHArrays();
   }
 
@@ -75,8 +80,18 @@ class FileCodestreamWriter extends CodestreamWriter {
   ///
   /// [mb] The maximum number of bytes that can be written to the bit
   /// stream.
-  FileCodestreamWriter.fromStream(this.out, int mb) : super(mb) {
+  FileCodestreamWriter.fromStream(IOSink output, int mb) : super(mb) {
+    out = output;
     initSOP_EPHArrays();
+  }
+
+  void _writeBytes(List<int> bytes) {
+    final file = _file;
+    if (file != null) {
+      file.writeFromSync(bytes);
+    } else {
+      out!.add(bytes);
+    }
   }
 
   @override
@@ -94,11 +109,9 @@ class FileCodestreamWriter extends CodestreamWriter {
   }
 
   @override
-  int writePacketHead(
-      Uint8List head, int hlen, bool sim, bool sop, bool eph) {
-    int len = hlen +
-        (sop ? Markers.SOP_LENGTH : 0) +
-        (eph ? Markers.EPH_LENGTH : 0);
+  int writePacketHead(Uint8List head, int hlen, bool sim, bool sop, bool eph) {
+    int len =
+        hlen + (sop ? Markers.SOP_LENGTH : 0) + (eph ? Markers.EPH_LENGTH : 0);
 
     // If not in simulation mode write the data
     if (!sim) {
@@ -114,20 +127,20 @@ class FileCodestreamWriter extends CodestreamWriter {
           // classe's constructor.
           sopMarker[4] = (packetIdx >> 8);
           sopMarker[5] = (packetIdx);
-          out.add(sopMarker.sublist(0, Markers.SOP_LENGTH));
+          _writeBytes(sopMarker.sublist(0, Markers.SOP_LENGTH));
           packetIdx++;
           if (packetIdx > SOP_MARKER_LIMIT) {
             // Reset SOP value as we have reached its upper limit
             packetIdx = 0;
           }
         }
-        out.add(head.sublist(0, hlen));
+        _writeBytes(head.sublist(0, hlen));
         // Update data length
         ndata += len;
 
         // Write End of Packet Header markers if necessary
         if (eph) {
-          out.add(ephMarker.sublist(0, Markers.EPH_LENGTH));
+          _writeBytes(ephMarker.sublist(0, Markers.EPH_LENGTH));
         }
 
         // Deal with ROI Information
@@ -150,7 +163,7 @@ class FileCodestreamWriter extends CodestreamWriter {
         len = getMaxAvailableBytes();
       }
       if (blen > 0) {
-        out.add(body.sublist(0, len));
+        _writeBytes(body.sublist(0, len));
       }
       // Update data length
       ndata += len;
@@ -169,11 +182,17 @@ class FileCodestreamWriter extends CodestreamWriter {
   @override
   void close() {
     // Write the EOC marker and close the codestream.
-    out.add([Markers.EOC >> 8, Markers.EOC & 0xFF]);
+    _writeBytes([Markers.EOC >> 8, Markers.EOC & 0xFF]);
 
     ndata += 2; // Add two to length of codestream for EOC marker
 
-    out.close();
+    final file = _file;
+    if (file != null) {
+      file.closeSync();
+      _file = null;
+    } else {
+      out!.close();
+    }
   }
 
   @override
@@ -185,7 +204,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   void commitBitstreamHeader(HeaderEncoder he) {
     // Actualize ndata
     ndata += he.getLength();
-    he.writeTo(out); // Write the header
+    _writeBytes(he.getBuffer()); // Write the header
     // Reset packet index used for SOP markers
     packetIdx = 0;
 
@@ -211,4 +230,3 @@ class FileCodestreamWriter extends CodestreamWriter {
     ephMarker[1] = (Markers.EPH & 0xFF);
   }
 }
-

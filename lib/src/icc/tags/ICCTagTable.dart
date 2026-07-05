@@ -74,4 +74,3 @@ class _Triplet {
 
   _Triplet(this.signature, this.offset, this.count);
 }
-

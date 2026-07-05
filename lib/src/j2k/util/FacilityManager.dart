@@ -6,7 +6,7 @@ import 'StreamMsgLogger.dart';
 
 /// Manages per-zone facilities such as [MsgLogger] and [ProgressWatch].
 class FacilityManager {
-  // TODO(jj2000): Revisit the scoping strategy once decoder threading is ported.
+  // Zone-local facilities keep concurrent decode/encode jobs isolated.
   static final Map<Zone, MsgLogger> _loggers = <Zone, MsgLogger>{};
   static MsgLogger _defaultLogger = StreamMsgLogger.stdout(lineWidth: 512);
 
@@ -51,4 +51,3 @@ class FacilityManager {
     return _progressWatches[currentZone] ?? _defaultProgressWatch;
   }
 }
-

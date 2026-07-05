@@ -22,4 +22,3 @@ class ICCProfileVersion {
     return "Version $uMajor.$uMinor";
   }
 }
-

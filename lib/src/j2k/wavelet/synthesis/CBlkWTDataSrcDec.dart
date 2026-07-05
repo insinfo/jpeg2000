@@ -29,4 +29,3 @@ abstract class CBlkWTDataSrcDec extends InvWTData {
     DataBlk? block,
   );
 }
-

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import '../../j2k/io/RandomAccessIO.dart';
-import '../../icc/IccProfile.dart';
+import '../../icc/ICCProfile.dart';
 import 'JP2Box.dart';
 
 class ChannelDefinitionBox extends JP2Box {
@@ -116,4 +116,3 @@ class ChannelDefinitionBox extends JP2Box {
     return bfr[2];
   }
 }
-

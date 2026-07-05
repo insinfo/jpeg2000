@@ -19,4 +19,3 @@ class BlkImgDataSrcAdapter extends ImgDataAdapter implements BlkImgDataSrc {
   DataBlk getCompData(DataBlk block, int component) =>
       source.getCompData(block, component);
 }
-

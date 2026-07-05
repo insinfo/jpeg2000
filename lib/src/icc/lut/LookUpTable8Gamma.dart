@@ -4,14 +4,12 @@ import 'LookUpTable8.dart';
 
 /// Gamma based LUT with 8-bit output.
 class LookUpTable8Gamma extends LookUpTable8 {
-  LookUpTable8Gamma(
-      ICCCurveType curve, int dwNumInput, int dwMaxOutput)
+  LookUpTable8Gamma(ICCCurveType curve, int dwNumInput, int dwMaxOutput)
       : super.fromCurve(curve, dwNumInput, dwMaxOutput) {
     double exponent = ICCCurveType.curveGammaToDouble(curve.entry[0]);
     for (int i = 0; i < dwNumInput; i++) {
       double normalized = (dwNumInput == 1) ? 0.0 : i / (dwNumInput - 1);
-      int value =
-          (math.pow(normalized, exponent) * dwMaxOutput + 0.5).floor();
+      int value = (math.pow(normalized, exponent) * dwMaxOutput + 0.5).floor();
       if (value < 0) {
         value = 0;
       } else if (value > dwMaxOutput) {

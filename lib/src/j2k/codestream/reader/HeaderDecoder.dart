@@ -12,13 +12,13 @@ import '../../entropy/decoder/CodedCBlkDataSrcDec.dart';
 import '../../entropy/decoder/EntropyDecoder.dart';
 import '../../entropy/decoder/StdEntropyDecoder.dart';
 import '../../image/BlkImgDataSrc.dart';
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import '../../image/invcomptransf/InvCompTransf.dart';
 import '../../io/RandomAccessIO.dart';
 import '../../quantization/dequantizer/StdDequantizer.dart';
 import '../../quantization/dequantizer/StdDequantizerParams.dart';
 import '../../quantization/dequantizer/CBlkQuantDataSrcDec.dart';
-import '../../roi/RoiDeScaler.dart';
+import '../../roi/ROIDeScaler.dart';
 import '../../util/DecoderInstrumentation.dart';
 import '../../util/FacilityManager.dart';
 import '../../util/MsgLogger.dart';
@@ -52,24 +52,23 @@ class _QuantizationParseResult {
   final int offset;
 }
 
-/// Partial port of JJ2000's `HeaderDecoder`.
+/// Port of JJ2000's `HeaderDecoder`.
 ///
-/// The real implementation parses JPEG 2000 main and tile-part headers to
-/// populate [HeaderInfo] and [DecoderSpecs]. For now we model the data the
-/// rest of the pipeline expects while leaving TODO markers where parsing
-/// logic must be restored.
+/// Parses JPEG 2000 main and tile-part headers into [HeaderInfo] and
+/// [DecoderSpecs], preserving marker payloads needed by the packet reader and
+/// image reconstruction stages.
 class HeaderDecoder {
   static const String _logSource = 'HeaderDecoder';
   static const int _maxSizLogs = 2;
   static const int _maxCodLogs = 4;
   static const int _maxQuantLogs = 6;
   static int _sizLogCount = 0;
+
   /// JJ2000 option prefix reserved for header decoder parameters.
   static const String optionPrefix = 'H';
   static int _codLogCount = 0;
   static int _quantLogCount = 0;
-  static const int _allowedCodingStyleFlags =
-      Markers.SCOX_PRECINCT_PARTITION |
+  static const int _allowedCodingStyleFlags = Markers.SCOX_PRECINCT_PARTITION |
       Markers.SCOX_USE_SOP |
       Markers.SCOX_USE_EPH |
       Markers.SCOX_HOR_CB_PART |
@@ -478,8 +477,7 @@ class HeaderDecoder {
     _validateEntropyOptions(spcodCs, 'COD marker');
     final spcodT = view.getUint8(offset++);
 
-    final usesPrecinctPartition =
-        (scod & Markers.SCOX_PRECINCT_PARTITION) != 0;
+    final usesPrecinctPartition = (scod & Markers.SCOX_PRECINCT_PARTITION) != 0;
     List<int>? precinctSpec;
     if (usesPrecinctPartition) {
       precinctSpec = <int>[];
@@ -996,7 +994,8 @@ class HeaderDecoder {
 
   static void _validateDecompositionLevels(int levels) {
     if (levels > 32) {
-      throw StateError('Number of decomposition levels out of range (max 32): $levels');
+      throw StateError(
+          'Number of decomposition levels out of range (max 32): $levels');
     }
   }
 
@@ -1031,8 +1030,7 @@ class HeaderDecoder {
   }
 
   static void _validateEntropyOptions(int options, String markerLabel) {
-    const allowedOptions =
-        StdEntropyCoderOptions.OPT_BYPASS |
+    const allowedOptions = StdEntropyCoderOptions.OPT_BYPASS |
         StdEntropyCoderOptions.OPT_RESET_MQ |
         StdEntropyCoderOptions.OPT_TERM_PASS |
         StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL |
@@ -1180,9 +1178,6 @@ class HeaderDecoder {
         throw StateError('Unsupported quantization type: $qType');
     }
   }
-
-  // TODO(jj2000): Port the full header parsing logic, populating DecoderSpecs
-  // and HeaderInfo from a RandomAccessIO source.
 
   void parsePocMarker(
     Uint8List markerPayload, {
@@ -2281,5 +2276,3 @@ class HeaderDecoder {
     return entries.isEmpty ? 'none' : entries.join(' ');
   }
 }
-
-

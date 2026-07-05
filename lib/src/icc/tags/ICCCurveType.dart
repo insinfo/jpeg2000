@@ -49,19 +49,18 @@ class ICCCurveType extends ICCTag {
       : type = ICCProfile.getInt(data, offset),
         reserved = ICCProfile.getInt(data, offset + ICCProfile.int_size),
         nEntries = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
-        entry = Int32List(ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size)),
+        entry = Int32List(
+            ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size)),
         super(signature, data, offset, offset + 2 * ICCProfile.int_size) {
-    
     for (int i = 0; i < nEntries; ++i) {
-      entry[i] = ICCProfile.getShort(
-              data, offset + 3 * ICCProfile.int_size + i * ICCProfile.short_size) &
+      entry[i] = ICCProfile.getShort(data,
+              offset + 3 * ICCProfile.int_size + i * ICCProfile.short_size) &
           0xFFFF;
     }
   }
-  
+
   /// Accessor for curve entry at index.
   int entryAt(int i) {
     return entry[i];
   }
 }
-

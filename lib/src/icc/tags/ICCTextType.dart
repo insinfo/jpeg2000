@@ -38,4 +38,3 @@ class ICCTextType extends ICCTag {
     return "[${super.toString()} \"${String.fromCharCodes(ascii)}\"]";
   }
 }
-

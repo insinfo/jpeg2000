@@ -109,4 +109,3 @@ class SubbandSyn extends Subband {
     return filter;
   }
 }
-

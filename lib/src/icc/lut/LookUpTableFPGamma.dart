@@ -10,7 +10,8 @@ class LookUpTableFPGamma extends LookUpTableFP {
   LookUpTableFPGamma(
       ICCCurveType curve, // Pointer to the curve data
       int dwNumInput // Number of input values in created LUT
-      ) : super(curve, dwNumInput) {
+      )
+      : super(curve, dwNumInput) {
     // Gamma exponent for inverse transformation
     dfE = ICCCurveType.curveGammaToDouble(curve.entryAt(0));
     for (int i = 0; i < dwNumInput; i++) {
@@ -28,4 +29,3 @@ class LookUpTableFPGamma extends LookUpTableFP {
     return (rep..write("]")).toString();
   }
 }
-

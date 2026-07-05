@@ -94,9 +94,8 @@ Uint8List buildRgnMarkerPayload({
   required int sprgn,
   bool shortComponentIndex = true,
 }) {
-  final componentBytes = shortComponentIndex
-      ? <int>[component & 0xff]
-      : uint16Bytes(component);
+  final componentBytes =
+      shortComponentIndex ? <int>[component & 0xff] : uint16Bytes(component);
   final body = <int>[...componentBytes, srgn & 0xff, sprgn & 0xff];
   return Uint8List.fromList(<int>[...uint16Bytes(2 + body.length), ...body]);
 }
@@ -188,7 +187,8 @@ void addMarker(BytesBuilder builder, int marker) {
     ..add(<int>[(Markers.SOD >> 8) & 0xff, Markers.SOD & 0xff]);
   final headerBytes = headerBuilder.toBytes();
   final bodyBytes = Uint8List.fromList(
-    List<int>.generate(bodyLength, (index) => (tileIdx + tilePartIdx + index) & 0xff),
+    List<int>.generate(
+        bodyLength, (index) => (tileIdx + tilePartIdx + index) & 0xff),
   );
   final tilePartLength = 2 + 2 + 8 + headerBytes.length + bodyBytes.length;
   final builder = BytesBuilder();
@@ -203,5 +203,9 @@ void addMarker(BytesBuilder builder, int marker) {
   );
   builder.add(headerBytes);
   builder.add(bodyBytes);
-  return (bytes: builder.toBytes(), psot: tilePartLength, bodyLength: bodyLength);
+  return (
+    bytes: builder.toBytes(),
+    psot: tilePartLength,
+    bodyLength: bodyLength
+  );
 }

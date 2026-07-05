@@ -40,14 +40,16 @@ abstract class SubbandROIMask {
         // Horizontal low-pass branch.
         final horizontal = y < hhMask.uly ? current.ll : current.lh;
         if (horizontal == null) {
-          throw StateError('Missing child while traversing horizontal low-pass');
+          throw StateError(
+              'Missing child while traversing horizontal low-pass');
         }
         current = horizontal;
       } else {
         // Horizontal high-pass branch.
         final vertical = y < hhMask.uly ? current.hl : current.hh;
         if (vertical == null) {
-          throw StateError('Missing child while traversing horizontal high-pass');
+          throw StateError(
+              'Missing child while traversing horizontal high-pass');
         }
         current = vertical;
       }

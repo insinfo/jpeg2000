@@ -31,8 +31,8 @@ class ICCXYZType extends ICCTag {
         super(signature, data, offset, length);
 
   /// Constructor for subclasses that need to specify values manually
-  ICCXYZType.fromValues(
-      int signature, Uint8List data, int offset, int length, this.x, this.y, this.z)
+  ICCXYZType.fromValues(int signature, Uint8List data, int offset, int length,
+      this.x, this.y, this.z)
       : super(signature, data, offset, length);
 
   /// Return the string rep of this tag.
@@ -41,4 +41,3 @@ class ICCXYZType extends ICCTag {
     return "[${super.toString()}($x, $y, $z)]";
   }
 }
-

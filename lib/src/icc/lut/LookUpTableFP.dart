@@ -29,7 +29,8 @@ abstract class LookUpTableFP extends LookUpTable {
   LookUpTableFP(
       ICCCurveType curve, // Pointer to the curve data
       int dwNumInput // Number of input values in created LUT
-      ) : super(curve, dwNumInput) {
+      )
+      : super(curve, dwNumInput) {
     lut = Float32List(dwNumInput);
   }
 
@@ -40,4 +41,3 @@ abstract class LookUpTableFP extends LookUpTable {
     return lut[index];
   }
 }
-

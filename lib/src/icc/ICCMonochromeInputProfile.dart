@@ -19,4 +19,3 @@ class ICCMonochromeInputProfile extends ICCProfile {
   /// @exception ICCProfileInvalidException
   ICCMonochromeInputProfile(ColorSpace csm) : super(csm);
 }
-

@@ -1,18 +1,19 @@
-import '../../image/Coord.dart';
+import '../../image/coord.dart';
 import 'MultiResImgData.dart';
 import 'SubbandSyn.dart';
 
 /// Aggregates multiple [MultiResImgData] providers into a single component space.
 class MultiResImgDataJoiner implements MultiResImgData {
-  MultiResImgDataJoiner(List<MultiResImgData> sources, List<int> componentIndices)
+  MultiResImgDataJoiner(
+      List<MultiResImgData> sources, List<int> componentIndices)
       : _sources = List<MultiResImgData>.from(sources, growable: false),
-        _componentIndices =
-            List<int>.from(componentIndices, growable: false) {
+        _componentIndices = List<int>.from(componentIndices, growable: false) {
     if (_sources.isEmpty) {
       throw ArgumentError('At least one source must be provided');
     }
     if (_sources.length != _componentIndices.length) {
-      throw ArgumentError('Source/component index arrays must have equal length');
+      throw ArgumentError(
+          'Source/component index arrays must have equal length');
     }
     final reference = _sources.first;
     final referenceTileCount = reference.getNumTilesTotal();
@@ -55,12 +56,12 @@ class MultiResImgDataJoiner implements MultiResImgData {
   int getNumComps() => _sources.length;
 
   @override
-  int getCompSubsX(int component) =>
-      _sourceForComponent(component).getCompSubsX(_indexForComponent(component));
+  int getCompSubsX(int component) => _sourceForComponent(component)
+      .getCompSubsX(_indexForComponent(component));
 
   @override
-  int getCompSubsY(int component) =>
-      _sourceForComponent(component).getCompSubsY(_indexForComponent(component));
+  int getCompSubsY(int component) => _sourceForComponent(component)
+      .getCompSubsY(_indexForComponent(component));
 
   @override
   int getTileCompWidth(int tile, int component, int resLevel) =>
@@ -93,8 +94,8 @@ class MultiResImgDataJoiner implements MultiResImgData {
       );
 
   @override
-  int getNomRangeBits(int component) =>
-      _sourceForComponent(component).getNomRangeBits(_indexForComponent(component));
+  int getNomRangeBits(int component) => _sourceForComponent(component)
+      .getNomRangeBits(_indexForComponent(component));
 
   @override
   void setTile(int x, int y) {
@@ -167,4 +168,3 @@ class MultiResImgDataJoiner implements MultiResImgData {
         _indexForComponent(component),
       );
 }
-

@@ -44,5 +44,3 @@ abstract class EntropyDecoder extends MultiResImgDataAdapter
   @override
   int getCbULY() => src.getCbULY();
 }
-
-

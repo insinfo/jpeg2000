@@ -1,7 +1,7 @@
 import '../../ModuleSpec.dart';
 import '../../util/ParameterList.dart';
-import '../../wavelet/analysis/AnWtFilter.dart';
-import '../../wavelet/analysis/AnWtFilterSpec.dart';
+import '../../wavelet/analysis/AnWTFilter.dart';
+import '../../wavelet/analysis/AnWTFilterSpec.dart';
 import '../../wavelet/FilterTypes.dart';
 import '../CompTransfSpec.dart';
 import '../invcomptransf/InvCompTransf.dart';
@@ -228,8 +228,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           case FilterTypes.W9X7: // Must use ICT
             if (isTileSpecified(t)) {
               // User has requested RCT -> Error
-              throw ArgumentError(
-                  "Cannot use RCT with 9x7 filter in tile $t");
+              throw ArgumentError("Cannot use RCT with 9x7 filter in tile $t");
             } else {
               // Specify ICT for this tile
               setTileDef(t, InvCompTransf.invIct);
@@ -246,8 +245,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           case FilterTypes.W5X3: // Must use RCT
             if (isTileSpecified(t)) {
               // User has requested ICT -> Error
-              throw ArgumentError(
-                  "Cannot use ICT with filter 5x3 in tile $t");
+              throw ArgumentError("Cannot use ICT with filter 5x3 in tile $t");
             } else {
               setTileDef(t, InvCompTransf.invRct);
             }
@@ -295,4 +293,3 @@ class ForwCompTransfSpec extends CompTransfSpec {
     return filtType[0];
   }
 }
-

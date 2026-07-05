@@ -25,7 +25,8 @@ class RectangularROI extends ROIShape {
 
   /// Returns `true` if any point of the block starting at (`blockX`, `blockY`)
   /// with dimensions (`blockWidth`, `blockHeight`) overlaps the ROI.
-  bool intersectsBlock(int blockX, int blockY, int blockWidth, int blockHeight) {
+  bool intersectsBlock(
+      int blockX, int blockY, int blockWidth, int blockHeight) {
     if (width == 0 || height == 0 || blockWidth == 0 || blockHeight == 0) {
       return false;
     }
@@ -34,4 +35,3 @@ class RectangularROI extends ROIShape {
     return blockX1 > x0 && blockX < x1 && blockY1 > y0 && blockY < y1;
   }
 }
-

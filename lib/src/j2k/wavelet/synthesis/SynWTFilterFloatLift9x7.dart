@@ -43,8 +43,8 @@ class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
     ik += iStep;
 
     for (var i = 2; i < outLen - 1; i += 2) {
-      outSig[ik] =
-          lowSig[lk] / kL - delta * ((highSig[hk - highStep] + highSig[hk]) / kH);
+      outSig[ik] = lowSig[lk] / kL -
+          delta * ((highSig[hk - highStep] + highSig[hk]) / kH);
       ik += iStep;
       lk += lowStep;
       hk += highStep;
@@ -140,8 +140,7 @@ class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
     var ik = outOff + outStep;
 
     for (var i = 1; i < outLen - 1; i += 2) {
-      outSig[ik] = lowSig[lk] -
-          delta * (highSig[hk] + highSig[hk + highStep]);
+      outSig[ik] = lowSig[lk] - delta * (highSig[hk] + highSig[hk + highStep]);
       ik += iStep;
       lk += lowStep;
       hk += highStep;
@@ -164,8 +163,8 @@ class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
     hk += highStep;
 
     for (var i = 2; i < outLen - 1; i += 2) {
-      outSig[ik] = highSig[hk] -
-          gamma * (outSig[ik - outStep] + outSig[ik + outStep]);
+      outSig[ik] =
+          highSig[hk] - gamma * (outSig[ik - outStep] + outSig[ik + outStep]);
       ik += iStep;
       hk += highStep;
     }
@@ -243,5 +242,3 @@ class SynWTFilterFloatLift9x7 extends SynWTFilterFloat {
   @override
   String toString() => 'w9x7 (lifting)';
 }
-
-

@@ -12,7 +12,8 @@ void main() {
     });
 
     test('intArraySet handles large lists', () {
-      final values = Int32List.fromList(List<int>.generate(64, (index) => index));
+      final values =
+          Int32List.fromList(List<int>.generate(64, (index) => index));
       ArrayUtil.intArraySet(values, -3);
       expect(values, everyElement(-3));
     });
@@ -39,4 +40,3 @@ void main() {
     });
   });
 }
-

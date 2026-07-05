@@ -105,4 +105,3 @@ abstract class AnWTFilter implements WaveletFilter {
   /// JJ2000 command-line parameter metadata for analysis filters.
   static List<List<String?>> getParameterInfo() => parameterInfo;
 }
-

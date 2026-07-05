@@ -77,4 +77,3 @@ class MaxShiftSpec extends IntegerSpec {
     }
   }
 }
-

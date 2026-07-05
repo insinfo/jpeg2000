@@ -1,9 +1,12 @@
 import '../ModuleSpec.dart';
 import '../util/ParameterList.dart';
-import 'dequantizer/StdDequantizerParams.dart';
 
 /// Stores the base quantization step sizes per tile-component.
-class QuantStepSizeSpec extends ModuleSpec<StdDequantizerParams> {
+class QuantStepSizeSpec extends ModuleSpec<dynamic> {
+  // NOTE: the value type is dynamic because this spec is shared by the two
+  // sides of the codec (as the raw ModuleSpec is in JJ2000): the encoder
+  // stores the normalized base step as a double (from -Qstep), while the
+  // decoder stores StdDequantizerParams parsed from the QCD/QCC markers.
   static const int SPEC_DEF = ModuleSpec.SPEC_DEF;
   static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
   static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
@@ -178,9 +181,7 @@ class QuantStepSizeSpec extends ModuleSpec<StdDequantizerParams> {
   }
 }
 
-StdDequantizerParams _wrapValue(double value) {
-  return StdDequantizerParams(
-    nStep: <List<double>>[<double>[value]],
-  );
-}
-
+// The encoder-side value stored for each tile-component is the normalized
+// base step itself, as a double (mirrors JJ2000, which stores a Float). The
+// decoder side stores StdDequantizerParams objects parsed from QCD/QCC.
+double _wrapValue(double value) => value;

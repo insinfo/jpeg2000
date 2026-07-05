@@ -7,12 +7,11 @@ import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
 import 'package:jpeg2000/src/j2k/codestream/markers.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/roi/RectangularRoi.dart';
 import 'package:jpeg2000/src/j2k/wavelet/FilterTypes.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/SynWTFilterFloatLift9x7.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/SynWTFilterIntLift5x3.dart';
-
 
 import '../test_utils.dart';
 
@@ -282,8 +281,8 @@ void main() {
       );
 
       expect(
-        () =>
-            decoder.parseCodMarker(conflictingPayload, isMainHeader: true, tileIdx: 0),
+        () => decoder.parseCodMarker(conflictingPayload,
+            isMainHeader: true, tileIdx: 0),
         throwsA(isA<StateError>()),
       );
     });
@@ -351,7 +350,8 @@ void main() {
       );
 
       expect(
-        () => decoder.parseCodMarker(tilePayload, isMainHeader: false, tileIdx: 1),
+        () => decoder.parseCodMarker(tilePayload,
+            isMainHeader: false, tileIdx: 1),
         throwsA(isA<StateError>()),
       );
     });
@@ -383,7 +383,8 @@ void main() {
       );
     });
 
-    test('installs tile-scoped precinct defaults even without partition flag', () {
+    test('installs tile-scoped precinct defaults even without partition flag',
+        () {
       final specs = DecoderSpecs.basic(2, 1);
       final info = HeaderInfo();
       final decoder = HeaderDecoder.placeholder(
@@ -462,7 +463,8 @@ void main() {
       expect(specs.wfs.getHFilters(0, 1)[0], isA<SynWTFilterFloatLift9x7>());
     });
 
-    test('records component precinct defaults when COC omits partition bits', () {
+    test('records component precinct defaults when COC omits partition bits',
+        () {
       final specs = DecoderSpecs.basic(1, 1);
       final info = HeaderInfo();
       final decoder = HeaderDecoder.placeholder(
@@ -537,7 +539,8 @@ void main() {
       );
 
       expect(
-        () => decoder.parseCocMarker(cocPayload, isMainHeader: true, tileIdx: 0),
+        () =>
+            decoder.parseCocMarker(cocPayload, isMainHeader: true, tileIdx: 0),
         throwsA(isA<StateError>()),
       );
     });
@@ -594,7 +597,8 @@ void main() {
         numComps: 1,
       );
 
-      final payload = Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x00, 0x64, 0x02, 0x05]);
+      final payload = Uint8List.fromList(
+          <int>[0x00, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x00, 0x64, 0x02, 0x05]);
       decoder.parseSotMarker(payload);
 
       final sot = info.sot['t1_tp2'];
@@ -653,7 +657,8 @@ void main() {
         numComps: 1,
       );
 
-      final sotPayload = Uint8List.fromList(<int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x01]);
+      final sotPayload = Uint8List.fromList(
+          <int>[0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x01]);
       decoder.parseSotMarker(sotPayload);
 
       decoder.parsePptMarker(
@@ -694,7 +699,8 @@ void main() {
       );
       decoder.parseCodMarker(mainCod, isMainHeader: true, tileIdx: 0);
 
-      final mainSqcd = (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+      final mainSqcd =
+          (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
       final mainQcd = buildQcdMarkerPayload(
         sqcd: mainSqcd,
         stepBytes: <int>[
@@ -746,12 +752,14 @@ void main() {
         spcocCs: 0x03,
         spcocT: 0x01,
       );
-      final tileSqcd = (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
+      final tileSqcd =
+          (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
       final tileQcd = buildQcdMarkerPayload(
         sqcd: tileSqcd,
         stepBytes: uint16List(<int>[0x6400]),
       );
-      final tileSqcc = (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
+      final tileSqcc =
+          (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
       final tileQcc = buildQccMarkerPayload(
         component: 1,
         sqcc: tileSqcc,
@@ -873,7 +881,9 @@ void main() {
       expect(rgnInfo!.sprgn, equals(5));
     });
 
-    test('removes rectangular component defaults when codestream defines ROI shifts', () {
+    test(
+        'removes rectangular component defaults when codestream defines ROI shifts',
+        () {
       final specs = DecoderSpecs.basic(1, 1);
       final rectSpec = specs.rectRois!;
       rectSpec.setCompDef(
@@ -900,7 +910,8 @@ void main() {
       expect(rectSpec.roiFor(0, 0), isNull);
     });
 
-    test('removes rectangular tile overrides when tile-level ROI shifts arrive', () {
+    test('removes rectangular tile overrides when tile-level ROI shifts arrive',
+        () {
       final specs = DecoderSpecs.basic(2, 1);
       final rectSpec = specs.rectRois!;
       rectSpec.setTileCompVal(
@@ -942,7 +953,8 @@ void main() {
         spcodCs: 0x00,
         spcodT: 0x01,
       );
-      final mainSqcd = (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+      final mainSqcd =
+          (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
       final mainQcd = buildQcdMarkerPayload(
         sqcd: mainSqcd,
         stepBytes: <int>[
@@ -977,12 +989,14 @@ void main() {
         spcocCs: 0x03,
         spcocT: 0x01,
       );
-      final tileSqcd = (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
+      final tileSqcd =
+          (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
       final tileQcd = buildQcdMarkerPayload(
         sqcd: tileSqcd,
         stepBytes: uint16List(<int>[0x6400]),
       );
-      final tileSqcc = (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
+      final tileSqcc =
+          (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
       final tileQcc = buildQccMarkerPayload(
         component: 1,
         sqcc: tileSqcc,
@@ -1106,9 +1120,12 @@ void main() {
       );
       addMarkerSegment(builder, Markers.COD, mainCod);
 
-      final tilePart00 = buildTilePart(tileIdx: 0, tilePartIdx: 0, numTileParts: 2, bodyLength: 6);
-      final tilePart01 = buildTilePart(tileIdx: 0, tilePartIdx: 1, numTileParts: 2, bodyLength: 3);
-      final tilePart10 = buildTilePart(tileIdx: 1, tilePartIdx: 0, numTileParts: 1, bodyLength: 4);
+      final tilePart00 = buildTilePart(
+          tileIdx: 0, tilePartIdx: 0, numTileParts: 2, bodyLength: 6);
+      final tilePart01 = buildTilePart(
+          tileIdx: 0, tilePartIdx: 1, numTileParts: 2, bodyLength: 3);
+      final tilePart10 = buildTilePart(
+          tileIdx: 1, tilePartIdx: 0, numTileParts: 1, bodyLength: 4);
 
       builder
         ..add(tilePart00.bytes)
@@ -1119,7 +1136,8 @@ void main() {
       final data = builder.toBytes();
       final io = ISRandomAccessIO(data);
       final headerInfo = HeaderInfo();
-      final decoder = HeaderDecoder.readMainHeader(input: io, headerInfo: headerInfo);
+      final decoder =
+          HeaderDecoder.readMainHeader(input: io, headerInfo: headerInfo);
 
       final observedTiles = <int>[];
       final observedTileParts = <(int tile, int part)>[];
@@ -1132,7 +1150,8 @@ void main() {
           observedTiles.add(sot.isot);
           observedTileParts.add((sot.isot, sot.tpsot));
           final psot = sot.psot;
-          expect(psot, isPositive, reason: 'Psot should expose tile-part length');
+          expect(psot, isPositive,
+              reason: 'Psot should expose tile-part length');
           final dataStart = io.getPos();
           observedOffsets.add(dataStart);
           final headerBytes = dataStart - start;
@@ -1143,7 +1162,8 @@ void main() {
           io.seek(expectedEnd);
         } on StateError catch (error) {
           final message = error.message;
-          if (message.contains('Reached end of codestream before encountering tile-part header')) {
+          if (message.contains(
+              'Reached end of codestream before encountering tile-part header')) {
             break;
           }
           rethrow;
@@ -1153,8 +1173,10 @@ void main() {
       expect(observedTiles, equals(<int>[0, 0, 1]));
       expect(decoder.nTileParts[0], equals(2));
       expect(decoder.nTileParts[1], equals(1));
-      expect(decoder.getTilePartLengths(0), equals(<int>[tilePart00.psot, tilePart01.psot]));
-      expect(decoder.getTileTotalLength(0), equals(tilePart00.psot + tilePart01.psot));
+      expect(decoder.getTilePartLengths(0),
+          equals(<int>[tilePart00.psot, tilePart01.psot]));
+      expect(decoder.getTileTotalLength(0),
+          equals(tilePart00.psot + tilePart01.psot));
       expect(decoder.getTilePartLengths(1), equals(<int>[tilePart10.psot]));
       expect(decoder.getTileTotalLength(1), equals(tilePart10.psot));
 
@@ -1169,13 +1191,14 @@ void main() {
           tile0Bodies.add(observedBodyLengths[i]);
         } else if (entry.$1 == 1) {
           tile1Offsets.add(observedOffsets[i]);
-           tile1Bodies.add(observedBodyLengths[i]);
+          tile1Bodies.add(observedBodyLengths[i]);
         }
       }
 
       expect(decoder.getTilePartDataOffsets(0), equals(tile0Offsets));
       expect(decoder.getTilePartBodyLengths(0), equals(tile0Bodies));
-      expect(tile0Bodies, equals(<int>[tilePart00.bodyLength, tilePart01.bodyLength]));
+      expect(tile0Bodies,
+          equals(<int>[tilePart00.bodyLength, tilePart01.bodyLength]));
       expect(decoder.getTilePartBodyLengths(1), equals(tile1Bodies));
       expect(tile1Bodies, equals(<int>[tilePart10.bodyLength]));
       expect(decoder.getTilePartDataOffsets(1), equals(tile1Offsets));
@@ -1184,5 +1207,3 @@ void main() {
     });
   });
 }
-
-

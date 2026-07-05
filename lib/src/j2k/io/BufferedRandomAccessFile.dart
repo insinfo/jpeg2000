@@ -135,7 +135,8 @@ abstract class BufferedRandomAccessFile implements RandomAccessIO {
   void seek(int offset) {
     _ensureOpen();
     if (offset < 0) {
-      throw ArgumentError.value(offset, 'offset', 'Cannot seek to negative positions');
+      throw ArgumentError.value(
+          offset, 'offset', 'Cannot seek to negative positions');
     }
 
     if (offset >= _offset && offset < _offset + _byteBuffer.length) {
@@ -269,4 +270,3 @@ enum _FileMode {
   readWriteTruncate,
   readWrite,
 }
-

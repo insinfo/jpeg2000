@@ -16,4 +16,3 @@ abstract class WaveletTransform implements ImgData {
   /// current tile (for example [wtImplLine] or [wtImplFull]).
   int getImplementationType(int component);
 }
-

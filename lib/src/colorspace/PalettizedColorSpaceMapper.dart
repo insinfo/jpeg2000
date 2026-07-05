@@ -30,7 +30,8 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
           'wrong number of components ($ncomps) for palettized image');
     }
     final outComps = getNumComps();
-    outShiftValueArray = List<int>.generate(outComps, (i) => 1 << (getNomRangeBits(i) - 1));
+    outShiftValueArray =
+        List<int>.generate(outComps, (i) => 1 << (getNomRangeBits(i) - 1));
   }
 
   @override
@@ -74,7 +75,8 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
     return out;
   }
 
-  void _mapPaletteInt(DataBlk out, int c, PaletteBox palette, List<int> outData) {
+  void _mapPaletteInt(
+      DataBlk out, int c, PaletteBox palette, List<int> outData) {
     final srcData = dataInt[0]!;
     for (var row = 0; row < out.h; ++row) {
       final leftIn = inInt[0]!.offset + row * inInt[0]!.scanw;
@@ -83,7 +85,8 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       var kOut = leftOut;
       for (var kIn = leftIn; kIn < rightIn; ++kIn, ++kOut) {
         outData[kOut] =
-            palette.getEntry(c, srcData[kIn] + shiftValueArray![0]) - outShiftValueArray[c];
+            palette.getEntry(c, srcData[kIn] + shiftValueArray![0]) -
+                outShiftValueArray[c];
       }
     }
   }
@@ -98,11 +101,11 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       var kOut = leftOut;
       for (var kIn = leftIn; kIn < rightIn; ++kIn, ++kOut) {
         outData[kOut] = (palette.getEntry(
-                      c,
-                      srcData[kIn].toInt() + shiftValueArray![0],
-                    ) -
-                    outShiftValueArray[c])
-                .toDouble();
+                  c,
+                  srcData[kIn].toInt() + shiftValueArray![0],
+                ) -
+                outShiftValueArray[c])
+            .toDouble();
       }
     }
   }

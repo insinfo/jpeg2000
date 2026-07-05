@@ -4,14 +4,13 @@ import 'package:jpeg2000/src/j2k/codestream/CBlkCoordInfo.dart';
 import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
 import 'package:test/test.dart';
 
-
 import 'package:jpeg2000/src/j2k/codestream/reader/CBlkInfo.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
 import 'package:jpeg2000/src/j2k/codestream/reader/BitstreamReaderAgent.dart';
 import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
 import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
 import 'package:jpeg2000/src/j2k/entropy/decoder/DecLyrdCBlk.dart';
-import 'package:jpeg2000/src/j2k/image/Coord.dart';
+import 'package:jpeg2000/src/j2k/image/coord.dart';
 
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
 
@@ -98,7 +97,8 @@ void main() {
 
       final remaining = <int>[0x7fffffff];
 
-      final truncated = decoder.readPktBody(0, 0, 0, 0, subbandBlocks, remaining);
+      final truncated =
+          decoder.readPktBody(0, 0, 0, 0, subbandBlocks, remaining);
       expect(truncated, isFalse);
       expect(blockInfo.off[0], equals(0));
       expect(blockInfo.body[0], isNotNull);
@@ -107,5 +107,3 @@ void main() {
     });
   });
 }
-
-
