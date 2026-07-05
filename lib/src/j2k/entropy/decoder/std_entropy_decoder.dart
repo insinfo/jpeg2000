@@ -549,7 +549,7 @@ class StdEntropyDecoder extends EntropyDecoder {
         FacilityManager.getMsgLogger().printmsg(
           MsgLogger.warning,
           'Error detected at bit-plane $curBitPlane in code-block '
-          '(${verticalCodeBlockIndex},${horizontalCodeBlockIndex}), '
+          '($verticalCodeBlockIndex,$horizontalCodeBlockIndex), '
           'sb_idx ${subband.sbandIdx}, res. level ${subband.resLvl}. Concealing...',
         );
       }

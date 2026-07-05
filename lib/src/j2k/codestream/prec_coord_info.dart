@@ -3,13 +3,7 @@ import 'coord_info.dart';
 /// Coordinates of a precinct both in the subband and reference grid.
 class PrecCoordInfo extends CoordInfo {
   PrecCoordInfo(
-      [int ulx = 0,
-      int uly = 0,
-      int w = 0,
-      int h = 0,
-      this.xref = 0,
-      this.yref = 0])
-      : super(ulx, uly, w, h);
+      [super.ulx, super.uly, super.w, super.h, this.xref = 0, this.yref = 0]);
 
   int xref;
   int yref;

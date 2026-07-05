@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import '../../wavelet/analysis/forward_wt.dart';
@@ -33,13 +32,13 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     [
       "Hjj2000_COM",
       null,
-      "Writes or not the JJ2000 COM marker in the " + "codestream",
+      "Writes or not the JJ2000 COM marker in the " "codestream",
       "on"
     ],
     [
       "HCOM",
       "<Comment 1>[#<Comment 2>[#<Comment3...>]]",
-      "Adds COM marker segments in the codestream. Comments must be " +
+      "Adds COM marker segments in the codestream. Comments must be "
           "separated with '#' and are written into distinct maker segments.",
       null
     ]
@@ -114,11 +113,6 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
   /// Returns the length of the header.
   int getLength() {
     return baos.length;
-  }
-
-  /// Writes the header to the specified IOSink.
-  void writeTo(IOSink out) {
-    out.add(getBuffer());
   }
 
   /// Writes the header to the specified BinaryDataOutput.
@@ -1270,9 +1264,10 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           encSpec.css.isCompSpecified(i) ||
           encSpec.pss.isCompSpecified(i) ||
           encSpec.cblks.isCompSpecified(i) ||
-          (isEresUsed != isEresUsedinComp))
+          (isEresUsed != isEresUsedinComp)) {
         // Some component non-default stuff => need COC
         writeCOC(true, 0, i);
+      }
     }
 
     // +-------------------------------+
@@ -1308,7 +1303,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
   void writeCOM() {
     if (enJJ2KMarkSeg) {
-      String str = "Created by: JJ2000 version " + JJ2KInfo.version;
+      String str = "Created by: JJ2000 version ${JJ2KInfo.version}";
       int markSegLen;
 
       writeShort(Markers.COM);
@@ -1371,8 +1366,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Isot
     if (tileIdx > 65534) {
-      throw ArgumentError("Trying to write a tile-part " +
-          "header whose tile index is " +
+      throw ArgumentError("Trying to write a tile-part "
+          "header whose tile index is "
           "too high");
     }
     writeByte(tileIdx >> 8);

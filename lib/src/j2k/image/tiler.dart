@@ -319,10 +319,10 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
     tileH = ty1 - ty0;
     // Set component specific variables
     int nc = src.getNumComps();
-    if (compW == null) compW = List.filled(nc, 0);
-    if (compH == null) compH = List.filled(nc, 0);
-    if (tcx0 == null) tcx0 = List.filled(nc, 0);
-    if (tcy0 == null) tcy0 = List.filled(nc, 0);
+    compW ??= List.filled(nc, 0);
+    compH ??= List.filled(nc, 0);
+    tcx0 ??= List.filled(nc, 0);
+    tcy0 ??= List.filled(nc, 0);
     for (int i = 0; i < nc; i++) {
       tcx0![i] = (tx0 / src.getCompSubsX(i)).ceil();
       tcy0![i] = (ty0 / src.getCompSubsY(i)).ceil();

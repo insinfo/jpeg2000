@@ -355,12 +355,12 @@ class AnWTFilterSpec extends ModuleSpec {
         // Horizontal filters
         str += "\tH:";
         for (int i = 0; i < an[0].length; i++) {
-          str += " " + an[0][i].toString();
+          str += " ${an[0][i]}";
         }
         // Horizontal filters
         str += "\n\tV:";
         for (int i = 0; i < an[1].length; i++) {
-          str += " " + an[1][i].toString();
+          str += " ${an[1][i]}";
         }
         str += "\n";
       }

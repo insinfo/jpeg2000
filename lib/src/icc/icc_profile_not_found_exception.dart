@@ -2,6 +2,6 @@ import 'icc_profile_exception.dart';
 
 /// Thrown when an image does not contain an ICC profile.
 class ICCProfileNotFoundException extends ICCProfileException {
-  ICCProfileNotFoundException([String message = 'no icc profile in image'])
-      : super(message);
+  ICCProfileNotFoundException(
+      [String super.message = 'no icc profile in image']);
 }

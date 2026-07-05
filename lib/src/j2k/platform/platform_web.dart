@@ -21,8 +21,8 @@ Future<Uint8List> readBinarySource(Object source) async {
   if (source is List<int>) {
     return Uint8List.fromList(source);
   }
-  if (source is web.Blob) {
-    return readBrowserBlob(source);
+  if (_isBrowserBlob(source)) {
+    return readBrowserBlob(source as web.Blob);
   }
   throw ArgumentError.value(
     source,
@@ -38,8 +38,8 @@ Future<String> readTextSource(Object source) async {
   if (source is List<int>) {
     return utf8.decode(source);
   }
-  if (source is web.Blob) {
-    final text = await source.text().toDart;
+  if (_isBrowserBlob(source)) {
+    final text = await (source as web.Blob).text().toDart;
     return text.toDart;
   }
   throw ArgumentError.value(
@@ -52,6 +52,14 @@ Future<String> readTextSource(Object source) async {
 Future<Uint8List> readBrowserBlob(web.Blob blob) async {
   final buffer = await blob.arrayBuffer().toDart;
   return Uint8List.view(buffer.toDart);
+}
+
+bool _isBrowserBlob(Object source) {
+  try {
+    return (source as JSObject).isA<web.Blob>();
+  } on TypeError {
+    return false;
+  }
 }
 
 class _BrowserConsoleSink implements StringSink {

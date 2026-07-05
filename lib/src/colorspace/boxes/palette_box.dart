@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import '../../j2k/io/random_access_io.dart';
 import '../color_space_exception.dart';
 import '../../icc/icc_profile.dart';
 import 'jp2_box.dart';
@@ -15,7 +14,7 @@ class PaletteBox extends JP2Box {
   List<int>? bitdepth;
   List<List<int>>? entries;
 
-  PaletteBox(RandomAccessIO in_io, int boxStart) : super(in_io, boxStart) {
+  PaletteBox(super.in_io, super.boxStart) {
     readBox();
   }
 

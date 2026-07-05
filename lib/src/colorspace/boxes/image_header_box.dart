@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import '../../j2k/io/random_access_io.dart';
 import '../../icc/icc_profile.dart';
 import 'jp2_box.dart';
 
@@ -17,7 +16,7 @@ class ImageHeaderBox extends JP2Box {
   bool unk = false;
   bool ipr = false;
 
-  ImageHeaderBox(RandomAccessIO in_io, int boxStart) : super(in_io, boxStart) {
+  ImageHeaderBox(super.in_io, super.boxStart) {
     readBox();
   }
 

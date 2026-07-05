@@ -892,12 +892,12 @@ class Decoder implements Runnable {
       ];
     }
 
-    SynWTFilter _factory() =>
+    SynWTFilter factory() =>
         reversible ? SynWTFilterIntLift5x3() : SynWTFilterFloatLift9x7();
 
-    final horizontal = List<SynWTFilter>.generate(levelCount, (_) => _factory(),
+    final horizontal = List<SynWTFilter>.generate(levelCount, (_) => factory(),
         growable: false);
-    final vertical = List<SynWTFilter>.generate(levelCount, (_) => _factory(),
+    final vertical = List<SynWTFilter>.generate(levelCount, (_) => factory(),
         growable: false);
     return <List<SynWTFilter>>[horizontal, vertical];
   }

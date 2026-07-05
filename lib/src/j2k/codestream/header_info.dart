@@ -423,7 +423,7 @@ class HeaderInfoSIZ {
     sb.writeln(' Capabilities : $rsiz');
     sb.writeln(
         ' Image dim.   : ${xsiz - x0siz}x${ysiz - y0siz}, (off=$x0siz,$y0siz)');
-    sb.writeln(' Tile dim.    : ${xtsiz}x${ytsiz}, (off=$xt0siz,$yt0siz)');
+    sb.writeln(' Tile dim.    : ${xtsiz}x$ytsiz, (off=$xt0siz,$yt0siz)');
     sb.writeln(' Component(s) : $csiz');
     sb.write(' Orig. depth  : ');
     for (var i = 0; i < csiz; i++) {
@@ -549,7 +549,7 @@ class HeaderInfoCOD {
     sb.writeln(' Num. of layers : $sgcodNl');
     final cblkWidth = 1 << (spcodCw + 2);
     final cblkHeight = 1 << (spcodCh + 2);
-    sb.writeln(' Cblk dimension : ${cblkWidth}x${cblkHeight}');
+    sb.writeln(' Cblk dimension : ${cblkWidth}x$cblkHeight');
     switch (spcodT[0]) {
       case FilterTypes.W9X7:
         sb.writeln(' Filter         : 9-7 irreversible');
@@ -904,9 +904,9 @@ class HeaderInfoTLM {
     sb.writeln(' Marker index   : $ztlm');
     final tileLabel = tileIndexFieldBytes == 0
         ? 'implicit'
-        : '${tileIndexFieldBytes} byte${tileIndexFieldBytes == 1 ? '' : 's'}';
+        : '$tileIndexFieldBytes byte${tileIndexFieldBytes == 1 ? '' : 's'}';
     sb.writeln(' Tile field     : $tileLabel');
-    sb.writeln(' Length field   : ${tilePartLengthFieldBytes} bytes');
+    sb.writeln(' Length field   : $tilePartLengthFieldBytes bytes');
     for (var i = 0; i < entries.length; i++) {
       final entry = entries[i];
       sb.writeln('  [${i + 1}] tile=${entry.tileIndex} length=${entry.length}');

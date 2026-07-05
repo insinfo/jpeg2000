@@ -129,8 +129,8 @@ class LayersInfo {
       throw ArgumentError("The number of extra layers must be 0 or more");
     }
     if (nopt > 0 && optbrate[nopt - 1] >= brate) {
-      throw ArgumentError("New optimization point must have " +
-          "a target bitrate higher than the " +
+      throw ArgumentError("New optimization point must have "
+          "a target bitrate higher than the "
           "preceding one");
     }
     // Check room for new optimization point

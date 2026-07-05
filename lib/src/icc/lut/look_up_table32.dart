@@ -54,10 +54,11 @@ abstract class LookUpTable32 extends LookUpTable {
       int dwNumInput, // Number of input values in created LUT
       int dwMaxOutput // Maximum output value of the LUT
       ) {
-    if (curve.count == 1)
+    if (curve.count == 1) {
       return LookUpTable32Gamma(curve, dwNumInput, dwMaxOutput);
-    else
+    } else {
       return LookUpTable32Interp(curve, dwNumInput, dwMaxOutput);
+    }
   }
 
   /// Construct an empty 32 bit

@@ -2,26 +2,29 @@
 
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
 
-Port em Dart puro do codec JPEG 2000/JJ2000, com decoder JP2/J2K, encoder
-básico e testes de regressão bit-exatos contra fixtures versionados no próprio
-repositório.
+Pure Dart JPEG 2000 codec based on the JJ2000/JAI ImageIO implementation. The
+package decodes JP2/J2K codestreams, provides a basic encoder for binary PGM and
+PPM inputs, and ships bit-exact regression fixtures inside the repository.
 
-## Estado Atual
+## Status
 
-- Decoder JP2/J2K com parsing de codestream, entropy decode, ROI de-scaling,
-  dequantização, inverse wavelet, RCT/ICT inverso e pipeline de cor JP2.
-- Encoder com entrada PPM P6 e PGM P5, saída codestream J2K e wrapper JP2
-  opcional.
-- Fixtures consolidados em `test/fixtures`; os testes dependem apenas de
-  arquivos versionados no repositório.
-- Cobertura de CI para Dart VM e Chrome.
-- Abstrações de plataforma usam export condicional e `package:web` para o lado
-  browser. A CLI e o pipeline alto nível por arquivo ainda são VM-only porque
-  usam filesystem.
+- JP2/J2K decoder with codestream parsing, entropy decoding, ROI de-scaling,
+  dequantization, inverse wavelet transform, inverse RCT/ICT, and JP2 color
+  mapping.
+- Encoder for binary PGM P5 and PPM P6 input, raw J2K output, and optional JP2
+  wrapping.
+- Public byte-oriented API in `package:jpeg2000/jpeg2000.dart`; it does not
+  expose paths or `dart:io` types.
+- Async source loading through conditional platform exports. Browser builds use
+  `package:web` for `Blob`/`File` input.
+- Fixtures are consolidated under `test/fixtures`; tests do not depend on local
+  reference checkouts.
+- CI runs formatting, analysis, VM tests, a Chrome test for the public browser
+  API, a VM benchmark smoke run, and production JavaScript compilation.
 
-## Instalação
+## Installation
 
-Como o pacote ainda não é publicado no pub.dev:
+The package is not published on pub.dev yet. Use the Git repository:
 
 ```yaml
 dependencies:
@@ -30,124 +33,146 @@ dependencies:
       url: https://github.com/insinfo/jpeg2000.git
 ```
 
-Depois:
+Then install dependencies:
 
 ```bash
 dart pub get
 ```
 
-## Uso Pela CLI
+## Public API
 
-Decodificar JP2/J2K para PPM, PGM, PGX ou BMP:
+Import the stable facade:
+
+```dart
+import 'dart:typed_data';
+
+import 'package:jpeg2000/jpeg2000.dart';
+
+void main() {
+  final Uint8List jp2OrJ2kBytes = loadSomehow();
+  final image = decodeJpeg2000(jp2OrJ2kBytes);
+
+  print('${image.width}x${image.height}');
+  print(image.components);
+  print(image.pixels); // 8-bit interleaved gray or RGB samples.
+}
+```
+
+Encode binary PGM or PPM bytes without using file paths:
+
+```dart
+import 'dart:typed_data';
+
+import 'package:jpeg2000/jpeg2000.dart';
+
+void main() {
+  final Uint8List ppmBytes = makeOrLoadBinaryPpm();
+
+  final j2k = encodeJpeg2000(
+    ppmBytes,
+    options: const Jpeg2000EncodeOptions(lossless: true),
+  );
+
+  final jp2 = encodeJpeg2000(
+    ppmBytes,
+    options: const Jpeg2000EncodeOptions(
+      lossless: true,
+      wrapInJp2: true,
+    ),
+  );
+
+  print('${j2k.length} raw codestream bytes');
+  print('${jp2.length} JP2 bytes');
+}
+```
+
+Use the async source helpers when the input may be a VM file/path or a browser
+`package:web` `Blob`/`File`:
+
+```dart
+import 'package:jpeg2000/jpeg2000.dart';
+import 'package:web/web.dart' as web;
+
+Future<void> decodeBrowserFile(web.File file) async {
+  final image = await decodeJpeg2000Source(file);
+  print(image.pixels.length);
+}
+```
+
+`decodeJpeg2000Source` and `encodeJpeg2000Source` accept bytes on every
+platform. On the VM they also accept `dart:io` `File` and filesystem paths. In
+the browser they accept `package:web` `Blob` and `File`.
+
+## Command Line
+
+Decode JP2/J2K to PPM, PGM, PGX, or BMP:
 
 ```bash
 dart run jpeg2000:decode -i input.jp2 -o output.ppm
 dart run jpeg2000:decode -i input.j2k -o output.bmp
 ```
 
-Codificar PPM/PGM para J2K lossless:
+Encode PPM/PGM to a lossless J2K codestream:
 
 ```bash
 dart run jpeg2000:encode -i input.ppm -o output.j2k -lossless on
 dart run jpeg2000:encode -i input.pgm -o output.j2k -lossless on
 ```
 
-Codificar com wrapper JP2:
+Encode with a JP2 wrapper:
 
 ```bash
 dart run jpeg2000:encode -i input.ppm -o output.jp2 -lossless on -file_format on
 ```
 
-Codificar com taxa alvo:
+Encode with a target bitrate:
 
 ```bash
 dart run jpeg2000:encode -i input.ppm -o output.j2k -rate 1.0
 ```
 
-## Uso Programático
+## Development
 
-A facade pública do pacote ainda será estabilizada. Hoje, para uso interno ou
-experimental em Dart VM, use os mesmos blocos que alimentam as CLIs:
-
-```dart
-import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
-
-void main() {
-  final params = ParameterList(Decoder.buildDefaultParameterList())
-    ..put('i', 'input.jp2')
-    ..put('o', 'output.ppm')
-    ..put('rate', '-1');
-
-  final decoder = Decoder(params)..run();
-  if (decoder.exitCode != 0) {
-    throw StateError('Decoder failed with exit code ${decoder.exitCode}');
-  }
-}
-```
-
-Encoder:
-
-```dart
-import 'package:jpeg2000/src/j2k/encoder/encoder.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
-
-void main() {
-  final params = ParameterList(Encoder.buildDefaultParameterList())
-    ..put('i', 'input.ppm')
-    ..put('o', 'output.j2k')
-    ..put('lossless', 'on');
-
-  final encoder = Encoder(params)..run();
-  if (encoder.exitCode != 0) {
-    throw StateError('Encoder failed with exit code ${encoder.exitCode}');
-  }
-}
-```
-
-## Testes
+Run the same checks as CI:
 
 ```bash
+dart format --output=none --set-exit-if-changed lib test bin benchmark
 dart analyze
 dart test
-dart test -p chrome
+dart test -p chrome test/jpeg2000_public_api_test.dart
+dart run benchmark/codec_benchmark.dart
+dart compile js -O2 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
 ```
 
-Os fixtures ficam em:
+The JavaScript compile smoke uses `-O2`, Dart's safe production-oriented
+optimization level. `-O4` is intentionally avoided in CI because it enables
+aggressive unsafe optimizations and is better reserved for separate optimizer
+experiments.
 
-- `test/fixtures/test_images`: imagens sintéticas, JP2/J2K e referências PPM.
-- `test/fixtures/j2k_tests`: subconjunto de conformance e referências
-  bit-exatas.
-- `test/fixtures/*.json`: fixtures pequenos para entropy/MQ/paridade.
+Fixtures live in:
 
-## CI
+- `test/fixtures/test_images`: synthetic JP2/J2K files and decoded references.
+- `test/fixtures/j2k_tests`: conformance subset and bit-exact references.
+- `test/fixtures/*.json`: small MQ/entropy/parity fixtures.
 
-O workflow `.github/workflows/dart.yml` roda em cada push e pull request:
+## Performance Roadmap
 
-- `dart pub get`
-- `dart format --output=none --set-exit-if-changed lib test bin`
-- `dart analyze`
+- Reduce allocations in code-blocks, wavelet buffers, color conversion, and
+  writers by reusing `TypedData` across blocks.
+- Profile and optimize MQ coder/decoder and entropy coder/decoder hot loops on
+  the Dart VM and generated JavaScript.
+- Expand automated benchmarks with larger fixture sets and a browser timing
+  harness for Chrome.
+- Evaluate tile/component parallelism with isolates on the VM and Web Workers
+  in browsers.
+- Implement true incremental reads for large inputs with configurable cache
+  policies per platform.
+- Expand the encoder to PGX, multiple independent input components, tile-parts,
+  and packed packet headers.
 
-Os lints de estilo aparecem como `INFO`. Isso deixa visíveis nomes herdados do
-JJ2000 que ainda não seguem o estilo Dart sem bloquear o CI enquanto a API do
-port ainda está sendo estabilizada.
-- `dart test`
-- `dart test -p chrome`
+## Notes
 
-## TODO De Performance E Web
-
-- Criar uma facade pública estável para decodificar/codificar a partir de bytes,
-  sem depender de paths ou `dart:io`.
-- Adicionar API async/browser para carregar bytes via `package:web`, mantendo a
-  camada síncrona interna de seek quando necessário.
-- Reduzir alocações em code-blocks, buffers de wavelet, conversão de cor e
-  writers, reaproveitando `TypedData` entre blocos.
-- Medir e otimizar hot loops do MQ coder/decoder e entropy coder/decoder no VM
-  e no JavaScript gerado.
-- Criar benchmark automatizado para VM, Chrome e compilação JS minificada.
-- Avaliar execução paralela por tile/componente com isolates no VM e Web
-  Workers no browser.
-- Implementar leitura incremental real para entradas grandes, com política de
-  cache configurável por plataforma.
-- Expandir o encoder para PGX, múltiplos componentes de entrada, tile-parts e
-  packed packet headers.
+The source still contains many JJ2000-style internal names while the port is
+being stabilized. The public API uses Dart-style names; internal cleanup is
+tracked by the analyzer lints and can be done incrementally without changing
+the byte-oriented facade.

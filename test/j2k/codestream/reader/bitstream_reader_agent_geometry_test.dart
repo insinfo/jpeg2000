@@ -139,8 +139,7 @@ class _GeometryFixture {
 }
 
 class _GeometryAgent extends BitstreamReaderAgent {
-  _GeometryAgent(HeaderDecoder headerDecoder, DecoderSpecs specs)
-      : super(headerDecoder, specs);
+  _GeometryAgent(super.headerDecoder, super.specs);
 
   @override
   void setTile(int x, int y) {

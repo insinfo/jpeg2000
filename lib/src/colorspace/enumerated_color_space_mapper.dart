@@ -4,8 +4,7 @@ import 'color_space.dart';
 import 'color_space_mapper.dart';
 
 class EnumeratedColorSpaceMapper extends ColorSpaceMapper {
-  EnumeratedColorSpaceMapper(BlkImgDataSrc src, ColorSpace csMap)
-      : super(src, csMap);
+  EnumeratedColorSpaceMapper(super.src, super.csMap);
 
   static BlkImgDataSrc createInstance(BlkImgDataSrc src, ColorSpace csMap) {
     return EnumeratedColorSpaceMapper(src, csMap);

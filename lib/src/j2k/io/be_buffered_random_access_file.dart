@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import '../util/int32_utils.dart';
@@ -8,18 +7,18 @@ import 'endian_type.dart';
 /// Big-endian implementation of [BufferedRandomAccessFile].
 class BEBufferedRandomAccessFile extends BufferedRandomAccessFile {
   BEBufferedRandomAccessFile.file(
-    File file,
-    String mode, {
-    int bufferSize = 512,
-  }) : super.file(file, mode, bufferSize: bufferSize) {
+    super.file,
+    super.mode, {
+    super.bufferSize,
+  }) : super.file() {
     byteOrdering = EndianType.bigEndian;
   }
 
   BEBufferedRandomAccessFile.path(
-    String path,
-    String mode, {
-    int bufferSize = 512,
-  }) : super.path(path, mode, bufferSize: bufferSize) {
+    super.path,
+    super.mode, {
+    super.bufferSize,
+  }) : super.path() {
     byteOrdering = EndianType.bigEndian;
   }
 

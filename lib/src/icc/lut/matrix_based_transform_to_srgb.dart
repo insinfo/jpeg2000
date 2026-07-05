@@ -118,9 +118,10 @@ class MatrixBasedTransformTosRGB {
   MatrixBasedTransformTosRGB(
       RestrictedICCProfile rICC, List<int> dwMaxValue, List<int> dwShiftValue) {
     // Assure the proper type profile for this xform.
-    if (rICC.getType() != RestrictedICCProfile.kThreeCompInput)
+    if (rICC.getType() != RestrictedICCProfile.kThreeCompInput) {
       throw ArgumentError(
           "MatrixBasedTransformTosRGB: wrong type ICCProfile supplied");
+    }
 
     int c; // component index.
     this.dwMaxValue = Int32List.fromList(dwMaxValue);
@@ -246,9 +247,9 @@ class MatrixBasedTransformTosRGB {
         val =
             (matrix[M00] * r + matrix[M01] * g + matrix[M02] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           ro[index] = lut32[0];
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           ro[index] = lut32[lut32.length - 1];
         else
           ro[index] = lut32[val];
@@ -256,9 +257,9 @@ class MatrixBasedTransformTosRGB {
         val =
             (matrix[M10] * r + matrix[M11] * g + matrix[M12] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           go[index] = lut32[0];
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           go[index] = lut32[lut32.length - 1];
         else
           go[index] = lut32[val];
@@ -266,9 +267,9 @@ class MatrixBasedTransformTosRGB {
         val =
             (matrix[M20] * r + matrix[M21] * g + matrix[M22] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           bo[index] = lut32[0];
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           bo[index] = lut32[lut32.length - 1];
         else
           bo[index] = lut32[val];
@@ -335,9 +336,9 @@ class MatrixBasedTransformTosRGB {
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           output[0]![index] = lut32[0].toDouble();
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           output[0]![index] = lut32[lut32.length - 1].toDouble();
         else
           output[0]![index] = lut32[val].toDouble();
@@ -348,9 +349,9 @@ class MatrixBasedTransformTosRGB {
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           output[1]![index] = lut32[0].toDouble();
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           output[1]![index] = lut32[lut32.length - 1].toDouble();
         else
           output[1]![index] = lut32[val].toDouble();
@@ -361,9 +362,9 @@ class MatrixBasedTransformTosRGB {
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
-        if (val < 0)
+        if (val < 0) {
           output[2]![index] = lut32[0].toDouble();
-        else if (val >= lut32.length)
+        } else if (val >= lut32.length)
           output[2]![index] = lut32[lut32.length - 1].toDouble();
         else
           output[2]![index] = lut32[val].toDouble();
@@ -387,9 +388,9 @@ class MatrixBasedTransformTosRGB {
         int i = inb.offset +
             (y - inb.uly) * inb.scanw +
             (x - inb.ulx); // pixel index.
-        if (input[i] > dwInputMaxValue)
+        if (input[i] > dwInputMaxValue) {
           wTemp = dwInputMaxValue;
-        else if (input[i] < 0)
+        } else if (input[i] < 0)
           wTemp = 0;
         else
           wTemp = input[i];
@@ -414,9 +415,9 @@ class MatrixBasedTransformTosRGB {
         int i = inb.offset +
             (y - inb.uly) * inb.scanw +
             (x - inb.ulx); // pixel index.
-        if (input[i] > dwInputMaxValue)
+        if (input[i] > dwInputMaxValue) {
           wTemp = dwInputMaxValue;
-        else if (input[i] < 0)
+        } else if (input[i] < 0)
           wTemp = 0;
         else
           wTemp = input[i];

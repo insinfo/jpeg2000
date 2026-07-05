@@ -5,21 +5,25 @@ import '../color_space_exception.dart';
 import '../../icc/icc_profile.dart';
 
 abstract class JP2Box {
-  /** Platform dependant line terminator */
+  /// Platform dependant line terminator
   static const String eol = '\n';
 
-  /** Return a String representation of the Box type. */
+  /// Return a String representation of the Box type.
   static String getTypeStringFromType(int t) => BoxType.get(t);
 
-  /** Length of the box.             */
+  /// Length of the box.
   late final int length;
-  /** input file                     */
+
+  /// input file
   final RandomAccessIO in_io;
-  /** offset to start of box         */
+
+  /// offset to start of box
   final int boxStart;
-  /** offset to end of box           */
+
+  /// offset to end of box
   late final int boxEnd;
-  /** offset to start of data in box */
+
+  /// offset to start of data in box
   late final int dataStart;
 
   JP2Box(this.in_io, this.boxStart) {
@@ -37,11 +41,11 @@ abstract class JP2Box {
   /// Returns the four-character box type marker.
   int get type;
 
-  /** Return the box type as a String. */
+  /// Return the box type as a String.
   String getTypeString() => BoxType.get(type);
 }
 
-/** JP2 Box structure analysis help */
+/// JP2 Box structure analysis help
 class BoxType {
   static final Map<int, String> map = {};
 

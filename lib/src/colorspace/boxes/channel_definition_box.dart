@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import '../../j2k/io/random_access_io.dart';
 import '../../icc/icc_profile.dart';
 import 'jp2_box.dart';
 
@@ -12,8 +11,7 @@ class ChannelDefinitionBox extends JP2Box {
   int ndefs = 0;
   final Map<int, List<int>> definitions = <int, List<int>>{};
 
-  ChannelDefinitionBox(RandomAccessIO in_io, int boxStart)
-      : super(in_io, boxStart) {
+  ChannelDefinitionBox(super.in_io, super.boxStart) {
     readBox();
   }
 
@@ -29,11 +27,11 @@ class ChannelDefinitionBox extends JP2Box {
     for (int i = 0; i < ndefs; ++i) {
       in_io.readFully(bfr, 0, 6);
       // int channel = ICCProfile.getShort(bfr, 0); // Unused
-      final channel_def = List<int>.filled(3, 0, growable: false);
-      channel_def[0] = _getCn(bfr);
-      channel_def[1] = _getTyp(bfr);
-      channel_def[2] = _getAsoc(bfr);
-      definitions[channel_def[0]] = channel_def;
+      final channelDef = List<int>.filled(3, 0, growable: false);
+      channelDef[0] = _getCn(bfr);
+      channelDef[1] = _getTyp(bfr);
+      channelDef[2] = _getAsoc(bfr);
+      definitions[channelDef[0]] = channelDef;
     }
   }
 

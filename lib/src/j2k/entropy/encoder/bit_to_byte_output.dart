@@ -47,8 +47,8 @@ class BitToByteOutput {
   void writeBits(List<int> symbuf, int nsym) {
     int i;
     int bbuf, bpos;
-    bbuf = this._bbuf;
-    bpos = this._bpos;
+    bbuf = _bbuf;
+    bpos = _bpos;
     // Write symbol by symbol to bit buffer
     for (i = 0; i < nsym; i++) {
       bbuf |= (symbuf[i] & 0x01) << (bpos--);
@@ -73,8 +73,8 @@ class BitToByteOutput {
         bbuf = 0;
       }
     }
-    this._bbuf = bbuf;
-    this._bpos = bpos;
+    _bbuf = bbuf;
+    _bpos = bpos;
   }
 
   /// Write a bit to the output. The least significant bit of 'bit' is
@@ -192,6 +192,6 @@ class BitToByteOutput {
   ///
   /// [isPredTerm] Whether or not predictable termination is requested.
   void setPredTerm(bool isPredTerm) {
-    this._isPredTerm = isPredTerm;
+    _isPredTerm = isPredTerm;
   }
 }

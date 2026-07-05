@@ -173,7 +173,7 @@ class ThreadPool {
     }
     FacilityManager.getMsgLogger().printmsg(
       MsgLogger.warning,
-      'ThreadPool(${_poolName}): ignoring completion lock of type ${lock.runtimeType}. '
+      'ThreadPool($_poolName): ignoring completion lock of type ${lock.runtimeType}. '
       'Pass a ThreadPoolLock or Completer<void> for notifications.',
     );
   }

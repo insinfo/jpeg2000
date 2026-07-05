@@ -293,7 +293,7 @@ class ImgWriterBmp extends ImgWriter {
         _debugRemainingBuffer!.add('($red,$green,$blue)');
         debugRemaining--;
         if (debugRemaining == 0) {
-          _log('BMP writer debug line ${_debugLines}: '
+          _log('BMP writer debug line $_debugLines: '
               '${_debugRemainingBuffer!.join(' ')}');
           _debugRemainingBuffer!.clear();
           _debugLines--;

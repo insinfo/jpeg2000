@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import '../../j2k/io/random_access_io.dart';
 import '../../j2k/util/facility_manager.dart';
 import '../../j2k/util/msg_logger.dart';
 import '../color_space_exception.dart';
@@ -20,8 +19,7 @@ class ColorSpecificationBox extends JP2Box {
   int rawmethod = 0;
   int approxAccuracy = 0;
 
-  ColorSpecificationBox(RandomAccessIO in_io, int boxStart)
-      : super(in_io, boxStart) {
+  ColorSpecificationBox(super.in_io, super.boxStart) {
     readBox();
   }
 

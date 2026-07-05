@@ -14,9 +14,8 @@ import 'roi.dart';
 /// for the whole tile-component, then decomposes that mask with the same
 /// subband tree supports used by the wavelet transform.
 class ArbROIMaskGenerator extends ROIMaskGenerator {
-  ArbROIMaskGenerator(List<ROI> rois, int numComponents, this.src)
-      : roiMasks = List<Int32List?>.filled(numComponents, null),
-        super(rois, numComponents);
+  ArbROIMaskGenerator(super.rois, super.numComponents, this.src)
+      : roiMasks = List<Int32List?>.filled(numComponents, null);
 
   final Quantizer src;
   final List<Int32List?> roiMasks;

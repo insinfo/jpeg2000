@@ -6,7 +6,7 @@ import 'inv_wt_full.dart';
 
 /// Abstract base for inverse wavelet transforms operating on full tiles/components.
 abstract class InverseWT extends InvWTAdapter implements BlkImgDataSrc {
-  InverseWT(CBlkWTDataSrcDec src, DecoderSpecs decSpec) : super(src, decSpec);
+  InverseWT(CBlkWTDataSrcDec super.src, super.decSpec);
 
   /// Factory matching JJ2000's default full-frame inverse transform path.
   static InverseWT createInstance(

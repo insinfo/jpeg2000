@@ -1,4 +1,6 @@
 @TestOn('vm')
+library;
+
 import 'dart:io';
 
 import 'package:jpeg2000/src/j2k/util/codestream_manipulator.dart';
@@ -406,15 +408,15 @@ List<int> _buildCodestream(List<List<_PacketDef>> tiles) {
 
   writeMarker(0x4F); // SOC
   writeMarker(0x51); // SIZ
-  bytes..addAll(const [0x00, 0x04, 0x00, 0x00]);
+  bytes.addAll(const [0x00, 0x04, 0x00, 0x00]);
   writeMarker(0x52); // COD
-  bytes..addAll(const [0x00, 0x03, 0x00]);
+  bytes.addAll(const [0x00, 0x03, 0x00]);
 
   var nsop = 1;
   for (var tile = 0; tile < tiles.length; tile++) {
     final packets = tiles[tile];
     final tileBody = <int>[];
-    tileBody..addAll(const [0xFF, 0x93]); // SOD
+    tileBody.addAll(const [0xFF, 0x93]); // SOD
 
     for (final packet in packets) {
       tileBody

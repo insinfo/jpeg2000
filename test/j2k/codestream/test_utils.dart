@@ -115,11 +115,12 @@ Uint8List buildSizMarkerPayload({
       bitDepths.length != numComps) {
     throw ArgumentError('Component metadata lengths must match numComps');
   }
-  final body = <int>[]
-    ..addAll(uint16Bytes(0))
-    ..addAll(uint32Bytes(xsize))
-    ..addAll(uint32Bytes(ysize))
-    ..addAll(uint32Bytes(0))
+  final body = <int>[
+    ...uint16Bytes(0),
+    ...uint32Bytes(xsize),
+    ...uint32Bytes(ysize),
+    ...uint32Bytes(0)
+  ]
     ..addAll(uint32Bytes(0))
     ..addAll(uint32Bytes(tileWidth))
     ..addAll(uint32Bytes(tileHeight))
@@ -143,11 +144,12 @@ Uint8List buildSotMarkerPayload({
   required int tilePartLength,
   required int numTileParts,
 }) {
-  final body = <int>[]
-    ..addAll(uint16Bytes(tileIdx))
-    ..addAll(uint32Bytes(tilePartLength))
-    ..add(tilePartIdx & 0xff)
-    ..add(numTileParts & 0xff);
+  final body = <int>[
+    ...uint16Bytes(tileIdx),
+    ...uint32Bytes(tilePartLength),
+    tilePartIdx & 0xff,
+    numTileParts & 0xff
+  ];
   return Uint8List.fromList(<int>[...uint16Bytes(2 + body.length), ...body]);
 }
 

@@ -80,11 +80,10 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   /// Constructs a new ForwCompTransf object that operates on the specified
   /// source of image data. Mirrors the original JJ2000 constructor that
   /// reads `cts` and `wfs` from the encoder specifications.
-  ForwCompTransf(BlkImgDataSrc imgSrc, EncoderSpecs encSpec)
+  ForwCompTransf(BlkImgDataSrc super.imgSrc, EncoderSpecs encSpec)
       : src = imgSrc,
         cts = encSpec.cts,
-        wfs = encSpec.wfs,
-        super(imgSrc);
+        wfs = encSpec.wfs;
 
   static List<List<String?>> getParameterInfo() => pinfo;
 

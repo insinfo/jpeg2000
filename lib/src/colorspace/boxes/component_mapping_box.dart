@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import '../../j2k/io/random_access_io.dart';
 import '../../icc/icc_profile.dart';
 import 'jp2_box.dart';
 
@@ -12,8 +11,7 @@ class ComponentMappingBox extends JP2Box {
   int nChannels = 0;
   final List<Uint8List> map = <Uint8List>[];
 
-  ComponentMappingBox(RandomAccessIO in_io, int boxStart)
-      : super(in_io, boxStart) {
+  ComponentMappingBox(super.in_io, super.boxStart) {
     readBox();
   }
 

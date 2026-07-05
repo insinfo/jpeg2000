@@ -2231,7 +2231,7 @@ class HeaderDecoder {
         : 'precinctSpec=default';
     _log(
       'COD summary ($contextLabel): progression=$progression layers=$layers '
-      'levels=$decompLevels cblk=${cblkWidth}x${cblkHeight} filter=$filterLabel '
+      'levels=$decompLevels cblk=${cblkWidth}x$cblkHeight filter=$filterLabel '
       'flags=${flags.isEmpty ? 'none' : flags.join('|')} $precinctLabel',
     );
   }

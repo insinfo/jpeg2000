@@ -39,14 +39,14 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   static const List<List<String?>> pinfo = [
     [
       "Rroi",
-      "[<component idx>] R <left> <top> <width> <height>" +
-          " or [<component idx>] C <centre column> <centre row> " +
+      "[<component idx>] R <left> <top> <width> <height>"
+          " or [<component idx>] C <centre column> <centre row> "
           "<radius> or [<component idx>] A <filename>",
-      "Specifies ROIs shape and location. The shape can be either " +
-          "rectangular 'R', or circular 'C' or arbitrary 'A'. " +
-          "Each new occurrence of an 'R', a 'C' or an 'A' is a new ROI. " +
-          "For circular and rectangular ROIs, all values are " +
-          "given as their pixel values relative to the canvas origin. " +
+      "Specifies ROIs shape and location. The shape can be either "
+              "rectangular 'R', or circular 'C' or arbitrary 'A'. "
+              "Each new occurrence of an 'R', a 'C' or an 'A' is a new ROI. "
+              "For circular and rectangular ROIs, all values are "
+              "given as their pixel values relative to the canvas origin. " +
           "Arbitrary shapes must be included in a PGM file where non 0 " +
           "values correspond to ROI coefficients. The PGM file must have " +
           "the size as the image. " +
@@ -60,28 +60,28 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
     [
       "Ralign",
       "[on|off]",
-      "By specifying this argument, the ROI mask will be " +
-          "limited to covering only entire code-blocks. The ROI coding can " +
-          "then be performed without any actual scaling of the coefficients " +
+      "By specifying this argument, the ROI mask will be "
+          "limited to covering only entire code-blocks. The ROI coding can "
+          "then be performed without any actual scaling of the coefficients "
           "but by instead scaling the distortion estimates.",
       "off"
     ],
     [
       "Rstart_level",
       "<level>",
-      "This argument forces the lowest <level> resolution levels to " +
-          "belong to the ROI. By doing this, it is possible to avoid only " +
-          "getting information for the ROI at an early stage of " +
-          "transmission.<level> = 0 means the lowest resolution level " +
-          "belongs to the ROI, 1 means the two lowest etc. (-1 deactivates" +
+      "This argument forces the lowest <level> resolution levels to "
+              "belong to the ROI. By doing this, it is possible to avoid only "
+              "getting information for the ROI at an early stage of "
+              "transmission.<level> = 0 means the lowest resolution level "
+              "belongs to the ROI, 1 means the two lowest etc. (-1 deactivates" +
           " the option)",
       "-1"
     ],
     [
       "Rno_rect",
       "[on|off]",
-      "This argument makes sure that the ROI mask generation is not done " +
-          "using the fast ROI mask generation for rectangular ROIs " +
+      "This argument makes sure that the ROI mask generation is not done "
+          "using the fast ROI mask generation for rectangular ROIs "
           "regardless of whether the specified ROIs are rectangular or not",
       "off"
     ],
@@ -143,6 +143,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   /// [c] The component to test for reversibility
   ///
   /// Returns True if the quantized data is reversible, false if not.
+  @override
   bool isReversible(int t, int c) {
     return src.isReversible(t, c);
   }
@@ -290,8 +291,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             word = stok[idx++];
             h = int.parse(word);
           } catch (e) {
-            throw ArgumentError(
-                "Bad parameter for " + "'-Rroi R' option : " + word);
+            throw ArgumentError("Bad parameter for '-Rroi R' option : $word");
           }
 
           // If the ROI is component-specific, check which comps.
@@ -322,8 +322,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             word = stok[idx++];
             rad = int.parse(word);
           } catch (e) {
-            throw ArgumentError(
-                "Bad parameter for " + "'-Rroi C' option : " + word);
+            throw ArgumentError("Bad parameter for '-Rroi C' option : $word");
           }
 
           // If the ROI is component-specific, check which comps.
@@ -351,7 +350,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
             filename = stok[idx++];
           } catch (e) {
             throw ArgumentError(
-                "Wrong number of " + "parameters for " + "'-Rroi A' option.");
+                "Wrong number of " "parameters for " "'-Rroi A' option.");
           }
           try {
             maskPGM = ImgReaderPGM(filename);
@@ -467,7 +466,9 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
       maskData = Int32List(w * h);
       mask.setDataInt(maskData);
     } else {
-      for (i = w * h - 1; i >= 0; i--) maskData[i] = 0;
+      for (i = w * h - 1; i >= 0; i--) {
+        maskData[i] = 0;
+      }
     }
     mask.ulx = ulx;
     mask.uly = uly;

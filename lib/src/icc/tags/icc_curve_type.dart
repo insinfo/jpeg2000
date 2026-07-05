@@ -7,6 +7,7 @@ class ICCCurveType extends ICCTag {
   static const String eol = '\n'; // System.getProperty ("line.separator");
 
   /// Tag fields
+  @override
   final int type;
 
   /// Tag fields

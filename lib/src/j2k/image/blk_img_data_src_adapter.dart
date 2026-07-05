@@ -6,6 +6,7 @@ import 'img_data_adapter.dart';
 class BlkImgDataSrcAdapter extends ImgDataAdapter implements BlkImgDataSrc {
   BlkImgDataSrcAdapter(this.source) : super(source);
 
+  @override
   final BlkImgDataSrc source;
 
   @override

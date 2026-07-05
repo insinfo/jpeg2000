@@ -52,12 +52,12 @@ abstract class Quantizer extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   static const List<List<String?>> pinfo = [
     [
       "Qtype",
-      "[<tile-component idx>] <id> " + "[ [<tile-component idx>] <id> ...]",
-      "Specifies which quantization type to use for specified " +
-          "tile-component. The default type is either 'reversible' or " +
-          "'expounded' depending on whether or not the '-lossless' option " +
-          " is specified.\n" +
-          "<tile-component idx> : see general note.\n" +
+      "[<tile-component idx>] <id> " "[ [<tile-component idx>] <id> ...]",
+      "Specifies which quantization type to use for specified "
+              "tile-component. The default type is either 'reversible' or "
+              "'expounded' depending on whether or not the '-lossless' option "
+              " is specified.\n"
+              "<tile-component idx> : see general note.\n" +
           "<id>: Supported quantization types specification are : " +
           "'reversible' " +
           "(no quantization), 'derived' (derived quantization step size) and " +
@@ -68,18 +68,18 @@ abstract class Quantizer extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
     ],
     [
       "Qstep",
-      "[<tile-component idx>] <bnss> " + "[ [<tile-component idx>] <bnss> ...]",
-      "This option specifies the base normalized quantization step " +
-          "size (bnss) for tile-components. It is normalized to a " +
-          "dynamic range of 1 in the image domain. This parameter is " +
-          "ignored in reversible coding. The default value is '1/128'" +
+      "[<tile-component idx>] <bnss> " "[ [<tile-component idx>] <bnss> ...]",
+      "This option specifies the base normalized quantization step "
+          "size (bnss) for tile-components. It is normalized to a "
+          "dynamic range of 1 in the image domain. This parameter is "
+          "ignored in reversible coding. The default value is '1/128'"
           " (i.e. 0.0078125).",
       "0.0078125"
     ],
     [
       "Qguard_bits",
-      "[<tile-component idx>] <gb> " + "[ [<tile-component idx>] <gb> ...]",
-      "The number of bits used for each tile-component in the quantizer" +
+      "[<tile-component idx>] <gb> " "[ [<tile-component idx>] <gb> ...]",
+      "The number of bits used for each tile-component in the quantizer"
           " to avoid overflow (gb).",
       "2"
     ],

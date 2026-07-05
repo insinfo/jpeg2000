@@ -5,14 +5,14 @@ part of 'bitstream_reader_agent.dart';
 @visibleForTesting
 class PktDecoderHarness extends PktDecoder {
   PktDecoderHarness(
-    DecoderSpecs decSpec,
-    HeaderDecoder hd,
-    RandomAccessIO input,
-    BitstreamReaderAgent agent,
-    bool truncationMode,
-    int maxCodeBlocks, {
+    super.decSpec,
+    super.hd,
+    super.input,
+    super.agent,
+    super.truncationMode,
+    super.maxCodeBlocks, {
     this.codeBlocksPerPacket = 1,
-  }) : super(decSpec, hd, input, agent, truncationMode, maxCodeBlocks);
+  });
 
   final int codeBlocksPerPacket;
 

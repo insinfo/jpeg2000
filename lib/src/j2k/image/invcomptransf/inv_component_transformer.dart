@@ -13,7 +13,7 @@ import 'inv_comp_transf.dart';
 class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
   static const String _logSource = 'InvCompTransf';
   InvCompTransfImgDataSrc(
-    BlkImgDataSrc source,
+    BlkImgDataSrc super.source,
     this.compTransfSpec, {
     bool enableComponentTransforms = true,
     List<int>? originalBitDepths,
@@ -21,8 +21,7 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
         _componentTransformEnabled = enableComponentTransforms,
         _utdepth = originalBitDepths == null
             ? null
-            : List<int>.from(originalBitDepths, growable: false),
-        super(source);
+            : List<int>.from(originalBitDepths, growable: false);
 
   static final List<int> _componentDebugCountdown = <int>[5, 5, 5];
 

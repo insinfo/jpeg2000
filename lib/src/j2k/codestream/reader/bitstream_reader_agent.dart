@@ -129,6 +129,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   @override
   int getCompSubsY(int comp) => hd.getCompSubsY(comp);
 
+  @override
   int getTileWidth(int rl) {
     final mindl = decSpec.dls.getMinInTile(getTileIdx());
     if (rl > mindl) {
@@ -141,6 +142,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ntulx, div) - _ceilDiv(ctulx, div);
   }
 
+  @override
   int getTileHeight(int rl) {
     final mindl = decSpec.dls.getMinInTile(getTileIdx());
     if (rl > mindl) {
@@ -153,6 +155,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ntuly, div) - _ceilDiv(ctuly, div);
   }
 
+  @override
   int getImgWidth(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
@@ -164,6 +167,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ax + imgW, div) - _ceilDiv(ax, div);
   }
 
+  @override
   int getImgHeight(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
@@ -175,6 +179,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ay + imgH, div) - _ceilDiv(ay, div);
   }
 
+  @override
   int getImgULX(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
@@ -185,6 +190,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ax, 1 << dl);
   }
 
+  @override
   int getImgULY(int rl) {
     final mindl = decSpec.dls.getMin();
     if (rl > mindl) {
@@ -195,6 +201,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(ay, 1 << dl);
   }
 
+  @override
   int getTileCompWidth(int t, int c, int rl) {
     final tileIdx = getTileIdx();
     if (t != tileIdx) {
@@ -207,6 +214,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(compNtulx, div) - _ceilDiv(culx[c], div);
   }
 
+  @override
   int getTileCompHeight(int t, int c, int rl) {
     final tileIdx = getTileIdx();
     if (t != tileIdx) {
@@ -219,6 +227,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(compNtuly, div) - _ceilDiv(culy[c], div);
   }
 
+  @override
   int getCompImgWidth(int c, int rl) {
     final dl = decSpec.dls.getMinInComp(c) - rl;
     final start = _ceilDiv(ax, hd.getCompSubsX(c));
@@ -227,6 +236,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(end, div) - _ceilDiv(start, div);
   }
 
+  @override
   int getCompImgHeight(int c, int rl) {
     final dl = decSpec.dls.getMinInComp(c) - rl;
     final start = _ceilDiv(ay, hd.getCompSubsY(c));
@@ -237,7 +247,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   @override
   Coord getTile(Coord? reuse) {
-    return reuse == null ? Coord(ctX, ctY) : reuse
+    return reuse ?? Coord(ctX, ctY)
       ..x = ctX
       ..y = ctY;
   }
@@ -245,6 +255,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   @override
   int getTileIdx() => ctY * ntX + ctX;
 
+  @override
   int getResULX(int c, int rl) {
     final dl = mdl[c] - rl;
     if (dl < 0) {
@@ -256,6 +267,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     return _ceilDiv(tcx0, 1 << dl);
   }
 
+  @override
   int getResULY(int c, int rl) {
     final dl = mdl[c] - rl;
     if (dl < 0) {
@@ -269,7 +281,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   @override
   Coord getNumTiles(Coord? reuse) {
-    return reuse == null ? Coord(ntX, ntY) : reuse
+    return reuse ?? Coord(ntX, ntY)
       ..x = ntX
       ..y = ntY;
   }
@@ -277,6 +289,7 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   @override
   int getNumTilesTotal() => nt;
 
+  @override
   SubbandSyn getSynSubbandTree(int t, int c) {
     if (t != getTileIdx()) {
       throw ArgumentError(
@@ -425,12 +438,16 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
 
   int getActualNbytes() => anbytes;
 
+  @override
   int getTilePartULX() => hd.getTilingOrigin(null).x;
 
+  @override
   int getTilePartULY() => hd.getTilingOrigin(null).y;
 
+  @override
   int getNomTileWidth() => hd.getNomTileWidth();
 
+  @override
   int getNomTileHeight() => hd.getNomTileHeight();
 
   static int _computeNtX(HeaderDecoder hd) {

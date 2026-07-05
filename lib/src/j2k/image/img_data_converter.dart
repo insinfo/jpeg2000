@@ -9,13 +9,12 @@ import 'img_data_adapter.dart';
 import '../util/decoder_instrumentation.dart';
 
 class ImgDataConverter extends ImgDataAdapter implements BlkImgDataSrc {
-  ImgDataConverter(BlkImgDataSrc source,
+  ImgDataConverter(BlkImgDataSrc super.source,
       [int fixedPoint = 0, String? debugLabel])
       : _source = source,
         _fixedPoint = fixedPoint,
         _debugLabel = debugLabel ?? 'ImgDataConverter',
-        _requestBlock = DataBlkInt(),
-        super(source);
+        _requestBlock = DataBlkInt();
 
   static const int _maxLogsPerDirection = 4;
 

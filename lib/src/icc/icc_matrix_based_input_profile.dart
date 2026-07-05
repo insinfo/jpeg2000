@@ -18,5 +18,5 @@ class ICCMatrixBasedInputProfile extends ICCProfile {
   ///   @param f contains a disk based ICCProfile.
   /// @exception ColorSpaceException
   /// @exception ICCProfileInvalidException
-  ICCMatrixBasedInputProfile(ColorSpace csm) : super(csm);
+  ICCMatrixBasedInputProfile(super.csm);
 }

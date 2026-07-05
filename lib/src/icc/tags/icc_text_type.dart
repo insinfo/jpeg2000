@@ -5,6 +5,7 @@ import 'icc_tag.dart';
 /// A text based ICC tag
 class ICCTextType extends ICCTag {
   /// Tag fields
+  @override
   final int type;
 
   /// Tag fields
@@ -14,11 +15,10 @@ class ICCTextType extends ICCTag {
   final Uint8List ascii;
 
   /// Construct this tag from its constituant parts
-  ICCTextType(int signature, Uint8List data, int offset, int length)
+  ICCTextType(super.signature, super.data, super.offset, super.length)
       : type = ICCProfile.getInt(data, offset),
         reserved = ICCProfile.getInt(data, offset + ICCProfile.int_size),
-        ascii = _readAscii(data, offset + 2 * ICCProfile.int_size),
-        super(signature, data, offset, length);
+        ascii = _readAscii(data, offset + 2 * ICCProfile.int_size);
 
   static Uint8List _readAscii(Uint8List data, int offset) {
     int size = 0;

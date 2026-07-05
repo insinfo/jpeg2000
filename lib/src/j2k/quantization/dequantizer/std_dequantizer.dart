@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:jpeg2000/src/j2k/quantization/dequantizer/dequantizer.dart';
 
-import '../../decoder/decoder_specs.dart';
 import '../../image/data_blk.dart';
 import '../../image/data_blk_float.dart';
 import '../../image/data_blk_int.dart';
@@ -13,7 +12,6 @@ import '../../wavelet/synthesis/subband_syn.dart';
 import '../guard_bits_spec.dart';
 import '../quant_step_size_spec.dart';
 import '../quant_type_spec.dart';
-import 'c_blk_quant_data_src_dec.dart';
 
 import 'std_dequantizer_params.dart';
 
@@ -21,13 +19,12 @@ import 'std_dequantizer_params.dart';
 class StdDequantizer extends Dequantizer {
   static const String _logSource = 'StdDequantizer';
   StdDequantizer(
-    CBlkQuantDataSrcDec src,
-    List<int> utrb,
-    DecoderSpecs decSpec,
+    super.src,
+    super.utrb,
+    super.decSpec,
   )   : qts = decSpec.qts,
         qsss = decSpec.qsss,
-        gbs = decSpec.gbs,
-        super(src, utrb, decSpec);
+        gbs = decSpec.gbs;
 
   final QuantTypeSpec qts;
   final QuantStepSizeSpec qsss;

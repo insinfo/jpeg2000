@@ -362,11 +362,11 @@ class MQCoder {
     }
 
     if (ltype == LENGTH_NEAR_OPT) {
-      if (savedC == null) savedC = List<int>.filled(SAVED_LEN, 0);
-      if (savedCT == null) savedCT = List<int>.filled(SAVED_LEN, 0);
-      if (savedA == null) savedA = List<int>.filled(SAVED_LEN, 0);
-      if (savedB == null) savedB = List<int>.filled(SAVED_LEN, 0);
-      if (savedDelFF == null) savedDelFF = List<bool>.filled(SAVED_LEN, false);
+      savedC ??= List<int>.filled(SAVED_LEN, 0);
+      savedCT ??= List<int>.filled(SAVED_LEN, 0);
+      savedA ??= List<int>.filled(SAVED_LEN, 0);
+      savedB ??= List<int>.filled(SAVED_LEN, 0);
+      savedDelFF ??= List<bool>.filled(SAVED_LEN, false);
     }
     this.ltype = ltype;
   }
@@ -1160,10 +1160,11 @@ class MQCoder {
     a = 0x8000;
     c = 0;
     b = 0;
-    if (b == 0xFF)
+    if (b == 0xFF) {
       cT = 13;
-    else
+    } else {
       cT = 12;
+    }
     resetCtxts();
     nrOfWrittenBytes = -1;
     delFF = false;

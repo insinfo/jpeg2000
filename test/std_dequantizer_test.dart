@@ -27,7 +27,7 @@ class MockCBlkQuantDataSrcDec implements CBlkQuantDataSrcDec {
   @override
   DataBlk getInternCodeBlock(
       int c, int m, int n, SubbandSyn sb, DataBlk? cblk) {
-    if (cblk == null) cblk = DataBlkInt();
+    cblk ??= DataBlkInt();
     cblk.w = w;
     cblk.h = h;
     cblk.ulx = 0;

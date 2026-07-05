@@ -11,8 +11,7 @@ import 'color_space_exception.dart';
 import 'color_space_mapper.dart';
 
 class SYccColorSpaceMapper extends ColorSpaceMapper {
-  SYccColorSpaceMapper(BlkImgDataSrc src, ColorSpace csMap)
-      : super(src, csMap) {
+  SYccColorSpaceMapper(super.src, super.csMap) {
     _validateComponentCount();
   }
 

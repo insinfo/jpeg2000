@@ -6,7 +6,6 @@ import '../../image/data_blk.dart';
 import '../../wavelet/analysis/c_blk_wt_data.dart';
 import '../../wavelet/analysis/c_blk_wt_data_float.dart';
 import '../../wavelet/analysis/c_blk_wt_data_int.dart';
-import '../../wavelet/analysis/c_blk_wt_data_src.dart';
 import '../../wavelet/analysis/subband_an.dart';
 import '../../wavelet/subband.dart';
 import '../guard_bits_spec.dart';
@@ -109,7 +108,7 @@ class StdQuantizer extends Quantizer {
   /// [src] The source of wavelet transform coefficients.
   ///
   /// [encSpec] The encoder specifications
-  StdQuantizer(CBlkWTDataSrc src, EncoderSpecs encSpec) : super(src) {
+  StdQuantizer(super.src, EncoderSpecs encSpec) {
     qts = encSpec.qts;
     qsss = encSpec.qsss;
     gbs = encSpec.gbs;
@@ -253,9 +252,7 @@ class StdQuantizer extends Quantizer {
     intq = (src.getDataType(tIdx, c) == DataBlk.typeInt);
 
     // Check that we have an output object
-    if (cblk == null) {
-      cblk = CBlkWTDataInt();
-    }
+    cblk ??= CBlkWTDataInt();
 
     // Cache input float code-block
     infblk = this.infblk;
@@ -315,15 +312,17 @@ class StdQuantizer extends Quantizer {
       cblk.magbits = g - 1 + src.getNomRangeBits(c) + sb.anGainExp;
       shiftBits = 31 - cblk.magbits;
 
+      final shiftFactor = 1 << shiftBits;
+
       // Update the convertFactor field
-      cblk.convertFactor = (1 << shiftBits).toDouble();
+      cblk.convertFactor = shiftFactor.toDouble();
 
       // Since we used getNextCodeBlock() to get the int data then
       // 'offset' is 0 and 'scanw' is the width of the code-block The
       // input and output arrays are the same (i.e. "in place")
       for (j = w * h - 1; j >= 0; j--) {
-        tmp = (outarr[j] << shiftBits);
-        outarr[j] = ((tmp < 0) ? (1 << 31) | (-tmp) : tmp);
+        tmp = outarr[j] * shiftFactor;
+        outarr[j] = _toSignMagnitude32(tmp);
       }
     } else {
       // Non-reversible, use step size
@@ -360,7 +359,7 @@ class StdQuantizer extends Quantizer {
         // The input and output arrays are the same (i.e. "in place")
         for (j = w * h - 1; j >= 0; j--) {
           tmp = (outarr[j] * invstep).toInt();
-          outarr[j] = ((tmp < 0) ? (1 << 31) | (-tmp) : tmp);
+          outarr[j] = _toSignMagnitude32(tmp);
         }
       } else {
         // Quantizing float data
@@ -370,7 +369,7 @@ class StdQuantizer extends Quantizer {
         for (; j >= 0; jmin -= w) {
           for (; j >= jmin; k--, j--) {
             tmp = (infarr![k] * invstep).toInt();
-            outarr[j] = ((tmp < 0) ? (1 << 31) | (-tmp) : tmp);
+            outarr[j] = _toSignMagnitude32(tmp);
           }
           // Jump to beggining of previous line in input
           k -= infblk.scanw - w;
@@ -379,6 +378,13 @@ class StdQuantizer extends Quantizer {
     }
     // Return the quantized code-block
     return cblk;
+  }
+
+  static int _toSignMagnitude32(int value) {
+    if (value >= 0) {
+      return value.toSigned(32);
+    }
+    return (0x80000000 | -value).toSigned(32);
   }
 
   /// Calculates the parameters of the SubbandAn objects that depend on the
@@ -396,8 +402,10 @@ class StdQuantizer extends Quantizer {
     double baseStep;
     final tIdx = getTileIdx();
 
-    if (sb.stepWMSE > 0.0) // parameters already calculated
+    if (sb.stepWMSE > 0.0) {
+      // parameters already calculated
       return;
+    }
     if (!sb.isNode) {
       if (isReversible(tIdx, c)) {
         sb.stepWMSE =

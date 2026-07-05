@@ -167,14 +167,14 @@ void main() {
       decoder.resetCtxts();
 
       // Alternar entre contextos diferentes
-      final ctx0_sym1 = decoder.decodeSymbol(0);
-      final ctx1_sym1 = decoder.decodeSymbol(1);
+      final ctx0Sym1 = decoder.decodeSymbol(0);
+      final ctx1Sym1 = decoder.decodeSymbol(1);
       decoder.decodeSymbol(0);
       decoder.decodeSymbol(1);
 
       // Cada contexto deve manter estado independente
-      expect(ctx0_sym1, anyOf(0, 1));
-      expect(ctx1_sym1, anyOf(0, 1));
+      expect(ctx0Sym1, anyOf(0, 1));
+      expect(ctx1Sym1, anyOf(0, 1));
     });
   });
 

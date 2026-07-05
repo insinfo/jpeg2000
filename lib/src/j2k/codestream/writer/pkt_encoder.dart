@@ -28,15 +28,15 @@ class PktEncoder {
   static const List<List<String>> pinfo = [
     [
       "Psop",
-      "[<tile idx>] on|off" + "[ [<tile idx>] on|off ...]",
-      "Specifies whether start of packet (SOP) markers should be used. " +
+      "[<tile idx>] on|off" "[ [<tile idx>] on|off ...]",
+      "Specifies whether start of packet (SOP) markers should be used. "
           "'on' enables, 'off' disables it.",
       "off"
     ],
     [
       "Peph",
-      "[<tile idx>] on|off" + "[ [<tile  idx>] on|off ...]",
-      "Specifies whether end of packet header (EPH) markers should be " +
+      "[<tile idx>] on|off" "[ [<tile  idx>] on|off ...]",
+      "Specifies whether end of packet header (EPH) markers should be "
           " used. 'on' enables, 'off' disables it.",
       "off"
     ]

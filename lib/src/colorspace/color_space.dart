@@ -21,13 +21,13 @@ class ColorSpace {
   static const int GREEN = 2;
   static const int BLUE = 3;
 
-  /** Parameter Specs */
+  /// Parameter Specs
   final ParameterList pl;
 
-  /** Header decoder */
+  /// Header decoder
   final HeaderDecoder hd;
 
-  /** Input image */
+  /// Input image
   final RandomAccessIO input;
 
   /* Image box structure as pertains to colorspacees. */
@@ -38,14 +38,12 @@ class ColorSpace {
   ImageHeaderBox? ihbox;
   final List<ColorSpecificationBox> csboxes = <ColorSpecificationBox>[];
 
-  /**
-     * Retrieve the ICC profile from the images as
-     * a byte array.
-     * @return the ICC Profile as a byte [].
-     */
+  /// Retrieve the ICC profile from the images as
+  /// a byte array.
+  /// @return the ICC Profile as a byte [].
   Uint8List? getICCProfile() => csbox?.getICCProfile();
 
-  /** Indent a String that contains newlines. */
+  /// Indent a String that contains newlines.
   static String indent(String ident, String instr) {
     final buffer = StringBuffer()..write(ident);
     for (var i = 0; i < instr.length; i++) {
@@ -62,10 +60,8 @@ class ColorSpace {
     _getBoxes();
   }
 
-  /**
-     * Retrieve the various boxes from the JP2 file.
-     * @exception ColorSpaceException, IOException
-     */
+  /// Retrieve the various boxes from the JP2 file.
+  /// @exception ColorSpaceException, IOException
   void _getBoxes() {
     int type;
     var len = 0;
@@ -152,7 +148,7 @@ class ColorSpace {
     }
   }
 
-  /** Return the channel definition of the input component. */
+  /// Return the channel definition of the input component.
   int getChannelDefinition(int c) {
     final defs = cdbox;
     if (defs == null) {
@@ -162,7 +158,7 @@ class ColorSpace {
     return mapped ?? c;
   }
 
-  /** Return the colorspace method (Profiled, enumerated, or palettized). */
+  /// Return the colorspace method (Profiled, enumerated, or palettized).
   MethodEnum getMethod() {
     final spec = csbox;
     if (spec == null) {
@@ -171,7 +167,7 @@ class ColorSpace {
     return spec.getMethod();
   }
 
-  /** Return the colorspace (sYCC, sRGB, sGreyScale). */
+  /// Return the colorspace (sYCC, sRGB, sGreyScale).
   CSEnum getColorSpace() {
     final spec = csbox;
     if (spec == null) {
@@ -180,7 +176,7 @@ class ColorSpace {
     return spec.getColorSpace();
   }
 
-  /** Return number of channels in the palette. */
+  /// Return number of channels in the palette.
   PaletteBox? getPaletteBox() {
     return pbox;
   }
@@ -188,32 +184,30 @@ class ColorSpace {
   List<ColorSpecificationBox> getColorSpecificationBoxes() =>
       List.unmodifiable(csboxes);
 
-  /** Return number of channels in the palette. */
+  /// Return number of channels in the palette.
   int getPaletteChannels() {
     return pbox == null ? 0 : pbox!.getNumColumns();
   }
 
-  /** Return bitdepth of the palette entries. */
+  /// Return bitdepth of the palette entries.
   int getPaletteChannelBits(int c) {
     return pbox == null ? 0 : pbox!.getBitDepth(c);
   }
 
-  /**
-     * Return a palettized sample
-     *   @param channel requested 
-     *   @param index of entry
-     * @return palettized sample
-     */
+  /// Return a palettized sample
+  ///   @param channel requested
+  ///   @param index of entry
+  /// @return palettized sample
   int getPalettizedSample(int channel, int index) {
     return pbox == null ? 0 : pbox!.getEntry(channel, index);
   }
 
-  /** Is palettized predicate. */
+  /// Is palettized predicate.
   bool isPalettized() {
     return pbox != null;
   }
 
-  /** Signed output predicate. */
+  /// Signed output predicate.
   bool isOutputSigned(int channel) {
     return (pbox != null)
         ? pbox!.isSigned(channel)
@@ -254,30 +248,33 @@ class ColorSpace {
     return rep.toString();
   }
 
-  /**
-     * Are profiling diagnostics turned on
-     * @return yes or no
-     */
+  /// Are profiling diagnostics turned on
+  /// @return yes or no
   bool debugging() {
     final flag = pl.getParameter('colorspace_debug');
     return flag != null && flag.toLowerCase() == 'on';
   }
 
   /* Enumeration Class */
-  /** method enumeration */
+  /// method enumeration
   static final MethodEnum ICC_PROFILED = MethodEnum("profiled");
-  /** method enumeration */
+
+  /// method enumeration
   static final MethodEnum ENUMERATED = MethodEnum("enumerated");
 
-  /** colorspace enumeration */
+  /// colorspace enumeration
   static final CSEnum sRGB = CSEnum("sRGB");
-  /** colorspace enumeration */
+
+  /// colorspace enumeration
   static final CSEnum GreyScale = CSEnum("GreyScale");
-  /** colorspace enumeration */
+
+  /// colorspace enumeration
   static final CSEnum sYCC = CSEnum("sYCC");
-  /** colorspace enumeration */
+
+  /// colorspace enumeration
   static final CSEnum Illegal = CSEnum("Illegal");
-  /** colorspace enumeration */
+
+  /// colorspace enumeration
   static final CSEnum Unknown = CSEnum("Unknown");
 }
 
@@ -291,9 +288,9 @@ class Enumeration {
 }
 
 class MethodEnum extends Enumeration {
-  const MethodEnum(String value) : super(value);
+  const MethodEnum(super.value);
 }
 
 class CSEnum extends Enumeration {
-  const CSEnum(String value) : super(value);
+  const CSEnum(super.value);
 }

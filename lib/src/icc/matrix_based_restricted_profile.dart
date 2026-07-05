@@ -17,14 +17,9 @@ class MatrixBasedRestrictedProfile extends RestrictedICCProfile {
   }
 
   /// Construct a 3 component RestrictedICCProfile
-  MatrixBasedRestrictedProfile(
-      ICCCurveType rcurve,
-      ICCCurveType gcurve,
-      ICCCurveType bcurve,
-      ICCXYZType rcolorant,
-      ICCXYZType gcolorant,
-      ICCXYZType bcolorant)
-      : super.rgb(rcurve, gcurve, bcurve, rcolorant, gcolorant, bcolorant);
+  MatrixBasedRestrictedProfile(super.rcurve, super.gcurve, super.bcurve,
+      super.rcolorant, super.gcolorant, super.bcolorant)
+      : super.rgb();
 
   /// Get the type of RestrictedICCProfile for this object
   @override

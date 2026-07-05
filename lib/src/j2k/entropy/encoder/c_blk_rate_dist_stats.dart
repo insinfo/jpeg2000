@@ -120,16 +120,16 @@ class CBlkRateDistStats extends CodedCBlk {
   /// it is ensured that all bit-planes are sent (i.e. the last truncation
   /// point is always included).
   CBlkRateDistStats.withStats(
-      int m,
-      int n,
-      int skipMSBP,
-      Uint8List data,
+      super.m,
+      super.n,
+      super.skipMSBP,
+      Uint8List super.data,
       List<int> rates,
       List<double> dists,
       List<bool>? termp,
       int np,
       bool inclast)
-      : super.full(m, n, skipMSBP, data) {
+      : super.full() {
     selectConvexHull(rates, dists, termp, np, inclast);
   }
 
@@ -288,10 +288,9 @@ class CBlkRateDistStats extends CodedCBlk {
   /// @return A string with the contents of the object
   @override
   String toString() {
-    String str = super.toString() +
-        "\n nVldTrunc=$nVldTrunc, nTotTrunc=$nTotTrunc, num. ROI" +
-        " coeff=$nROIcoeff, num. ROI coding passes=$nROIcp, sb=" +
-        (sb?.sbandIdx.toString() ?? "null");
-    return str;
+    return '${super.toString()}\n'
+        ' nVldTrunc=$nVldTrunc, nTotTrunc=$nTotTrunc, '
+        'num. ROI coeff=$nROIcoeff, num. ROI coding passes=$nROIcp, '
+        'sb=${sb?.sbandIdx.toString() ?? "null"}';
   }
 }

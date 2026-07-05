@@ -1,4 +1,6 @@
 @TestOn('vm')
+library;
+
 import 'dart:io';
 import 'package:jpeg2000/src/j2k/io/be_buffered_random_access_file.dart';
 import 'package:test/test.dart';

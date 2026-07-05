@@ -30,7 +30,7 @@ class PrecinctSizeSpec extends ModuleSpec<List<List<int>>> {
     int numTiles,
     int numComps,
     int specType,
-    Object? _imgSrc,
+    Object? imgSrc,
     this.dls,
     ParameterList parameters,
   ) : super(numTiles, numComps, specType) {

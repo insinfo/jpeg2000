@@ -867,7 +867,7 @@ void main() {
         <SynWTFilter>[reversibleFilter],
       ]);
 
-      PktDecoderHarness _runAgent(String pocQuit) {
+      PktDecoderHarness runAgent(String pocQuit) {
         final headerInfo = HeaderInfo();
         final headerDecoder = _createHeaderDecoder(decSpec, headerInfo);
         _registerSingleTilePart(headerDecoder, 0);
@@ -901,8 +901,8 @@ void main() {
         return harness;
       }
 
-      final harnessOff = _runAgent('off');
-      final harnessOn = _runAgent('on');
+      final harnessOff = runAgent('off');
+      final harnessOn = runAgent('on');
 
       expect(harnessOff.quitTriggered, isFalse);
       expect(harnessOn.quitTriggered, isFalse);

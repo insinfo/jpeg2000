@@ -288,7 +288,7 @@ class ForwWTFull extends ForwardWT {
     if (decomposedComps[c] == null) {
       int k, w, h;
       DataBlk bufblk;
-      Object dst_data;
+      Object dstData;
 
       w = getTileCompWidth(getTileIdx(), c);
       h = getTileCompHeight(getTileIdx(), c);
@@ -304,7 +304,7 @@ class ForwWTFull extends ForwardWT {
 
       // Get data from source line by line (this diminishes the memory
       // requirements on the data source)
-      dst_data = decomposedComps[c]!.getData()!;
+      dstData = decomposedComps[c]!.getData()!;
       int lstart = getCompULX(c);
       bufblk.ulx = lstart;
       bufblk.w = w;
@@ -316,10 +316,10 @@ class ForwWTFull extends ForwardWT {
         bufblk = src.getInternCompData(bufblk, c);
         // System.arraycopy(bufblk.getData(),bufblk.offset, dst_data,k*w,w);
         if (intData) {
-          (dst_data as Int32List).setRange(k * w, k * w + w,
+          (dstData as Int32List).setRange(k * w, k * w + w,
               (bufblk as DataBlkInt).getDataInt()!, bufblk.offset);
         } else {
-          (dst_data as Float32List).setRange(k * w, k * w + w,
+          (dstData as Float32List).setRange(k * w, k * w + w,
               (bufblk as DataBlkFloat).getDataFloat()!, bufblk.offset);
         }
       }
@@ -498,18 +498,18 @@ class ForwWTFull extends ForwardWT {
 
     int j, k;
     int w;
-    Object? dst_data; // a int[] or float[] object
-    Int32List? dst_data_int;
-    Float32List? dst_data_float;
-    Object src_data; // a int[] or float[] object
+    Object? dstData; // a int[] or float[] object
+    Int32List? dstDataInt;
+    Float32List? dstDataFloat;
+    Object srcData; // a int[] or float[] object
 
     intData = (filters.getWTDataType(getTileIdx(), c) == DataBlk.typeInt);
 
-    dst_data = null;
+    dstData = null;
 
     // Cache the data array, if any
     if (cblk != null) {
-      dst_data = cblk.getData();
+      dstData = cblk.getData();
     }
 
     // Get the next code-block
@@ -523,24 +523,24 @@ class ForwWTFull extends ForwardWT {
     // Ensure size of output buffer
     if (intData) {
       // int data
-      dst_data_int = dst_data as Int32List?;
-      if (dst_data_int == null || dst_data_int.length < cblk.w * cblk.h) {
-        dst_data = Int32List(cblk.w * cblk.h);
+      dstDataInt = dstData as Int32List?;
+      if (dstDataInt == null || dstDataInt.length < cblk.w * cblk.h) {
+        dstData = Int32List(cblk.w * cblk.h);
       }
     } else {
       // float data
-      dst_data_float = dst_data as Float32List?;
-      if (dst_data_float == null || dst_data_float.length < cblk.w * cblk.h) {
-        dst_data = Float32List(cblk.w * cblk.h);
+      dstDataFloat = dstData as Float32List?;
+      if (dstDataFloat == null || dstDataFloat.length < cblk.w * cblk.h) {
+        dstData = Float32List(cblk.w * cblk.h);
       }
     }
 
     // Copy data line by line
-    src_data = cblk.getData()!;
+    srcData = cblk.getData()!;
     w = cblk.w;
     if (intData) {
-      var src = src_data as Int32List;
-      var dst = dst_data as Int32List;
+      var src = srcData as Int32List;
+      var dst = dstData as Int32List;
       j = w * (cblk.h - 1);
       k = cblk.offset + (cblk.h - 1) * cblk.scanw;
       for (; j >= 0; j -= w, k -= cblk.scanw) {
@@ -548,8 +548,8 @@ class ForwWTFull extends ForwardWT {
         dst.setRange(j, j + w, src, k);
       }
     } else {
-      var src = src_data as Float32List;
-      var dst = dst_data as Float32List;
+      var src = srcData as Float32List;
+      var dst = dstData as Float32List;
       j = w * (cblk.h - 1);
       k = cblk.offset + (cblk.h - 1) * cblk.scanw;
       for (; j >= 0; j -= w, k -= cblk.scanw) {
@@ -558,7 +558,7 @@ class ForwWTFull extends ForwardWT {
       }
     }
 
-    cblk.setData(dst_data!);
+    cblk.setData(dstData!);
     cblk.offset = 0;
     cblk.scanw = w;
 
@@ -711,7 +711,7 @@ class ForwWTFull extends ForwardWT {
   /// @param c The index of the current component to decompose
   void wavelet2DDecomposition(DataBlk band, SubbandAn subband, int c) {
     int ulx, uly, w, h;
-    int band_w;
+    int bandW;
 
     // If subband is empty (i.e. zero size) nothing to do
     if (subband.w == 0 || subband.h == 0) {
@@ -722,7 +722,7 @@ class ForwWTFull extends ForwardWT {
     uly = subband.uly;
     w = subband.w;
     h = subband.h;
-    band_w = getTileCompWidth(getTileIdx(), c);
+    bandW = getTileCompWidth(getTileIdx(), c);
 
     if (intData) {
       //Perform the decompositions if the filter is implemented with an
@@ -736,22 +736,22 @@ class ForwWTFull extends ForwardWT {
       if (subband.ulcy % 2 == 0) {
         // Even start index => use LPF
         for (j = 0; j < w; j++) {
-          offset = uly * band_w + ulx + j;
+          offset = uly * bandW + ulx + j;
           for (i = 0; i < h; i++) {
-            tmpVector[i] = data[offset + (i * band_w)];
+            tmpVector[i] = data[offset + (i * bandW)];
           }
-          subband.vFilter!.analyzeLpf(tmpVector, 0, h, 1, data, offset, band_w,
-              data, offset + ((h + 1) ~/ 2) * band_w, band_w);
+          subband.vFilter!.analyzeLpf(tmpVector, 0, h, 1, data, offset, bandW,
+              data, offset + ((h + 1) ~/ 2) * bandW, bandW);
         }
       } else {
         // Odd start index => use HPF
         for (j = 0; j < w; j++) {
-          offset = uly * band_w + ulx + j;
+          offset = uly * bandW + ulx + j;
           for (i = 0; i < h; i++) {
-            tmpVector[i] = data[offset + (i * band_w)];
+            tmpVector[i] = data[offset + (i * bandW)];
           }
-          subband.vFilter!.analyzeHpf(tmpVector, 0, h, 1, data, offset, band_w,
-              data, offset + (h ~/ 2) * band_w, band_w);
+          subband.vFilter!.analyzeHpf(tmpVector, 0, h, 1, data, offset, bandW,
+              data, offset + (h ~/ 2) * bandW, bandW);
         }
       }
 
@@ -759,7 +759,7 @@ class ForwWTFull extends ForwardWT {
       if (subband.ulcx % 2 == 0) {
         // Even start index => use LPF
         for (i = 0; i < h; i++) {
-          offset = (uly + i) * band_w + ulx;
+          offset = (uly + i) * bandW + ulx;
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
@@ -769,7 +769,7 @@ class ForwWTFull extends ForwardWT {
       } else {
         // Odd start index => use HPF
         for (i = 0; i < h; i++) {
-          offset = (uly + i) * band_w + ulx;
+          offset = (uly + i) * bandW + ulx;
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
@@ -789,29 +789,29 @@ class ForwWTFull extends ForwardWT {
       if (subband.ulcy % 2 == 0) {
         // Even start index => use LPF
         for (j = 0; j < w; j++) {
-          offset = uly * band_w + ulx + j;
+          offset = uly * bandW + ulx + j;
           for (i = 0; i < h; i++) {
-            tmpVector[i] = data[offset + (i * band_w)];
+            tmpVector[i] = data[offset + (i * bandW)];
           }
-          subband.vFilter!.analyzeLpf(tmpVector, 0, h, 1, data, offset, band_w,
-              data, offset + ((h + 1) ~/ 2) * band_w, band_w);
+          subband.vFilter!.analyzeLpf(tmpVector, 0, h, 1, data, offset, bandW,
+              data, offset + ((h + 1) ~/ 2) * bandW, bandW);
         }
       } else {
         // Odd start index => use HPF
         for (j = 0; j < w; j++) {
-          offset = uly * band_w + ulx + j;
+          offset = uly * bandW + ulx + j;
           for (i = 0; i < h; i++) {
-            tmpVector[i] = data[offset + (i * band_w)];
+            tmpVector[i] = data[offset + (i * bandW)];
           }
-          subband.vFilter!.analyzeHpf(tmpVector, 0, h, 1, data, offset, band_w,
-              data, offset + (h ~/ 2) * band_w, band_w);
+          subband.vFilter!.analyzeHpf(tmpVector, 0, h, 1, data, offset, bandW,
+              data, offset + (h ~/ 2) * bandW, bandW);
         }
       }
       //Perform the horizontal decomposition.
       if (subband.ulcx % 2 == 0) {
         // Even start index => use LPF
         for (i = 0; i < h; i++) {
-          offset = (uly + i) * band_w + ulx;
+          offset = (uly + i) * bandW + ulx;
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
@@ -821,7 +821,7 @@ class ForwWTFull extends ForwardWT {
       } else {
         // Odd start index => use HPF
         for (i = 0; i < h; i++) {
-          offset = (uly + i) * band_w + ulx;
+          offset = (uly + i) * bandW + ulx;
           for (j = 0; j < w; j++) {
             tmpVector[j] = data[offset + j];
           }
@@ -890,6 +890,7 @@ class ForwWTFull extends ForwardWT {
   ///
   /// @see SubbandAn
   /// @see Subband
+  @override
   SubbandAn getAnSubbandTree(int t, int c) {
     if (subbTrees[t][c] == null) {
       subbTrees[t][c] = SubbandAn.tree(
@@ -952,7 +953,7 @@ class ForwWTFull extends ForwardWT {
       }
 
       // Number of code-blocks
-      if (sb.numCb == null) sb.numCb = Coord();
+      sb.numCb ??= Coord();
       if (sb.w != 0 && sb.h != 0) {
         int acb0x = cb0x;
         int acb0y = cb0y;

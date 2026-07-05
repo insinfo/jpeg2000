@@ -9,7 +9,7 @@ class MonochromeInputRestrictedProfile extends RestrictedICCProfile {
   }
 
   /// Construct a 1 component RestrictedICCProfile
-  MonochromeInputRestrictedProfile(ICCCurveType c) : super.gray(c);
+  MonochromeInputRestrictedProfile(super.c) : super.gray();
 
   /// Get the type of RestrictedICCProfile for this object
   @override

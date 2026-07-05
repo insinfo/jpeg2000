@@ -30,16 +30,16 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
   static const List<List<String?>> pinfo = [
     [
       "Aptype",
-      "[<tile idx>] res|layer|res-pos|" +
-          "pos-comp|comp-pos [res_start comp_start layer_end res_end " +
-          "comp_end " +
-          "prog] [[res_start comp_start ly_end res_end comp_end prog] ...] [" +
+      "[<tile idx>] res|layer|res-pos|"
+          "pos-comp|comp-pos [res_start comp_start layer_end res_end "
+          "comp_end "
+          "prog] [[res_start comp_start ly_end res_end comp_end prog] ...] ["
           "[<tile-component idx>] ...]",
-      "Specifies which type of progression should be used when " +
-          "generating " +
-          "the codestream. The 'res' value generates a resolution " +
-          "progressive codestream with the number of layers specified by " +
-          "'Alayers' option. The 'layer' value generates a layer progressive " +
+      "Specifies which type of progression should be used when "
+              "generating "
+              "the codestream. The 'res' value generates a resolution "
+              "progressive codestream with the number of layers specified by "
+              "'Alayers' option. The 'layer' value generates a layer progressive " +
           "codestream with multiple layers. In any case the rate-allocation " +
           "algorithm optimizes for best quality in each layer. The quality " +
           "measure is mean squared error (MSE) or a weighted version of it " +
@@ -60,11 +60,11 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
     [
       "Alayers",
       "[<rate> [+<layers>] [<rate [+<layers>] [...]] | sl]",
-      "Explicitly specifies the codestream layer formation parameters. " +
-          "The <rate> parameter specifies the bitrate to which the first " +
-          "layer should be optimized. The <layers> parameter, if present, " +
-          "specifies the number of extra layers that should be added for " +
-          "scalability. These extra layers are not optimized. " +
+      "Explicitly specifies the codestream layer formation parameters. "
+              "The <rate> parameter specifies the bitrate to which the first "
+              "layer should be optimized. The <layers> parameter, if present, "
+              "specifies the number of extra layers that should be added for "
+              "scalability. These extra layers are not optimized. " +
           "Any extra <rate> and <layers> parameters add more layers, in the " +
           "same way. An additional layer is always added at the end, which" +
           " is " +

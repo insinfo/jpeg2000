@@ -235,10 +235,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         mrl = sb.resLvl + 1;
 
         // Initialize maximum number of precincts per resolution array
-        if (numPrec == null) {
-          numPrec =
-              List.generate(nt, (_) => List.generate(nc, (_) => <img.Coord>[]));
-        }
+        numPrec ??=
+            List.generate(nt, (_) => List.generate(nc, (_) => <img.Coord>[]));
         if (numPrec![t][c].isEmpty) {
           numPrec![t][c] = List.generate(mrl, (_) => img.Coord(0, 0));
         }
@@ -495,8 +493,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     while (newbytes < minlsz) {
       if (numLayers == 1) {
         if (newbytes <= 0) {
-          throw ArgumentError("Overall target bitrate too " +
-              "low, given the current " +
+          throw ArgumentError("Overall target bitrate too "
+              "low, given the current "
               "bit stream header overhead");
         }
         break;
@@ -556,7 +554,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     SubbandAn subb;
     CBlkRateDistStats? ccb;
     img.Coord? ncblks;
-    int last_sidx;
+    int lastSidx;
     double fslope;
 
     int stime = 0;
@@ -624,24 +622,25 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
           // Add code-block contribution to summary R-D table
           // RDSlopesRates
-          last_sidx = -1;
+          lastSidx = -1;
           for (k = ccb.nVldTrunc - 1; k >= 0; k--) {
             fslope = ccb.truncSlopes[k];
             if (fslope > maxSlope) maxSlope = fslope;
             if (fslope < minSlope) minSlope = fslope;
             sidx = getLimitedSIndexFromSlope(fslope);
-            for (; sidx > last_sidx; sidx--) {
+            for (; sidx > lastSidx; sidx--) {
               RDSlopesRates[sidx] += ccb.truncRates[ccb.truncIdxs[k]];
             }
-            last_sidx = getLimitedSIndexFromSlope(fslope);
+            lastSidx = getLimitedSIndexFromSlope(fslope);
           }
 
           //Fills code-blocks array
           cblks[t][c][r][s][(ccb.m * ncblks.x) + ccb.n] = ccb;
           ccb = null;
 
-          if (DO_TIMING)
+          if (DO_TIMING) {
             initTime += DateTime.now().millisecondsSinceEpoch - stime;
+          }
         }
       }
 
@@ -650,8 +649,10 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       }
 
       //Goto next tile
-      if (t < numTiles - 1) //not at last tile
+      if (t < numTiles - 1) {
+        //not at last tile
         src.nextTile();
+      }
     }
   }
 
@@ -697,9 +698,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
             optimizeBitstreamLayer(l, rdThreshold, maxBytes, actualBytes);
       } else {
         if (l <= 0 || l >= numLayers - 1) {
-          throw ArgumentError("The first and the" +
-              " last layer " +
-              "thresholds" +
+          throw ArgumentError("The first and the"
+              " last layer "
+              "thresholds"
               " must be optimized");
         }
         rdThreshold = estimateLayerThreshold(maxBytes, layers[l - 1]);
@@ -1063,8 +1064,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // level
     PrecInfo prec; // temporary variable
     int p; // Current precinct index
-    int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
-    int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
+    int gcdX = 0; // Horiz. distance between 2 precincts in the ref. grid
+    int gcdY = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
     List<List<int>> nextPrec =
         List.generate(ce, (_) => []); // Next precinct index in each
@@ -1098,11 +1099,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           }
 
           if (nPrec == 0) {
-            gcd_x = prec.rgw;
-            gcd_y = prec.rgh;
+            gcdX = prec.rgw;
+            gcdY = prec.rgh;
           } else {
-            gcd_x = MathUtil.gcd(gcd_x, prec.rgw);
-            gcd_y = MathUtil.gcd(gcd_y, prec.rgh);
+            gcdX = MathUtil.gcd(gcdX, prec.rgw);
+            gcdY = MathUtil.gcd(gcdY, prec.rgh);
           }
           nPrec++;
         } // precincts
@@ -1113,8 +1114,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       throw Error(); // "Image cannot have no precinct"
     }
 
-    int pyend = ((maxy - miny) / gcd_y).floor() + 1;
-    int pxend = ((maxx - minx) / gcd_x).floor() + 1;
+    int pyend = ((maxy - miny) / gcdY).floor() + 1;
+    int pxend = ((maxx - minx) / gcdX).floor() + 1;
     int y = ty0;
     int x = tx0;
     for (int py = 0; py <= pyend; py++) {
@@ -1170,13 +1171,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           } // Resolution levels
         } // Components
         if (px != pxend) {
-          x = minx + px * gcd_x;
+          x = minx + px * gcdX;
         } else {
           x = tx0;
         }
       } // Horizontal precincts
       if (py != pyend) {
-        y = miny + py * gcd_y;
+        y = miny + py * gcdY;
       } else {
         y = ty0;
       }
@@ -1241,8 +1242,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // level
     PrecInfo prec; // temporary variable
     int p; // Current precinct index
-    int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
-    int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
+    int gcdX = 0; // Horiz. distance between 2 precincts in the ref. grid
+    int gcdY = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
     List<List<int>> nextPrec =
         List.generate(ce, (_) => []); // Next precinct index in each
@@ -1276,11 +1277,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           }
 
           if (nPrec == 0) {
-            gcd_x = prec.rgw;
-            gcd_y = prec.rgh;
+            gcdX = prec.rgw;
+            gcdY = prec.rgh;
           } else {
-            gcd_x = MathUtil.gcd(gcd_x, prec.rgw);
-            gcd_y = MathUtil.gcd(gcd_y, prec.rgh);
+            gcdX = MathUtil.gcd(gcdX, prec.rgw);
+            gcdY = MathUtil.gcd(gcdY, prec.rgh);
           }
           nPrec++;
         } // precincts
@@ -1291,8 +1292,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       throw Error(); // "Image cannot have no precinct"
     }
 
-    int pyend = ((maxy - miny) / gcd_y).floor() + 1;
-    int pxend = ((maxx - minx) / gcd_x).floor() + 1;
+    int pyend = ((maxy - miny) / gcdY).floor() + 1;
+    int pxend = ((maxx - minx) / gcdX).floor() + 1;
     int y = ty0;
     int x = tx0;
     for (int py = 0; py <= pyend; py++) {
@@ -1348,13 +1349,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           } // Resolution levels
         } // Components
         if (px != pxend) {
-          x = minx + px * gcd_x;
+          x = minx + px * gcdX;
         } else {
           x = tx0;
         }
       } // Horizontal precincts
       if (py != pyend) {
-        y = miny + py * gcd_y;
+        y = miny + py * gcdY;
       } else {
         y = ty0;
       }
@@ -1403,8 +1404,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // level
     PrecInfo prec; // temporary variable
     int p; // Current precinct index
-    int gcd_x = 0; // Horiz. distance between 2 precincts in the ref. grid
-    int gcd_y = 0; // Vert. distance between 2 precincts in the ref. grid
+    int gcdX = 0; // Horiz. distance between 2 precincts in the ref. grid
+    int gcdY = 0; // Vert. distance between 2 precincts in the ref. grid
     int nPrec = 0; // Total number of found precincts
     List<List<int>> nextPrec =
         List.generate(ce, (_) => []); // Next precinct index in each
@@ -1438,11 +1439,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           }
 
           if (nPrec == 0) {
-            gcd_x = prec.rgw;
-            gcd_y = prec.rgh;
+            gcdX = prec.rgw;
+            gcdY = prec.rgh;
           } else {
-            gcd_x = MathUtil.gcd(gcd_x, prec.rgw);
-            gcd_y = MathUtil.gcd(gcd_y, prec.rgh);
+            gcdX = MathUtil.gcd(gcdX, prec.rgw);
+            gcdY = MathUtil.gcd(gcdY, prec.rgh);
           }
           nPrec++;
         } // precincts
@@ -1453,8 +1454,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       throw Error(); // "Image cannot have no precinct"
     }
 
-    int pyend = ((maxy - miny) / gcd_y).floor() + 1;
-    int pxend = ((maxx - minx) / gcd_x).floor() + 1;
+    int pyend = ((maxy - miny) / gcdY).floor() + 1;
+    int pxend = ((maxx - minx) / gcdX).floor() + 1;
     int y = ty0;
     int x = tx0;
     for (int py = 0; py <= pyend; py++) {
@@ -1510,13 +1511,13 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           } // Resolution levels
         } // Components
         if (px != pxend) {
-          x = minx + px * gcd_x;
+          x = minx + px * gcdX;
         } else {
           x = tx0;
         }
       } // Horizontal precincts
       if (py != pyend) {
-        y = miny + py * gcd_y;
+        y = miny + py * gcdY;
       } else {
         y = ty0;
       }
@@ -1737,7 +1738,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       SubbandAn subb, double fthresh, int precinctIdx) {
     int minsbi, maxsbi, b, n;
     SubbandAn sb;
-    CBlkRateDistStats cur_cblk;
+    CBlkRateDistStats curCblk;
     PrecInfo prec = pktEnc.getPrecInfo(tileIdx, compIdx, lvlIdx, precinctIdx);
     img.Coord cbCoord;
 
@@ -1762,9 +1763,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           if (cbInfo == null) continue;
           cbCoord = cbInfo.idx;
           b = cbCoord.x + cbCoord.y * sb.numCb!.x;
-          cur_cblk = cblks[tileIdx][compIdx][lvlIdx][s][b];
-          for (n = 0; n < cur_cblk.nVldTrunc; n++) {
-            if (cur_cblk.truncSlopes[n] < fthresh) {
+          curCblk = cblks[tileIdx][compIdx][lvlIdx][s][b];
+          for (n = 0; n < curCblk.nVldTrunc; n++) {
+            if (curCblk.truncSlopes[n] < fthresh) {
               break;
             } else {
               continue;
@@ -1853,15 +1854,15 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   ///
   /// @return The value of the slope threshold for the estimated layer
   double estimateLayerThreshold(int targetBytes, EBCOTLayer lastLayer) {
-    double log_sl1; // The log of the first slope used for interpolation
-    double log_sl2; // The log of the second slope used for interpolation
-    double log_len1; // The log of the first length used for interpolation
-    double log_len2; // The log of the second length used for interpolation
-    double log_isl; // The log of the interpolated slope
-    double log_ilen; // Log of the interpolated length
-    double log_ab; // Log of actual bytes in last layer
+    double logSl1; // The log of the first slope used for interpolation
+    double logSl2; // The log of the second slope used for interpolation
+    double logLen1; // The log of the first length used for interpolation
+    double logLen2; // The log of the second length used for interpolation
+    double logIsl; // The log of the interpolated slope
+    double logIlen; // Log of the interpolated length
+    double logAb; // Log of actual bytes in last layer
     int sidx; // Index into the summary R-D info array
-    double log_off; // The log of the offset proportion
+    double logOff; // The log of the offset proportion
     int tlen; // The corrected target layer length
     double lthresh; // The threshold of the last layer
     double eth; // The estimated threshold
@@ -1901,33 +1902,33 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       // Pathological case, we can not use log of 0. Add
       // RDSlopesRates[sidx]+1 bytes to the rates (just a crude simple
       // solution to this rare case)
-      log_len1 = math.log((RDSlopesRates[sidx] << 1) + 1);
-      log_len2 = math.log(RDSlopesRates[sidx] + 1);
-      log_ab = math.log(lastLayer.actualBytes + RDSlopesRates[sidx] + 1);
+      logLen1 = math.log((RDSlopesRates[sidx] << 1) + 1);
+      logLen2 = math.log(RDSlopesRates[sidx] + 1);
+      logAb = math.log(lastLayer.actualBytes + RDSlopesRates[sidx] + 1);
     } else {
-      log_len1 = math.log(RDSlopesRates[sidx]);
-      log_len2 = math.log(RDSlopesRates[sidx + 1]);
-      log_ab = math.log(lastLayer.actualBytes);
+      logLen1 = math.log(RDSlopesRates[sidx]);
+      logLen2 = math.log(RDSlopesRates[sidx + 1]);
+      logAb = math.log(lastLayer.actualBytes);
     }
 
-    log_sl1 = math.log(getSlopeFromSIndex(sidx));
-    log_sl2 = math.log(getSlopeFromSIndex(sidx + 1));
+    logSl1 = math.log(getSlopeFromSIndex(sidx));
+    logSl2 = math.log(getSlopeFromSIndex(sidx + 1));
 
-    log_isl = math.log(lthresh);
+    logIsl = math.log(lthresh);
 
-    log_ilen = log_len1 +
-        (log_isl - log_sl1) * (log_len1 - log_len2) / (log_sl1 - log_sl2);
+    logIlen =
+        logLen1 + (logIsl - logSl1) * (logLen1 - logLen2) / (logSl1 - logSl2);
 
-    log_off = log_ab - log_ilen;
+    logOff = logAb - logIlen;
 
     // Do not use negative offsets (i.e. offset proportion larger than 1)
     // since that is probably a sign that our model is off. To be
     // conservative use an offset of 0 (i.e. offset proportiojn 1).
-    if (log_off < 0) log_off = 0.0;
+    if (logOff < 0) logOff = 0.0;
 
     // 2) Correct the target layer length by the offset.
 
-    tlen = (targetBytes / math.exp(log_off)).toInt();
+    tlen = (targetBytes / math.exp(logOff)).toInt();
 
     // 3) Find, from the summary R-D info, the thresholds that generate
     // lengths just above and below our corrected target layer length.
@@ -1949,25 +1950,25 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       // Pathological case, we can not use log of 0. Add
       // RDSlopesRates[sidx-1]+1 bytes to the rates (just a crude simple
       // solution to this rare case)
-      log_len1 = math.log(RDSlopesRates[sidx - 1] + 1);
-      log_len2 = math.log((RDSlopesRates[sidx - 1] << 1) + 1);
-      log_ilen = math.log(tlen + RDSlopesRates[sidx - 1] + 1);
+      logLen1 = math.log(RDSlopesRates[sidx - 1] + 1);
+      logLen2 = math.log((RDSlopesRates[sidx - 1] << 1) + 1);
+      logIlen = math.log(tlen + RDSlopesRates[sidx - 1] + 1);
     } else {
       // Normal case, we can safely take the logs.
-      log_len1 = math.log(RDSlopesRates[sidx]);
-      log_len2 = math.log(RDSlopesRates[sidx - 1]);
-      log_ilen = math.log(tlen);
+      logLen1 = math.log(RDSlopesRates[sidx]);
+      logLen2 = math.log(RDSlopesRates[sidx - 1]);
+      logIlen = math.log(tlen);
     }
 
-    log_sl1 = math.log(getSlopeFromSIndex(sidx));
-    log_sl2 = math.log(getSlopeFromSIndex(sidx - 1));
+    logSl1 = math.log(getSlopeFromSIndex(sidx));
+    logSl2 = math.log(getSlopeFromSIndex(sidx - 1));
 
     // 4) Interpolate the two thresholds to find the target threshold.
 
-    log_isl = log_sl1 +
-        (log_ilen - log_len1) * (log_sl1 - log_sl2) / (log_len1 - log_len2);
+    logIsl =
+        logSl1 + (logIlen - logLen1) * (logSl1 - logSl2) / (logLen1 - logLen2);
 
-    eth = math.exp(log_isl);
+    eth = math.exp(logIsl);
 
     // Correct out of bounds results
     if (eth > lthresh) eth = lthresh;

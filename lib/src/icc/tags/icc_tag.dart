@@ -101,9 +101,9 @@ abstract class ICCTag {
 
   /// Create a string representation of the tag type
   static String typeString(int type) {
-    if (type == kdwTextDescType)
+    if (type == kdwTextDescType) {
       return sdwTextDescType;
-    else if (type == kdwTextType)
+    } else if (type == kdwTextType)
       return sdwTextDescType;
     else if (type == kdwCurveType)
       return sdwCurveType;
@@ -119,9 +119,9 @@ abstract class ICCTag {
 
   /// Create a string representation of the signature
   static String signatureString(int signature) {
-    if (signature == kdwCprtSignature)
+    if (signature == kdwCprtSignature) {
       return sdwCprtSignature;
-    else if (signature == kdwDescSignature)
+    } else if (signature == kdwDescSignature)
       return sdwDescSignature;
     else if (signature == kdwWtPtSignature)
       return sdwWtPtSignature;
@@ -154,9 +154,9 @@ abstract class ICCTag {
       int signature, Uint8List data, int offset, int count) {
     int type = ICCProfile.getInt(data, offset);
 
-    if (type == kdwTextDescType)
+    if (type == kdwTextDescType) {
       return ICCTextDescriptionType(signature, data, offset, count);
-    else if (type == kdwTextType)
+    } else if (type == kdwTextType)
       return ICCTextType(signature, data, offset, count);
     else if (type == kdwXYZType)
       return ICCXYZType(signature, data, offset, count);

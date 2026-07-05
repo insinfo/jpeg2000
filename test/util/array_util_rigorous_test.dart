@@ -81,11 +81,15 @@ void main() {
       ArrayUtil.intArraySet(arr, 0);
       expect(arr, [0, 0, 0, 0, 0]);
 
-      for (int i = 0; i < arr.length; i++) arr[i] = i + 10;
+      for (int i = 0; i < arr.length; i++) {
+        arr[i] = i + 10;
+      }
       ArrayUtil.intArraySet(arr, 0);
       expect(arr, [0, 0, 0, 0, 0]);
 
-      for (int i = 0; i < arr.length; i++) arr[i] = -i;
+      for (int i = 0; i < arr.length; i++) {
+        arr[i] = -i;
+      }
       ArrayUtil.intArraySet(arr, 0);
       expect(arr, [0, 0, 0, 0, 0]);
     });

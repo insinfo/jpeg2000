@@ -152,14 +152,16 @@ class ICCProfiler extends ColorSpaceMapper {
       case 1:
         ICC = ICCMonochromeInputProfile.createInstance(csm);
         rICC = ICC!.parse();
-        if (rICC!.getType() != RestrictedICCProfile.kMonochromeInput)
+        if (rICC!.getType() != RestrictedICCProfile.kMonochromeInput) {
           throw ArgumentError("wrong ICCProfile type for image");
+        }
         break;
       case 3:
         ICC = ICCMatrixBasedInputProfile.createInstance(csm);
         rICC = ICC!.parse();
-        if (rICC!.getType() != RestrictedICCProfile.kThreeCompInput)
+        if (rICC!.getType() != RestrictedICCProfile.kThreeCompInput) {
           throw ArgumentError("wrong ICCProfile type for image");
+        }
         break;
       default:
         throw ArgumentError("illegal number of components ($ncomps) in image");
@@ -427,10 +429,12 @@ class ICCProfiler extends ColorSpaceMapper {
   String toString() {
     StringBuffer rep = StringBuffer("[ICCProfiler:");
     StringBuffer body = StringBuffer();
-    if (ICC != null)
+    if (ICC != null) {
       body.write("$eol${ColorSpace.indent("  ", ICC.toString())}");
-    if (xform != null)
+    }
+    if (xform != null) {
       body.write("$eol${ColorSpace.indent("  ", xform.toString())}");
+    }
     rep.write(ColorSpace.indent("  ", body.toString()));
     return (rep..write("]")).toString();
   }

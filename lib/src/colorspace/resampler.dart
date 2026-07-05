@@ -9,7 +9,7 @@ import 'color_space_exception.dart';
 import 'color_space_mapper.dart';
 
 class Resampler extends ColorSpaceMapper {
-  Resampler(BlkImgDataSrc src, ColorSpace csMap) : super(src, csMap) {
+  Resampler(super.src, super.csMap) {
     _initialize();
   }
 

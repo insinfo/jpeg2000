@@ -10,8 +10,7 @@ class ChannelDefinitionMapper extends ColorSpaceMapper {
     return ChannelDefinitionMapper(src, csMap);
   }
 
-  ChannelDefinitionMapper(BlkImgDataSrc src, ColorSpace csMap)
-      : super(src, csMap);
+  ChannelDefinitionMapper(super.src, super.csMap);
 
   @override
   DataBlk getCompData(DataBlk outblk, int c) {

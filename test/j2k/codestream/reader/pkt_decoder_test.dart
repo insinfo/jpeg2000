@@ -15,8 +15,7 @@ import 'package:jpeg2000/src/j2k/image/coord.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 class _TestBitstreamReaderAgent extends BitstreamReaderAgent {
-  _TestBitstreamReaderAgent(HeaderDecoder header, DecoderSpecs specs)
-      : super(header, specs) {
+  _TestBitstreamReaderAgent(super.header, super.specs) {
     setTile(0, 0);
   }
 

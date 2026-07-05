@@ -446,9 +446,6 @@ class AnWTFilterFloatLift9x7 extends AnWTFilterFloat {
   }
 
   @override
-  int get hashCode => super.hashCode;
-
-  @override
   int getFilterType() {
     return FilterTypes.W9X7;
   }

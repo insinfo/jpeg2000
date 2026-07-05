@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import '../icc_profile.dart';
 import 'icc_tag.dart';
 
@@ -24,16 +23,14 @@ class ICCXYZType extends ICCTag {
   }
 
   /// Construct this tag from its constituant parts
-  ICCXYZType(int signature, Uint8List data, int offset, int length)
+  ICCXYZType(super.signature, super.data, super.offset, super.length)
       : x = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
         y = ICCProfile.getInt(data, offset + 3 * ICCProfile.int_size),
-        z = ICCProfile.getInt(data, offset + 4 * ICCProfile.int_size),
-        super(signature, data, offset, length);
+        z = ICCProfile.getInt(data, offset + 4 * ICCProfile.int_size);
 
   /// Constructor for subclasses that need to specify values manually
-  ICCXYZType.fromValues(int signature, Uint8List data, int offset, int length,
-      this.x, this.y, this.z)
-      : super(signature, data, offset, length);
+  ICCXYZType.fromValues(super.signature, super.data, super.offset, super.length,
+      this.x, this.y, this.z);
 
   /// Return the string rep of this tag.
   @override

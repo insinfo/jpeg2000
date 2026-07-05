@@ -71,9 +71,10 @@ class MonochromeTransformTosRGB {
   ///   @param dwInputShiftValue value used to shift samples to positive
   MonochromeTransformTosRGB(
       RestrictedICCProfile rICC, int dwInputMaxValue, int dwInputShiftValue) {
-    if (rICC.getType() != RestrictedICCProfile.kMonochromeInput)
+    if (rICC.getType() != RestrictedICCProfile.kMonochromeInput) {
       throw ArgumentError(
           "MonochromeTransformTosRGB: wrong type ICCProfile supplied");
+    }
 
     this.dwInputMaxValue = dwInputMaxValue;
     lut = Int16List(dwInputMaxValue + 1);
@@ -125,9 +126,9 @@ class MonochromeTransformTosRGB {
     // o = inb.offset; // Not used
     for (i = 0; i < inb.h * inb.w; ++i) {
       j = input[i];
-      if (j < 0)
+      if (j < 0) {
         j = 0;
-      else if (j > dwInputMaxValue) j = dwInputMaxValue;
+      } else if (j > dwInputMaxValue) j = dwInputMaxValue;
       output[i] = lut[j];
     }
   }
@@ -158,9 +159,9 @@ class MonochromeTransformTosRGB {
     // o = inb.offset; // Not used
     for (i = 0; i < inb.h * inb.w; ++i) {
       j = input[i].toInt();
-      if (j < 0)
+      if (j < 0) {
         j = 0;
-      else if (j > dwInputMaxValue) j = dwInputMaxValue;
+      } else if (j > dwInputMaxValue) j = dwInputMaxValue;
       output[i] = lut[j].toDouble();
     }
   }

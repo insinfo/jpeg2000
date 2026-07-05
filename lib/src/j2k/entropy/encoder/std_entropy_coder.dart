@@ -368,7 +368,7 @@ class StdEntropyCoder extends EntropyCoder {
 
     int i, j;
     double val, deltaMSE;
-    List<int>? inter_sc_lut;
+    List<int>? interScLut;
     int ds, us, rs, ls;
     int dsgn, usgn, rsgn, lsgn;
     int h, v;
@@ -522,16 +522,16 @@ class StdEntropyCoder extends EntropyCoder {
     }
 
     // Initialize the SC lookup tables
-    inter_sc_lut = List<int>.filled(36, 0);
-    inter_sc_lut[(2 << 3) | 2] = 15;
-    inter_sc_lut[(2 << 3) | 1] = 14;
-    inter_sc_lut[(2 << 3) | 0] = 13;
-    inter_sc_lut[(1 << 3) | 2] = 12;
-    inter_sc_lut[(1 << 3) | 1] = 11;
-    inter_sc_lut[(1 << 3) | 0] = 12 | INT_SIGN_BIT;
-    inter_sc_lut[(0 << 3) | 2] = 13 | INT_SIGN_BIT;
-    inter_sc_lut[(0 << 3) | 1] = 14 | INT_SIGN_BIT;
-    inter_sc_lut[(0 << 3) | 0] = 15 | INT_SIGN_BIT;
+    interScLut = List<int>.filled(36, 0);
+    interScLut[(2 << 3) | 2] = 15;
+    interScLut[(2 << 3) | 1] = 14;
+    interScLut[(2 << 3) | 0] = 13;
+    interScLut[(1 << 3) | 2] = 12;
+    interScLut[(1 << 3) | 1] = 11;
+    interScLut[(1 << 3) | 0] = 12 | INT_SIGN_BIT;
+    interScLut[(0 << 3) | 2] = 13 | INT_SIGN_BIT;
+    interScLut[(0 << 3) | 1] = 14 | INT_SIGN_BIT;
+    interScLut[(0 << 3) | 0] = 15 | INT_SIGN_BIT;
 
     for (i = 0; i < (1 << SC_LUT_BITS) - 1; i++) {
       ds = i & 0x01;
@@ -550,9 +550,9 @@ class StdEntropyCoder extends EntropyCoder {
       v = (v >= -1) ? v : -1;
       v = (v <= 1) ? v : 1;
 
-      SC_LUT[i] = inter_sc_lut[(h + 1) << 3 | (v + 1)];
+      SC_LUT[i] = interScLut[(h + 1) << 3 | (v + 1)];
     }
-    inter_sc_lut = null;
+    interScLut = null;
 
     // Initialize the MR lookup tables
     MR_LUT[0] = 16;
@@ -660,9 +660,7 @@ class StdEntropyCoder extends EntropyCoder {
       boutT[0] = BitToByteOutput(outT[0]);
     }
 
-    if (ccb == null) {
-      ccb = CBlkRateDistStats();
-    }
+    ccb ??= CBlkRateDistStats();
 
     compressCodeBlock(
         c,
@@ -765,7 +763,7 @@ class StdEntropyCoder extends EntropyCoder {
       bool rev,
       int lcType,
       int tType) {
-    List<int> zc_lut;
+    List<int> zcLut;
     int skipbp;
     int curbp;
     List<int> fm;
@@ -804,14 +802,14 @@ class StdEntropyCoder extends EntropyCoder {
 
     switch (srcblk.sb!.orientation) {
       case Subband.wtOrientHl:
-        zc_lut = ZC_LUT_HL;
+        zcLut = ZC_LUT_HL;
         break;
       case Subband.wtOrientLl:
       case Subband.wtOrientLh:
-        zc_lut = ZC_LUT_LH;
+        zcLut = ZC_LUT_LH;
         break;
       case Subband.wtOrientHh:
-        zc_lut = ZC_LUT_HH;
+        zcLut = ZC_LUT_HH;
         break;
       default:
         throw Error();
@@ -836,7 +834,7 @@ class StdEntropyCoder extends EntropyCoder {
           ((options & OPT_BYPASS) != 0 &&
               (31 - NUM_NON_BYPASS_MS_BP - skipbp) >= curbp);
       totdist += cleanuppass(srcblk, mq, istermbuf[npass], curbp, state, fs,
-              zc_lut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
+              zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
           msew;
       distbuf[npass] = totdist;
       if (istermbuf[npass]) ltpidx = npass;
@@ -855,7 +853,7 @@ class StdEntropyCoder extends EntropyCoder {
       if ((options & OPT_BYPASS) == 0 ||
           (31 - NUM_NON_BYPASS_MS_BP - skipbp <= curbp)) {
         totdist += sigProgPass(srcblk, mq, istermbuf[npass], curbp, state, fs,
-                zc_lut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
+                zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
             msew;
       } else {
         bout!.setPredTerm((options & OPT_PRED_TERM) != 0);
@@ -890,7 +888,7 @@ class StdEntropyCoder extends EntropyCoder {
           ((options & OPT_BYPASS) != 0 &&
               (31 - NUM_NON_BYPASS_MS_BP - skipbp) >= curbp);
       totdist += cleanuppass(srcblk, mq, istermbuf[npass], curbp, state, fs,
-              zc_lut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
+              zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
           msew;
       distbuf[npass] = totdist;
 
@@ -955,7 +953,7 @@ class StdEntropyCoder extends EntropyCoder {
       int bp,
       List<int> state,
       List<int> fs,
-      List<int> zc_lut,
+      List<int> zcLut,
       List<int> symbuf,
       List<int> ctxtbuf,
       List<int> ratebuf,
@@ -984,7 +982,7 @@ class StdEntropyCoder extends EntropyCoder {
     bool causal;
     int nstripes;
     int sheight;
-    int off_ul, off_ur, off_dr, off_dl;
+    int offUl, offUr, offDr, offDl;
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
@@ -999,10 +997,10 @@ class StdEntropyCoder extends EntropyCoder {
     downshift = (shift <= 0) ? 0 : shift;
     causal = (options & OPT_VERT_STR_CAUSAL) != 0;
 
-    off_ul = -sscanw - 1;
-    off_ur = -sscanw + 1;
-    off_dr = sscanw + 1;
-    off_dl = sscanw - 1;
+    offUl = -sscanw - 1;
+    offUr = -sscanw + 1;
+    offDr = sscanw + 1;
+    offDl = sscanw - 1;
 
     sk = srcblk.offset;
     sj = sscanw + 1;
@@ -1016,15 +1014,15 @@ class StdEntropyCoder extends EntropyCoder {
         if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
           k = sk;
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
-            ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
               if (!causal) {
-                state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               }
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
@@ -1075,14 +1073,14 @@ class StdEntropyCoder extends EntropyCoder {
           }
           if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
             k += dscanw;
-            ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_VISITED_R2 |
@@ -1130,14 +1128,14 @@ class StdEntropyCoder extends EntropyCoder {
         if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
           k = sk + (dscanw << 1);
           if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
-            ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
                     STATE_VISITED_R1 |
@@ -1183,14 +1181,14 @@ class StdEntropyCoder extends EntropyCoder {
           }
           if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
             k += dscanw;
-            ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_VISITED_R2 |
@@ -1286,7 +1284,7 @@ class StdEntropyCoder extends EntropyCoder {
     bool causal;
     int nstripes;
     int sheight;
-    int off_ul, off_ur, off_dr, off_dl;
+    int offUl, offUr, offDr, offDl;
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
@@ -1301,10 +1299,10 @@ class StdEntropyCoder extends EntropyCoder {
     downshift = (shift <= 0) ? 0 : shift;
     causal = (options & OPT_VERT_STR_CAUSAL) != 0;
 
-    off_ul = -sscanw - 1;
-    off_ur = -sscanw + 1;
-    off_dr = sscanw + 1;
-    off_dl = sscanw - 1;
+    offUl = -sscanw - 1;
+    offUr = -sscanw + 1;
+    offDr = sscanw + 1;
+    offDl = sscanw - 1;
 
     sk = srcblk.offset;
     sj = sscanw + 1;
@@ -1323,8 +1321,8 @@ class StdEntropyCoder extends EntropyCoder {
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               if (!causal) {
-                state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               }
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
@@ -1379,8 +1377,8 @@ class StdEntropyCoder extends EntropyCoder {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_VISITED_R2 |
@@ -1432,8 +1430,8 @@ class StdEntropyCoder extends EntropyCoder {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
                     STATE_VISITED_R1 |
@@ -1483,8 +1481,8 @@ class StdEntropyCoder extends EntropyCoder {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_VISITED_R2 |
@@ -1774,7 +1772,7 @@ class StdEntropyCoder extends EntropyCoder {
       int bp,
       List<int> state,
       List<int> fs,
-      List<int> zc_lut,
+      List<int> zcLut,
       List<int> symbuf,
       List<int> ctxtbuf,
       List<int> ratebuf,
@@ -1804,7 +1802,7 @@ class StdEntropyCoder extends EntropyCoder {
     bool causal;
     int nstripes;
     int sheight;
-    int off_ul, off_ur, off_dr, off_dl;
+    int offUl, offUr, offDr, offDl;
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
@@ -1819,10 +1817,10 @@ class StdEntropyCoder extends EntropyCoder {
     downshift = (shift <= 0) ? 0 : shift;
     causal = (options & OPT_VERT_STR_CAUSAL) != 0;
 
-    off_ul = -sscanw - 1;
-    off_ur = -sscanw + 1;
-    off_dr = sscanw + 1;
-    off_dl = sscanw - 1;
+    offUl = -sscanw - 1;
+    offUr = -sscanw + 1;
+    offDr = sscanw + 1;
+    offDl = sscanw - 1;
 
     sk = srcblk.offset;
     sj = sscanw + 1;
@@ -1870,8 +1868,8 @@ class StdEntropyCoder extends EntropyCoder {
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
               if (rlclen != 0 || !causal) {
-                state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               }
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
@@ -1917,8 +1915,8 @@ class StdEntropyCoder extends EntropyCoder {
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_NZ_CTXT_R1 |
@@ -1963,15 +1961,15 @@ class StdEntropyCoder extends EntropyCoder {
           if ((((csj >> 1) | csj) & VSTD_MASK_R1R2) != VSTD_MASK_R1R2) {
             k = sk;
             if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
-              ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
+              ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
                 sym = (data[k] >> 31) & 1;
                 ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
                 symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
                 ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
                 if (!causal) {
-                  state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                  state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                  state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+                  state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
                 }
                 if (sym != 0) {
                   csj |= STATE_SIG_R1 |
@@ -2021,14 +2019,14 @@ class StdEntropyCoder extends EntropyCoder {
             }
             if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == 0) {
               k += dscanw;
-              ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
+              ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
                 sym = (data[k] >> 31) & 1;
                 ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
                 symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
                 ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-                state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-                state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+                state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+                state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
                 if (sym != 0) {
                   csj |= STATE_SIG_R2 |
                       STATE_VISITED_R2 |
@@ -2077,14 +2075,14 @@ class StdEntropyCoder extends EntropyCoder {
         if ((((csj >> 1) | csj) & VSTD_MASK_R1R2) != VSTD_MASK_R1R2) {
           k = sk + (dscanw << 1);
           if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
-            ctxtbuf[nsym] = zc_lut[csj & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_ul] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + off_ur] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
+              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
               if (sym != 0) {
                 csj |= STATE_SIG_R1 |
                     STATE_VISITED_R1 |
@@ -2129,14 +2127,14 @@ class StdEntropyCoder extends EntropyCoder {
           }
           if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == 0) {
             k += dscanw;
-            ctxtbuf[nsym] = zc_lut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
               ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
               symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
               ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + off_dl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + off_dr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
+              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
               if (sym != 0) {
                 csj |= STATE_SIG_R2 |
                     STATE_VISITED_R2 |

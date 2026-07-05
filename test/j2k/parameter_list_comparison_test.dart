@@ -1,4 +1,6 @@
 @TestOn('vm')
+library;
+
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/util/parameter_list.dart';

@@ -1,6 +1,5 @@
 import '../../encoder/encoder_specs.dart';
 import '../../image/blk_img_data_src.dart';
-import '../../image/img_data.dart';
 import '../../image/img_data_adapter.dart';
 import '../../util/parameter_list.dart';
 import 'c_blk_wt_data_src.dart';
@@ -53,7 +52,7 @@ abstract class ForwardWT extends ImgDataAdapter
   /// components 'nc'.
   ///
   /// @param src The source of ImgData
-  ForwardWT(ImgData src) : super(src);
+  ForwardWT(super.src);
 
   /// Returns the parameters that are used in this class and implementing
   /// classes. It returns a 2D String array. Each of the 1D arrays is for a

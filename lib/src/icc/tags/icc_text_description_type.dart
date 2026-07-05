@@ -5,6 +5,7 @@ import 'icc_tag.dart';
 /// A text based ICC tag
 class ICCTextDescriptionType extends ICCTag {
   /// Tag fields
+  @override
   final int type;
 
   /// Tag fields

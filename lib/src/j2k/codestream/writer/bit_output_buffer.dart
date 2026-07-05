@@ -155,9 +155,7 @@ class BitOutputBuffer {
   /// number of elements returned is what 'getLength()' returns.
   Uint8List toByteArray([Uint8List? data]) {
     final len = (_avbits == 8) ? _curbyte : _curbyte + 1;
-    if (data == null) {
-      data = Uint8List(len);
-    }
+    data ??= Uint8List(len);
     data.setRange(0, len, _buf);
     return data;
   }

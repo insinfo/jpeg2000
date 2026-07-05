@@ -17,10 +17,11 @@ abstract class LookUpTableFP extends LookUpTable {
       ICCCurveType curve, // Pointer to the curve data
       int dwNumInput // Number of input values in created LUT
       ) {
-    if (curve.nEntries == 1)
+    if (curve.nEntries == 1) {
       return LookUpTableFPGamma(curve, dwNumInput);
-    else
+    } else {
       return LookUpTableFPInterp(curve, dwNumInput);
+    }
   }
 
   /// Construct an empty lut

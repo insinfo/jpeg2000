@@ -38,73 +38,73 @@ abstract class EntropyCoder extends ImgDataAdapter
   static const List<List<String?>> pinfo = [
     [
       "Cblksiz",
-      "[<tile-component idx>] <width> <height> " +
+      "[<tile-component idx>] <width> <height> "
           "[[<tile-component idx>] <width> <height>]",
-      "Specifies the maximum code-block size to use for tile-component. " +
-          "The maximum width and height is 1024, however the surface area " +
-          "(i.e. width x height) must not exceed 4096. The minimum width and " +
+      "Specifies the maximum code-block size to use for tile-component. "
+          "The maximum width and height is 1024, however the surface area "
+          "(i.e. width x height) must not exceed 4096. The minimum width and "
           "height is 4.",
       "64 64"
     ],
     [
       "Cbypass",
-      "[<tile-component idx>] on|off" + "[ [<tile-component idx>] on|off ...]",
-      "Uses the lazy coding mode with the entropy coder. This will bypass " +
-          "the MQ coder for some of the coding passes, where the distribution " +
-          "is often close to uniform. Since the MQ codeword will be " +
-          "terminated " +
-          "at least once per lazy pass, it is important to use an efficient " +
+      "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
+      "Uses the lazy coding mode with the entropy coder. This will bypass "
+              "the MQ coder for some of the coding passes, where the distribution "
+              "is often close to uniform. Since the MQ codeword will be "
+              "terminated "
+              "at least once per lazy pass, it is important to use an efficient " +
           "termination algorithm, see the 'Cterm_type' option." +
           "'on' enables, 'off' disables it.",
       "off"
     ],
     [
       "CresetMQ",
-      "[<tile-component idx>] on|off" + "[ [<tile-component idx>] on|off ...]",
-      "If this is enabled the probability estimates of the MQ coder are " +
-          "reset after each arithmetically coded (i.e. non-lazy) coding pass. " +
+      "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
+      "If this is enabled the probability estimates of the MQ coder are "
+          "reset after each arithmetically coded (i.e. non-lazy) coding pass. "
           "'on' enables, 'off' disables it.",
       "off"
     ],
     [
       "Cterminate",
-      "[<tile-component idx>] on|off" + "[ [<tile-component idx>] on|off ...]",
-      "If this is enabled the codeword (raw or MQ) is terminated on a " +
-          "byte boundary after each coding pass. In this case it is important " +
-          "to use an efficient termination algorithm, see the 'Cterm' option. " +
+      "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
+      "If this is enabled the codeword (raw or MQ) is terminated on a "
+          "byte boundary after each coding pass. In this case it is important "
+          "to use an efficient termination algorithm, see the 'Cterm' option. "
           "'on' enables, 'off' disables it.",
       "off"
     ],
     [
       "Ccausal",
-      "[<tile-component idx>] on|off" + "[ [<tile-component idx>] on|off ...]",
-      "Uses vertically stripe causal context formation. If this is " +
-          "enabled " +
-          "the context formation process in one stripe is independant of the " +
-          "next stripe (i.e. the one below it). 'on' " +
+      "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
+      "Uses vertically stripe causal context formation. If this is "
+          "enabled "
+          "the context formation process in one stripe is independant of the "
+          "next stripe (i.e. the one below it). 'on' "
           "enables, 'off' disables it.",
       "off"
     ],
     [
       "Cseg_symbol",
-      "[<tile-component idx>] on|off" + "[ [<tile-component idx>] on|off ...]",
-      "Inserts an error resilience segmentation symbol in the MQ " +
-          "codeword at the end of " +
-          "each bit-plane (cleanup pass). Decoders can use this " +
-          "information to detect and " +
-          "conceal errors.'on' enables, 'off' disables " +
+      "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
+      "Inserts an error resilience segmentation symbol in the MQ "
+              "codeword at the end of "
+              "each bit-plane (cleanup pass). Decoders can use this "
+              "information to detect and "
+              "conceal errors.'on' enables, 'off' disables " +
           "it.",
       "off"
     ],
     [
       "Cterm_type",
-      "[<tile-component idx>] near_opt|easy|predict|full" +
+      "[<tile-component idx>] near_opt|easy|predict|full"
           "[ [<tile-component idx>] near_opt|easy|predict|full ...]",
-      "Specifies the algorithm used to terminate the MQ codeword. " +
-          "The most efficient one is 'near_opt', which delivers a codeword " +
-          "which in almost all cases is the shortest possible. The 'easy' is " +
-          "a simpler algorithm that delivers a codeword length that is close " +
-          "to the previous one (in average 1 bit longer). The 'predict' is" +
+      "Specifies the algorithm used to terminate the MQ codeword. "
+              "The most efficient one is 'near_opt', which delivers a codeword "
+              "which in almost all cases is the shortest possible. The 'easy' is "
+              "a simpler algorithm that delivers a codeword length that is close "
+              "to the previous one (in average 1 bit longer). The 'predict' is" +
           " almost " +
           "the same as the 'easy' but it leaves error resilient information " +
           "on " +
@@ -121,13 +121,13 @@ abstract class EntropyCoder extends ImgDataAdapter
     ],
     [
       "Clen_calc",
-      "[<tile-component idx>] near_opt|lazy_good|lazy" +
+      "[<tile-component idx>] near_opt|lazy_good|lazy"
           "[ [<tile-component idx>] ...]",
-      "Specifies the algorithm to use in calculating the necessary MQ " +
-          "length for each decoding pass. The best one is 'near_opt', which " +
-          "performs a rather sophisticated calculation and provides the best " +
-          "results. The 'lazy_good' and 'lazy' are very simple algorithms " +
-          "that " +
+      "Specifies the algorithm to use in calculating the necessary MQ "
+              "length for each decoding pass. The best one is 'near_opt', which "
+              "performs a rather sophisticated calculation and provides the best "
+              "results. The 'lazy_good' and 'lazy' are very simple algorithms "
+              "that " +
           "provide rather conservative results, 'lazy_good' one being " +
           "slightly " +
           "better. Do not change this option unless you want to experiment " +
@@ -136,13 +136,13 @@ abstract class EntropyCoder extends ImgDataAdapter
     ],
     [
       "Cpp",
-      "[<tile-component idx>] <dim> <dim> [<dim> <dim>] " +
+      "[<tile-component idx>] <dim> <dim> [<dim> <dim>] "
           "[ [<tile-component idx>] ...]",
-      "Specifies precinct partition dimensions for tile-component. The " +
-          "first " +
-          "two values apply to the highest resolution and the following ones " +
-          "(if " +
-          "any) apply to the remaining resolutions in decreasing order. If " +
+      "Specifies precinct partition dimensions for tile-component. The "
+              "first "
+              "two values apply to the highest resolution and the following ones "
+              "(if "
+              "any) apply to the remaining resolutions in decreasing order. If " +
           "less " +
           "values than the number of decomposition levels are specified, " +
           "then the " +
@@ -192,6 +192,7 @@ abstract class EntropyCoder extends ImgDataAdapter
   /// @return true is the data is reversible, false if not.
   ///
   /// @see ucar.jpeg.jj2000.j2k.roi.encoder.ROIScaler
+  @override
   bool isReversible(int t, int c) {
     return src.isReversible(t, c);
   }
@@ -208,18 +209,21 @@ abstract class EntropyCoder extends ImgDataAdapter
   /// @see SubbandAn
   ///
   /// @see Subband
+  @override
   SubbandAn getAnSubbandTree(int t, int c) {
     return src.getAnSubbandTree(t, c);
   }
 
   /// Returns the horizontal offset of the code-block partition. Allowable
   /// values are 0 and 1, nothing else.
+  @override
   int getCbULX() {
     return src.getCbULX();
   }
 
   /// Returns the vertical offset of the code-block partition. Allowable
   /// values are 0 and 1, nothing else.
+  @override
   int getCbULY() {
     return src.getCbULY();
   }

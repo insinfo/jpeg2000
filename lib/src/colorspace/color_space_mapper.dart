@@ -15,10 +15,10 @@ import 'sycc_color_space_mapper.dart';
 
 abstract class ColorSpaceMapper extends ImgDataAdapter
     implements BlkImgDataSrc {
-  /** The prefix for ICC Profiler options */
+  /// The prefix for ICC Profiler options
   static const String OPT_PREFIX = 'I';
 
-  /** Platform dependant end of line String. */
+  /// Platform dependant end of line String.
   static const String eol = '\n';
 
   // Temporary data buffers needed during profiling.
@@ -36,7 +36,7 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
   List<int>? maxValueArray;
   List<int>? fixedPtBitsArray;
 
-  /** The list of parameters that are accepted for ICC profiling.*/
+  /// The list of parameters that are accepted for ICC profiling.
   static const List<List<String?>> pinfo = [
     [
       "IcolorSpacedebug",
@@ -46,36 +46,32 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
     ]
   ];
 
-  /** Parameter Specs */
+  /// Parameter Specs
   ParameterList? pl;
 
-  /** ColorSpace info */
+  /// ColorSpace info
   ColorSpace? csMap;
 
-  /** Number of image components */
+  /// Number of image components
   int ncomps = 0;
 
-  /** The image source. */
+  /// The image source.
   BlkImgDataSrc? src;
 
-  /** The image source data per component. */
+  /// The image source data per component.
   List<DataBlk?>? srcBlk;
 
   ComputedComponents computed = ComputedComponents();
 
-  /**
-     * Returns the parameters that are used in this class and implementing
-     * classes.
-     */
+  /// Returns the parameters that are used in this class and implementing
+  /// classes.
   static List<List<String?>> getParameterInfo() {
     return pinfo;
   }
 
-  /**
-     * Arrange for the input DataBlk to receive an
-     * appropriately sized and typed data buffer
-     *   @param db input DataBlk
-     */
+  /// Arrange for the input DataBlk to receive an
+  /// appropriately sized and typed data buffer
+  ///   @param db input DataBlk
   static void setInternalBuffer(DataBlk db) {
     switch (db.getDataType()) {
       case DataBlk.typeInt:
@@ -100,13 +96,11 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
     }
   }
 
-  /**
-     * Copy the DataBlk geometry from source to target
-     * DataBlk and assure that the target has an appropriate
-     * data buffer.
-     *   @param tgt has its geometry set.
-     *   @param src used to get the new geometric parameters.
-     */
+  /// Copy the DataBlk geometry from source to target
+  /// DataBlk and assure that the target has an appropriate
+  /// data buffer.
+  ///   @param tgt has its geometry set.
+  ///   @param src used to get the new geometric parameters.
   static void copyGeometry(DataBlk tgt, DataBlk src) {
     tgt.offset = 0;
     tgt.h = src.h;
@@ -119,13 +113,11 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
     setInternalBuffer(tgt);
   }
 
-  /**
-     * Factory method for creating instances of this class.
-     *   @param src -- source of image data
-     *   @param csMap -- provides colorspace info
-     * @return ColorSpaceMapper instance
-     * @exception IOException profile access exception
-     */
+  /// Factory method for creating instances of this class.
+  ///   @param src -- source of image data
+  ///   @param csMap -- provides colorspace info
+  /// @return ColorSpaceMapper instance
+  /// @exception IOException profile access exception
   static BlkImgDataSrc? createInstance(BlkImgDataSrc src, ColorSpace csMap) {
     csMap.pl.checkListSingle(
         OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
@@ -151,24 +143,22 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
     throw ColorSpaceException('Bad color space specification in image');
   }
 
-  /**
-     * Ctor which creates an ICCProfile for the image and initializes
-     * all data objects (input, working, and output).
-     *
-     *   @param src -- Source of image data
-     *   @param csm -- provides colorspace info
-     *
-     */
+  /// Ctor which creates an ICCProfile for the image and initializes
+  /// all data objects (input, working, and output).
+  ///
+  ///   @param src -- Source of image data
+  ///   @param csm -- provides colorspace info
+  ///
   ColorSpaceMapper(BlkImgDataSrc src, ColorSpace csMap) : super(src) {
     this.src = src;
     this.csMap = csMap;
     initialize();
   }
 
-  /** General utility used by ctors */
+  /// General utility used by ctors
   void initialize() {
-    this.pl = csMap!.pl;
-    this.ncomps = src!.getNumComps();
+    pl = csMap!.pl;
+    ncomps = src!.getNumComps();
 
     shiftValueArray = List.filled(ncomps, 0);
     maxValueArray = List.filled(ncomps, 0);

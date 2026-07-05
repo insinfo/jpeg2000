@@ -18,30 +18,40 @@ abstract class ICCProfile {
   static const String eol = '\n'; // System.getProperty("line.separator");
 
   // Renamed for convenience:
-  /** Gray index. */
+  /// Gray index.
   static const int GRAY = 0;
-  /** RGB index.  */
+
+  /// RGB index.
   static const int RED = 0;
-  /** RGB index.  */
+
+  /// RGB index.
   static const int GREEN = 1;
-  /** RGB index.  */
+
+  /// RGB index.
   static const int BLUE = 2;
 
-  /** Size of native type */
+  /// Size of native type
   static const int boolean_size = 1;
-  /** Size of native type */
+
+  /// Size of native type
   static const int byte_size = 1;
-  /** Size of native type */
+
+  /// Size of native type
   static const int char_size = 2;
-  /** Size of native type */
+
+  /// Size of native type
   static const int short_size = 2;
-  /** Size of native type */
+
+  /// Size of native type
   static const int int_size = 4;
-  /** Size of native type */
+
+  /// Size of native type
   static const int float_size = 4;
-  /** Size of native type */
+
+  /// Size of native type
   static const int long_size = 8;
-  /** Size of native type */
+
+  /// Size of native type
   static const int double_size = 8;
 
   /* Bit twiddling constant for integral types. */
@@ -98,22 +108,18 @@ abstract class ICCProfile {
     }
   }
 
-  /**
-   * Creates an int from a 4 character String
-   *   @param fourChar string representation of an integer
-   * @return the integer which is denoted by the input String.
-   */
+  /// Creates an int from a 4 character String
+  ///   @param fourChar string representation of an integer
+  /// @return the integer which is denoted by the input String.
   static int getIntFromString(String fourChar) {
     List<int> bytes = fourChar.codeUnits;
     return getInt(Uint8List.fromList(bytes), 0);
   }
 
-  /**
-   * Create an XYZNumber from byte [] input
-   *   @param data array containing the XYZNumber representation
-   *   @param offset start of the rep in the array
-   * @return the created XYZNumber
-   */
+  /// Create an XYZNumber from byte [] input
+  ///   @param data array containing the XYZNumber representation
+  ///   @param offset start of the rep in the array
+  /// @return the created XYZNumber
   static XYZNumber getXYZNumber(Uint8List data, int offset) {
     int x, y, z;
     x = getInt(data, offset);
@@ -122,12 +128,10 @@ abstract class ICCProfile {
     return XYZNumber(x, y, z);
   }
 
-  /**
-   * Create an ICCProfileVersion from byte [] input
-   *   @param data array containing the ICCProfileVersion representation
-   *   @param offset start of the rep in the array
-   * @return  the created ICCProfileVersion
-   */
+  /// Create an ICCProfileVersion from byte [] input
+  ///   @param data array containing the ICCProfileVersion representation
+  ///   @param offset start of the rep in the array
+  /// @return  the created ICCProfileVersion
   static ICCProfileVersion getICCProfileVersion(Uint8List data, int offset) {
     int major = data[offset];
     int minor = data[offset + byte_size];
@@ -136,12 +140,10 @@ abstract class ICCProfile {
     return ICCProfileVersion(major, minor, resv1, resv2);
   }
 
-  /**
-   * Create an ICCDateTime from byte [] input
-   *   @param data array containing the ICCProfileVersion representation
-   *   @param offset start of the rep in the array
-   * @return the created ICCProfileVersion
-   */
+  /// Create an ICCDateTime from byte [] input
+  ///   @param data array containing the ICCProfileVersion representation
+  ///   @param offset start of the rep in the array
+  /// @return the created ICCProfileVersion
   static ICCDateTime getICCDateTime(Uint8List data, int offset) {
     int wYear = getShort(data, offset); // Number of the actual year (i.e. 1994)
     int wMonth = getShort(
@@ -157,16 +159,14 @@ abstract class ICCProfile {
     return ICCDateTime(wYear, wMonth, wDay, wHours, wMinutes, wSeconds);
   }
 
-  /**
-   * Create a String from a byte []. Optionally swap adjacent byte
-   * pairs.  Intended to be used to create integer String representations
-   * allowing for endian translations.
-   *   @param bfr data array
-   *   @param offset start of data in array
-   *   @param length length of data in array
-   *   @param swap swap adjacent bytes?
-   * @return String rep of data
-   */
+  /// Create a String from a byte []. Optionally swap adjacent byte
+  /// pairs.  Intended to be used to create integer String representations
+  /// allowing for endian translations.
+  ///   @param bfr data array
+  ///   @param offset start of data in array
+  ///   @param length length of data in array
+  ///   @param swap swap adjacent bytes?
+  /// @return String rep of data
   static String getString(Uint8List bfr, int offset, int length, bool swap) {
     Uint8List result = Uint8List(length);
     int incr = swap ? -1 : 1;
@@ -178,13 +178,11 @@ abstract class ICCProfile {
     return String.fromCharCodes(result);
   }
 
-  /**
-   * Create a short from a two byte [], with optional byte swapping.
-   *   @param bfr data array
-   *   @param off start of data in array
-   *   @param swap swap bytes?
-   * @return native type from representation.
-   */
+  /// Create a short from a two byte [], with optional byte swapping.
+  ///   @param bfr data array
+  ///   @param off start of data in array
+  ///   @param swap swap bytes?
+  /// @return native type from representation.
   static int getShort(Uint8List bfr, int off, [bool swap = false]) {
     int tmp0 = bfr[off] & 0xff; // Clear the sign extended bits in the int.
     int tmp1 = bfr[off + 1] & 0xff;
@@ -194,13 +192,11 @@ abstract class ICCProfile {
         : (tmp0 << BITS_PER_BYTE | tmp1));
   }
 
-  /**
-   * Separate bytes in an int into a byte array lsb to msb order.
-   *   @param d integer to separate
-   * @return byte [] containing separated int.
-   */
+  /// Separate bytes in an int into a byte array lsb to msb order.
+  ///   @param d integer to separate
+  /// @return byte [] containing separated int.
   static Uint8List setInt(int d, [Uint8List? b]) {
-    if (b == null) b = Uint8List(BYTES_PER_INT);
+    b ??= Uint8List(BYTES_PER_INT);
     for (int i = 0; i < BYTES_PER_INT; ++i) {
       b[i] = (d & 0x0ff);
       d = d >> BITS_PER_BYTE;
@@ -208,13 +204,11 @@ abstract class ICCProfile {
     return b;
   }
 
-  /**
-   * Separate bytes in a long into a byte array lsb to msb order.
-   *   @param d long to separate
-   * @return byte [] containing separated int.
-   */
+  /// Separate bytes in a long into a byte array lsb to msb order.
+  ///   @param d long to separate
+  /// @return byte [] containing separated int.
   static Uint8List setLong(int d, [Uint8List? b]) {
-    if (b == null) b = Uint8List(BYTES_PER_LONG);
+    b ??= Uint8List(BYTES_PER_LONG);
     for (int i = 0; i < BYTES_PER_LONG; ++i) {
       b[i] = (d & 0x0ff);
       d = d >> BITS_PER_BYTE;
@@ -222,13 +216,11 @@ abstract class ICCProfile {
     return b;
   }
 
-  /**
-   * Create an int from a byte [4], with optional byte swapping.
-   *   @param bfr data array
-   *   @param off start of data in array
-   *   @param swap swap bytes?
-   * @return native type from representation.
-   */
+  /// Create an int from a byte [4], with optional byte swapping.
+  ///   @param bfr data array
+  ///   @param off start of data in array
+  ///   @param swap swap bytes?
+  /// @return native type from representation.
   static int getInt(Uint8List bfr, int off, [bool swap = false]) {
     int tmp0 = getShort(bfr, off, swap) &
         0xffff; // Clear the sign extended bits in the int.
@@ -239,12 +231,10 @@ abstract class ICCProfile {
         : (tmp0 << BITS_PER_SHORT | tmp1));
   }
 
-  /**
-   * Create an long from a byte [8].
-   *   @param bfr data array
-   *   @param off start of data in array
-   * @return native type from representation.
-   */
+  /// Create an long from a byte [8].
+  ///   @param bfr data array
+  ///   @param off start of data in array
+  /// @return native type from representation.
   static int getLong(Uint8List bfr, int off) {
     int tmp0 = getInt(bfr, off) &
         0xffffffff; // Clear the sign extended bits in the int.
@@ -258,102 +248,113 @@ abstract class ICCProfile {
   // be stored in memory and be addressed by address. As such, only those
   // codes required for Restricted ICC use are defined here
 
-  /** signature    */
+  /// signature
   static final int kdwProfileSignature = ICCProfile.getIntFromString("acsp");
-  /** signature    */
+
+  /// signature
   static final int kdwProfileSigReverse = ICCProfile.getIntFromString("psca");
-  /** profile type */
+
+  /// profile type
   static final int kdwInputProfile = ICCProfile.getIntFromString("scnr");
-  /** tag type     */
+
+  /// tag type
   static final int kdwDisplayProfile = ICCProfile.getIntFromString("mntr");
-  /** tag type     */
+
+  /// tag type
   static final int kdwRGBData = ICCProfile.getIntFromString("RGB ");
-  /** tag type     */
+
+  /// tag type
   static final int kdwGrayData = ICCProfile.getIntFromString("GRAY");
-  /** tag type     */
+
+  /// tag type
   static final int kdwXYZData = ICCProfile.getIntFromString("XYZ ");
-  /** input type   */
+
+  /// input type
   static const int kMonochromeInput = 0;
-  /** input type   */
+
+  /// input type
   static const int kThreeCompInput = 1;
 
-  /** tag signature */
+  /// tag signature
   static final int kdwGrayTRCTag = ICCProfile.getIntFromString("kTRC");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwRedColorantTag = ICCProfile.getIntFromString("rXYZ");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwGreenColorantTag = ICCProfile.getIntFromString("gXYZ");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwBlueColorantTag = ICCProfile.getIntFromString("bXYZ");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwRedTRCTag = ICCProfile.getIntFromString("rTRC");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwGreenTRCTag = ICCProfile.getIntFromString("gTRC");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwBlueTRCTag = ICCProfile.getIntFromString("bTRC");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwCopyrightTag = ICCProfile.getIntFromString("cprt");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwMediaWhiteTag = ICCProfile.getIntFromString("wtpt");
-  /** tag signature */
+
+  /// tag signature
   static final int kdwProfileDescTag = ICCProfile.getIntFromString("desc");
 
-  /**
-   * Create a two character hex representation of a byte
-   *   @param i byte to represent
-   * @return representation
-   */
+  /// Create a two character hex representation of a byte
+  ///   @param i byte to represent
+  /// @return representation
   static String toHexStringByte(int i) {
     String rep = (i >= 0 && i < 16 ? "0" : "") + i.toRadixString(16);
     if (rep.length > 2) rep = rep.substring(rep.length - 2);
     return rep;
   }
 
-  /**
-   * Create a 4 character hex representation of a short
-   *   @param i short to represent
-   * @return representation
-   */
+  /// Create a 4 character hex representation of a short
+  ///   @param i short to represent
+  /// @return representation
   static String toHexStringShort(int i) {
     String rep;
 
-    if (i >= 0 && i < 0x10)
-      rep = "000" + i.toRadixString(16);
-    else if (i >= 0 && i < 0x100)
-      rep = "00" + i.toRadixString(16);
+    if (i >= 0 && i < 0x10) {
+      rep = "000${i.toRadixString(16)}";
+    } else if (i >= 0 && i < 0x100)
+      rep = "00${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x1000)
-      rep = "0" + i.toRadixString(16);
+      rep = "0${i.toRadixString(16)}";
     else
-      rep = "" + i.toRadixString(16);
+      rep = i.toRadixString(16);
 
     if (rep.length > 4) rep = rep.substring(rep.length - 4);
     return rep;
   }
 
-  /**
-   * Create a 8 character hex representation of a int
-   *   @param i int to represent
-   * @return representation
-   */
+  /// Create a 8 character hex representation of a int
+  ///   @param i int to represent
+  /// @return representation
   static String toHexStringInt(int i) {
     String rep;
 
-    if (i >= 0 && i < 0x10)
-      rep = "0000000" + i.toRadixString(16);
-    else if (i >= 0 && i < 0x100)
-      rep = "000000" + i.toRadixString(16);
+    if (i >= 0 && i < 0x10) {
+      rep = "0000000${i.toRadixString(16)}";
+    } else if (i >= 0 && i < 0x100)
+      rep = "000000${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x1000)
-      rep = "00000" + i.toRadixString(16);
+      rep = "00000${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x10000)
-      rep = "0000" + i.toRadixString(16);
+      rep = "0000${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x100000)
-      rep = "000" + i.toRadixString(16);
+      rep = "000${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x1000000)
-      rep = "00" + i.toRadixString(16);
+      rep = "00${i.toRadixString(16)}";
     else if (i >= 0 && i < 0x10000000)
-      rep = "0" + i.toRadixString(16);
+      rep = "0${i.toRadixString(16)}";
     else
-      rep = "" + i.toRadixString(16);
+      rep = i.toRadixString(16);
 
     if (rep.length > 8) rep = rep.substring(rep.length - 8);
     return rep;
@@ -431,7 +432,7 @@ abstract class ICCProfile {
   /// ParameterList constructor
   ///   @param csb provides colorspace information
   ICCProfile(ColorSpace csm) {
-    this.pl = csm.pl;
+    pl = csm.pl;
     List<int>? p = csm.getICCProfile();
     if (p == null) throw ArgumentError("ICC Profile not found in ColorSpace");
     profile = Uint8List.fromList(p);
@@ -457,11 +458,11 @@ abstract class ICCProfile {
 
     if (getProfileClass() == kdwDisplayProfile) {
       String message =
-          "NOTE!! Technically, this profile is a Display profile, not an" +
-              " Input Profile, and thus is not a valid Restricted ICC profile." +
-              " However, it is quite possible that this profile is usable as" +
-              " a Restricted ICC profile, so this code will ignore this state" +
-              " and proceed with processing.";
+          "NOTE!! Technically, this profile is a Display profile, not an"
+          " Input Profile, and thus is not a valid Restricted ICC profile."
+          " However, it is quite possible that this profile is usable as"
+          " a Restricted ICC profile, so this code will ignore this state"
+          " and proceed with processing.";
 
       FacilityManager.getMsgLogger().printmsg(MsgLogger.warning, message);
     }

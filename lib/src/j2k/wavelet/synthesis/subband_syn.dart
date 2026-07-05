@@ -16,14 +16,14 @@ class SubbandSyn extends Subband {
   SubbandSyn();
 
   SubbandSyn.tree(
-    int w,
-    int h,
-    int ulcx,
-    int ulcy,
-    int levels,
-    List<WaveletFilter> hFilters,
-    List<WaveletFilter> vFilters,
-  ) : super.tree(w, h, ulcx, ulcy, levels, hFilters, vFilters);
+    super.w,
+    super.h,
+    super.ulcx,
+    super.ulcy,
+    super.levels,
+    super.hFilters,
+    super.vFilters,
+  ) : super.tree();
 
   @override
   Subband? getParent() => parent;

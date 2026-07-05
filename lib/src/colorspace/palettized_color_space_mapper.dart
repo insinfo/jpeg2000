@@ -183,6 +183,6 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       body.write('image does not contain a palette box');
     }
     builder.write(ColorSpace.indent('  ', body.toString()));
-    return '${builder}]';
+    return '$builder]';
   }
 }
