@@ -1,5 +1,5 @@
-import 'package:jpeg2000/src/j2k/util/ParameterList.dart';
-import 'package:jpeg2000/src/j2k/util/StringFormatException.dart';
+import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
+import 'package:jpeg2000/src/j2k/util/string_format_exception.dart';
 import 'package:test/test.dart';
 
 void main() {

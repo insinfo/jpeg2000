@@ -16,7 +16,7 @@ não o pipeline completo — os testes de conformance só verificam que a decodi
 
 Esses sintomas agora estão cobertos por testes de regressão versionados no
 repositório, principalmente `test/decoder_debug_findings_regression_test.dart`
-e `test/conformance_subset_test.dart`. Os scripts temporários de comparação e
+e `test/conformance_subset_test.dart`. As ferramentas temporárias de comparação e
 dump usados durante a investigação foram removidos depois que os fixtures
 bit-exatos foram consolidados em `test/fixtures`.
 
@@ -44,7 +44,7 @@ bit-exatos foram consolidados em `test/fixtures`.
 3. Em `checkerboard`/`rainbow_stripes` (conteúdo cinza) o erro é idêntico nos 3
    canais RGB → o erro vem do componente Y antes da transformada inversa de
    componentes (MCT), não da MCT em si.
-4. `InvWTFull.dart` foi comparado linha a linha com `InvWTFull.java` — está
+4. `inv_wt_full.dart` foi comparado linha a linha com `InvWTFull.java` — está
    fiel (orquestração da árvore, paridade ulcx/ulcy, offsets, cópia de
    code-blocks). O bug provavelmente está a montante: EntropyDecoder /
    Dequantizer / BitstreamReader (truncation points, msbSkipped) — ou em
@@ -106,7 +106,7 @@ em vez de virem do Java.
 
 ## Bugs encontrados e CORRIGIDOS
 
-### Bug 1 — `_sigProgPass` (StdEntropyDecoder.dart): metade inferior da coluna
+### Bug 1 — `_sigProgPass` (std_entropy_decoder.dart): metade inferior da coluna
 aninhada dentro do `if` de skip da metade superior
 
 O Java processa a metade inferior de cada coluna do stripe SEMPRE (após o `if`
@@ -221,9 +221,9 @@ Update Todos
 
 Ligar factories: EntropyCoder.createInstance → StdEntropyCoder, PostCompRateAllocator.createInstance → EBCOTRateAllocator
 
-Portar ForwCompTransf.dart (RCT/ICT direto) do Java
+Portar forw_comp_transf.dart (RCT/ICT direto) do Java
 
-Portar Tiler.dart do Java
+Portar tiler.dart do Java
 
 Criar classe Encoder principal (espelho do JJ2000 Encoder.java) + script encode.dart
 

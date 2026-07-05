@@ -1,24 +1,24 @@
-import '../codestream/writer/FileCodestreamWriter.dart';
-import '../codestream/writer/HeaderEncoder.dart';
-import '../codestream/writer/PktEncoder.dart';
-import '../entropy/encoder/EntropyCoder.dart';
-import '../entropy/encoder/PostCompRateAllocator.dart';
-import '../fileformat/writer/FileFormatWriter.dart';
-import '../image/BlkImgDataSrc.dart';
-import '../image/ImgDataConverter.dart';
-import '../image/forwcomptransf/ForwCompTransf.dart';
-import '../image/input/ImgReader.dart';
-import '../image/input/ImgReaderPGM.dart';
-import '../image/input/ImgReaderPPM.dart';
+import '../codestream/writer/file_codestream_writer.dart';
+import '../codestream/writer/header_encoder.dart';
+import '../codestream/writer/pkt_encoder.dart';
+import '../entropy/encoder/entropy_coder.dart';
+import '../entropy/encoder/post_comp_rate_allocator.dart';
+import '../fileformat/writer/file_format_writer.dart';
+import '../image/blk_img_data_src.dart';
+import '../image/img_data_converter.dart';
+import '../image/forwcomptransf/forw_comp_transf.dart';
+import '../image/input/img_reader.dart';
+import '../image/input/img_reader_pgm.dart';
+import '../image/input/img_reader_ppm.dart';
 import '../image/tiler.dart';
-import '../quantization/quantizer/Quantizer.dart';
-import '../roi/encoder/ROIScaler.dart';
-import '../util/FacilityManager.dart';
-import '../util/MsgLogger.dart';
-import '../util/ParameterList.dart';
-import '../wavelet/analysis/AnWTFilter.dart';
-import '../wavelet/analysis/ForwardWT.dart';
-import 'EncoderSpecs.dart';
+import '../quantization/quantizer/quantizer.dart';
+import '../roi/encoder/roi_scaler.dart';
+import '../util/facility_manager.dart';
+import '../util/msg_logger.dart';
+import '../util/parameter_list.dart';
+import '../wavelet/analysis/an_wt_filter.dart';
+import '../wavelet/analysis/forward_wt.dart';
+import 'encoder_specs.dart';
 
 /// This class is the JPEG 2000 encoder entry point, mirroring JJ2000's
 /// `Encoder` class. It instantiates the whole encoding chain and writes the

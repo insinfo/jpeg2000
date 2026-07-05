@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/byte_input_buffer.dart';
 import 'package:jpeg2000/src/j2k/io/exceptions.dart';
 import 'package:test/test.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/ByteToBitInput.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/byte_input_buffer.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/byte_to_bit_input.dart';
 
 /// Testes RIGOROSOS para ByteToBitInput - operações fundamentais
 /// Foco em byte stuffing e overflow que podem causar bugs no MQDecoder

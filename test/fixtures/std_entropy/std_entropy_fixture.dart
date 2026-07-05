@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/entropy/decoder/DecLyrdCBlk.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/dec_lyrd_c_blk.dart';
+import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 /// Deserializes recorded StdEntropy fixtures captured from the Java decoder.
 class StdEntropyFixture {

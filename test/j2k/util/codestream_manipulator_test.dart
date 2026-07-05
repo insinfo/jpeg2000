@@ -1,7 +1,7 @@
 @TestOn('vm')
 import 'dart:io';
 
-import 'package:jpeg2000/src/j2k/util/CodestreamManipulator.dart';
+import 'package:jpeg2000/src/j2k/util/codestream_manipulator.dart';
 import 'package:test/test.dart';
 
 void main() {

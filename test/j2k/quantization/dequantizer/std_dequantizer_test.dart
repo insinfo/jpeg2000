@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
+import 'package:jpeg2000/src/j2k/decoder/decoder_specs.dart';
 import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/CBlkQuantDataSrcDec.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/StdDequantizer.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/StdDequantizerParams.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
+import 'package:jpeg2000/src/j2k/quantization/dequantizer/c_blk_quant_data_src_dec.dart';
+import 'package:jpeg2000/src/j2k/quantization/dequantizer/std_dequantizer.dart';
+import 'package:jpeg2000/src/j2k/quantization/dequantizer/std_dequantizer_params.dart';
+import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 void main() {
   group('StdDequantizer', () {

@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
+import 'package:jpeg2000/src/j2k/util/is_random_access_io.dart';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
+import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
 import 'package:jpeg2000/src/j2k/codestream/markers.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
-import 'package:jpeg2000/src/j2k/image/invcomptransf/InvCompTransf.dart';
+import 'package:jpeg2000/src/j2k/codestream/reader/header_decoder.dart';
+import 'package:jpeg2000/src/j2k/image/invcomptransf/inv_comp_transf.dart';
 
 void main() {
   group('HeaderDecoder.readMainHeader', () {

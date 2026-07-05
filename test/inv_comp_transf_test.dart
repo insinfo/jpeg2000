@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
-import 'package:jpeg2000/src/j2k/image/CompTransfSpec.dart';
+import 'package:jpeg2000/src/j2k/image/blk_img_data_src.dart';
+import 'package:jpeg2000/src/j2k/image/comp_transf_spec.dart';
 import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlkFloat.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/image/invcomptransf/InvCompTransf.dart';
-import 'package:jpeg2000/src/j2k/image/invcomptransf/InvComponentTransformer.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk_float.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
+import 'package:jpeg2000/src/j2k/image/invcomptransf/inv_comp_transf.dart';
+import 'package:jpeg2000/src/j2k/image/invcomptransf/inv_component_transformer.dart';
 import 'package:test/test.dart';
 
 class MockBlkImgDataSrc implements BlkImgDataSrc {

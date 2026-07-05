@@ -1,6 +1,6 @@
-import 'package:jpeg2000/src/j2k/wavelet/analysis/AnWTFilterIntLift5x3.dart';
-import 'package:jpeg2000/src/j2k/wavelet/FilterTypes.dart';
-import 'package:jpeg2000/src/j2k/wavelet/WaveletFilter.dart';
+import 'package:jpeg2000/src/j2k/wavelet/analysis/an_wt_filter_int_lift5x3.dart';
+import 'package:jpeg2000/src/j2k/wavelet/filter_types.dart';
+import 'package:jpeg2000/src/j2k/wavelet/wavelet_filter.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/util/Int32Utils.dart';
+import 'package:jpeg2000/src/j2k/util/int32_utils.dart';
 import 'package:test/test.dart';
 
 void main() {

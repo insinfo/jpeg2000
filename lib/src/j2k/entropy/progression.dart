@@ -1,4 +1,4 @@
-import '../codestream/ProgressionType.dart';
+import '../codestream/progression_type.dart';
 
 /// Holds a single progression order segment definition for the codestream.
 class Progression {

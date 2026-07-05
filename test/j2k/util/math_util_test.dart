@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/util/MathUtil.dart';
+import 'package:jpeg2000/src/j2k/util/math_util.dart';
 import 'package:test/test.dart';
 
 void main() {

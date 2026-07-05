@@ -18,4 +18,4 @@ Cada caso de teste deve ficar em um subdiretório próprio contendo:
 - Saída(s) de referência (`reference.pgm`, `reference.ppm`) geradas por um decoder de referência (ex.: OpenJPEG).
 - `meta.json` com metadados (largura, altura, bit depth, componentes, cores, se é lossless/lossy, tolerâncias de comparação, etc.).
 
-A geração desses arquivos deve ser feita com scripts em `scripts/` (a definir), para garantir reprodutibilidade.
+A geração desses arquivos deve ser feita por ferramentas versionadas em `bin/` ou `tool/` (a definir), para garantir reprodutibilidade.

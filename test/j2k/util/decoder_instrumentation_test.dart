@@ -1,6 +1,6 @@
-import 'package:jpeg2000/src/j2k/util/DecoderInstrumentation.dart';
-import 'package:jpeg2000/src/j2k/util/FacilityManager.dart';
-import 'package:jpeg2000/src/j2k/util/MsgLogger.dart';
+import 'package:jpeg2000/src/j2k/util/decoder_instrumentation.dart';
+import 'package:jpeg2000/src/j2k/util/facility_manager.dart';
+import 'package:jpeg2000/src/j2k/util/msg_logger.dart';
 import 'package:test/test.dart';
 
 void main() {

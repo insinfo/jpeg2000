@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/ParameterList.dart';
+import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
 
 ParameterList _baseDecoderParameters() {
   final params = ParameterList(Decoder.buildDefaultParameterList());

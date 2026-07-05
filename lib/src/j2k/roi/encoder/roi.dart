@@ -1,4 +1,4 @@
-import '../../image/input/ImgReaderPGM.dart';
+import '../../image/input/img_reader_pgm.dart';
 
 /// Describes a single region of interest used by the encoder.
 ///

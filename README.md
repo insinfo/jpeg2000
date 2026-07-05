@@ -41,27 +41,27 @@ dart pub get
 Decodificar JP2/J2K para PPM, PGM, PGX ou BMP:
 
 ```bash
-dart run scripts/decode.dart -i input.jp2 -o output.ppm
-dart run scripts/decode.dart -i input.j2k -o output.bmp
+dart run jpeg2000:decode -i input.jp2 -o output.ppm
+dart run jpeg2000:decode -i input.j2k -o output.bmp
 ```
 
 Codificar PPM/PGM para J2K lossless:
 
 ```bash
-dart run scripts/encode.dart -i input.ppm -o output.j2k -lossless on
-dart run scripts/encode.dart -i input.pgm -o output.j2k -lossless on
+dart run jpeg2000:encode -i input.ppm -o output.j2k -lossless on
+dart run jpeg2000:encode -i input.pgm -o output.j2k -lossless on
 ```
 
 Codificar com wrapper JP2:
 
 ```bash
-dart run scripts/encode.dart -i input.ppm -o output.jp2 -lossless on -file_format on
+dart run jpeg2000:encode -i input.ppm -o output.jp2 -lossless on -file_format on
 ```
 
 Codificar com taxa alvo:
 
 ```bash
-dart run scripts/encode.dart -i input.ppm -o output.j2k -rate 1.0
+dart run jpeg2000:encode -i input.ppm -o output.j2k -rate 1.0
 ```
 
 ## Uso Programático
@@ -71,7 +71,7 @@ experimental em Dart VM, use os mesmos blocos que alimentam as CLIs:
 
 ```dart
 import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/ParameterList.dart';
+import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
 
 void main() {
   final params = ParameterList(Decoder.buildDefaultParameterList())
@@ -90,7 +90,7 @@ Encoder:
 
 ```dart
 import 'package:jpeg2000/src/j2k/encoder/encoder.dart';
-import 'package:jpeg2000/src/j2k/util/ParameterList.dart';
+import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
 
 void main() {
   final params = ParameterList(Encoder.buildDefaultParameterList())
@@ -108,7 +108,7 @@ void main() {
 ## Testes
 
 ```bash
-dart analyze --fatal-infos
+dart analyze
 dart test
 dart test -p chrome
 ```
@@ -125,8 +125,12 @@ Os fixtures ficam em:
 O workflow `.github/workflows/dart.yml` roda em cada push e pull request:
 
 - `dart pub get`
-- `dart format --output=none --set-exit-if-changed lib test scripts`
-- `dart analyze --fatal-infos`
+- `dart format --output=none --set-exit-if-changed lib test bin`
+- `dart analyze`
+
+Os lints de estilo aparecem como `INFO`. Isso deixa visíveis nomes herdados do
+JJ2000 que ainda não seguem o estilo Dart sem bloquear o CI enquanto a API do
+port ainda está sendo estabilizada.
 - `dart test`
 - `dart test -p chrome`
 

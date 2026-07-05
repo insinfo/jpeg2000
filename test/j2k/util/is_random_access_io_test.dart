@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/io/EndianType.dart';
+import 'package:jpeg2000/src/j2k/io/endian_type.dart';
 import 'package:jpeg2000/src/j2k/io/exceptions.dart';
-import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
+import 'package:jpeg2000/src/j2k/util/is_random_access_io.dart';
 import 'package:test/test.dart';
 
 void main() {

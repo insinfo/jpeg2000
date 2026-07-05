@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/entropy/decoder/DecLyrdCBlk.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/dec_lyrd_c_blk.dart';
 import 'package:test/test.dart';
 
 void main() {

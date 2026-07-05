@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/MQDecoder.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
-import 'package:jpeg2000/src/j2k/entropy/encoder/MQCoder.dart';
-import 'package:jpeg2000/src/j2k/entropy/encoder/ByteOutputBuffer.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/mq_decoder.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/byte_input_buffer.dart';
+import 'package:jpeg2000/src/j2k/entropy/encoder/mq_coder.dart';
+import 'package:jpeg2000/src/j2k/entropy/encoder/byte_output_buffer.dart';
 
 Uint8List _encodeMqSegment({
   required List<int> bits,

@@ -2,9 +2,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/image/input/ImgReaderPGM.dart';
-import 'package:jpeg2000/src/j2k/image/input/ImgReaderPPM.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
+import 'package:jpeg2000/src/j2k/image/input/img_reader_pgm.dart';
+import 'package:jpeg2000/src/j2k/image/input/img_reader_ppm.dart';
 import 'package:test/test.dart';
 
 void main() {

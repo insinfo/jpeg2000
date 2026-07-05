@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:jpeg2000/src/j2k/util/FacilityManager.dart';
-import 'package:jpeg2000/src/j2k/util/MsgLogger.dart';
-import 'package:jpeg2000/src/j2k/util/ProgressWatch.dart';
+import 'package:jpeg2000/src/j2k/util/facility_manager.dart';
+import 'package:jpeg2000/src/j2k/util/msg_logger.dart';
+import 'package:jpeg2000/src/j2k/util/progress_watch.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/util/Int32Utils.dart';
+import 'package:jpeg2000/src/j2k/util/int32_utils.dart';
 
 /// Testes rigorosos para Int32Utils - operações bitwise fundamentais
 /// Compara comportamento Dart vs Java int32

@@ -2,7 +2,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/util/ArrayUtil.dart';
+import 'package:jpeg2000/src/j2k/util/array_util.dart';
 
 void main() {
   group('ArrayUtil Comparison', () {

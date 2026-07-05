@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:jpeg2000/src/j2k/util/MsgLogger.dart';
+import 'package:jpeg2000/src/j2k/util/msg_logger.dart';
 
 class QuietLogger implements MsgLogger {
   @override

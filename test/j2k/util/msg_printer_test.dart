@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/util/MsgPrinter.dart';
+import 'package:jpeg2000/src/j2k/util/msg_printer.dart';
 import 'package:test/test.dart';
 
 void main() {

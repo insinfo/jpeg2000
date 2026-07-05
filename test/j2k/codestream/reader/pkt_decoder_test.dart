@@ -1,18 +1,18 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/codestream/CBlkCoordInfo.dart';
-import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
+import 'package:jpeg2000/src/j2k/codestream/c_blk_coord_info.dart';
+import 'package:jpeg2000/src/j2k/util/is_random_access_io.dart';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/codestream/reader/CBlkInfo.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/HeaderDecoder.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/BitstreamReaderAgent.dart';
-import 'package:jpeg2000/src/j2k/codestream/HeaderInfo.dart';
-import 'package:jpeg2000/src/j2k/decoder/DecoderSpecs.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/DecLyrdCBlk.dart';
+import 'package:jpeg2000/src/j2k/codestream/reader/c_blk_info.dart';
+import 'package:jpeg2000/src/j2k/codestream/reader/header_decoder.dart';
+import 'package:jpeg2000/src/j2k/codestream/reader/bitstream_reader_agent.dart';
+import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
+import 'package:jpeg2000/src/j2k/decoder/decoder_specs.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/dec_lyrd_c_blk.dart';
 import 'package:jpeg2000/src/j2k/image/coord.dart';
 
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/SubbandSyn.dart';
+import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 class _TestBitstreamReaderAgent extends BitstreamReaderAgent {
   _TestBitstreamReaderAgent(HeaderDecoder header, DecoderSpecs specs)

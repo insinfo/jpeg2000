@@ -1,0 +1,9 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    constant_identifier_names: true
+    file_names: true
+    library_names: true
+    non_constant_identifier_names: true
+    type_init_formals: true

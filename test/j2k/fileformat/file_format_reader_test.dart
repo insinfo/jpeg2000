@@ -2,12 +2,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/util/ISRandomAccessIO.dart';
+import 'package:jpeg2000/src/j2k/util/is_random_access_io.dart';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/fileformat/FileFormatBoxes.dart';
-import 'package:jpeg2000/src/j2k/fileformat/FileFormatReader.dart';
-import 'package:jpeg2000/src/j2k/fileformat/writer/FileFormatWriter.dart';
+import 'package:jpeg2000/src/j2k/fileformat/file_format_boxes.dart';
+import 'package:jpeg2000/src/j2k/fileformat/file_format_reader.dart';
+import 'package:jpeg2000/src/j2k/fileformat/writer/file_format_writer.dart';
 
 void main() {
   group('FileFormatReader', () {

@@ -2,7 +2,7 @@
 import 'dart:io';
 
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/util/MathUtil.dart';
+import 'package:jpeg2000/src/j2k/util/math_util.dart';
 
 void main() {
   group('MathUtil Comparison', () {

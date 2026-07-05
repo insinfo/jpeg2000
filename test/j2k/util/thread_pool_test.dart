@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:jpeg2000/src/j2k/util/ThreadPool.dart';
+import 'package:jpeg2000/src/j2k/util/thread_pool.dart';
 import 'package:test/test.dart';
 
 void main() {

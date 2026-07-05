@@ -5,11 +5,11 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/image/BlkImgDataSrc.dart';
+import 'package:jpeg2000/src/j2k/image/blk_img_data_src.dart';
 import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlk.dart';
-import 'package:jpeg2000/src/j2k/image/DataBlkInt.dart';
-import 'package:jpeg2000/src/j2k/image/output/ImgWriterPGM.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk.dart';
+import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
+import 'package:jpeg2000/src/j2k/image/output/img_writer_pgm.dart';
 
 typedef _ComponentSamples = List<int>;
 

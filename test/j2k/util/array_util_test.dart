@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/util/ArrayUtil.dart';
+import 'package:jpeg2000/src/j2k/util/array_util.dart';
 import 'package:test/test.dart';
 
 void main() {

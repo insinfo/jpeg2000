@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/util/NativeServices.dart';
+import 'package:jpeg2000/src/j2k/util/native_services.dart';
 import 'package:test/test.dart';
 
 void main() {

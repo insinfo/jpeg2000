@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/MQDecoder.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/ByteInputBuffer.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/mq_decoder.dart';
+import 'package:jpeg2000/src/j2k/entropy/decoder/byte_input_buffer.dart';
 
 /// Teste diagnóstico do MQDecoder
 /// Verifica estado interno durante decodificação
