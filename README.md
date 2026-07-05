@@ -182,6 +182,36 @@ Lower is better.
 | Go reference | in-process | 395.9 us/op | 1126.0 us/op | 819.7 us/op | 3271.2 us/op | `referencias/go-jpeg2000`; color case is RGBA |
 | OpenJPEG C | CLI end-to-end | 11773.4 us/op | 12484.6 us/op | 12991.8 us/op | 15697.9 us/op | Native tools; includes startup and filesystem I/O |
 
+### Optimization Targets
+
+The first performance target is the original JAI ImageIO/JJ2000 Java reference.
+On the Dart VM JIT, this port is already faster than JAI for lossless encoding,
+but decoding still needs work:
+
+| Target | Current Dart VM status |
+|---|---:|
+| Match JAI gray encode | Dart is about 1.85x faster |
+| Match JAI RGB encode | Dart is about 2.44x faster |
+| Match JAI gray decode | Dart is about 1.13x slower; needs roughly 11% less time |
+| Match JAI RGB decode | Dart is about 1.36x slower; needs roughly 26% less time |
+
+The longer-term target is the Go reference implementation. Against that row,
+the Dart VM still needs a much larger gain:
+
+| Target | Current Dart VM gap |
+|---|---:|
+| Match Go gray encode | Dart is about 7.0x slower |
+| Match Go gray decode | Dart is about 4.2x slower |
+| Match Go RGB encode | Dart is about 4.7x slower |
+| Match Go RGB decode | Dart is about 3.0x slower |
+
+In practical terms, the VM target after parity with JAI is a 4x to 5x average
+speedup, with the worst current path near 7x. The first places to optimize are
+RGB decode/component conversion/writer buffering, MQ and entropy decoder hot
+loops, and allocation reuse in code-block and wavelet buffers. JavaScript and
+Wasm should be treated as a separate browser optimization pass after the VM hot
+paths are cleaner.
+
 Reproduce the Dart rows with:
 
 ```bash
