@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:test/test.dart';
 import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
 
@@ -6,9 +8,9 @@ void main() {
     test('synthetizeLpfInt', () {
       final filter = SynWTFilterIntLift5x3();
 
-      final lowSig = [10, 12, 14];
-      final highSig = [2, 4, 6];
-      final outSig = List<int>.filled(6, 0);
+      final lowSig = Int32List.fromList([10, 12, 14]);
+      final highSig = Int32List.fromList([2, 4, 6]);
+      final outSig = Int32List(6);
 
       filter.synthetizeLpfInt(
         lowSig,

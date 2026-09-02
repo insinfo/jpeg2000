@@ -128,3 +128,23 @@ What remains, from `build/profile.dart` (VM service CPU samples): MQ
 `decodeSymbol` 47%, the three coding passes 31%, 5x3 synthesis 6%,
 dequantization 4%. The next step is the MQ decoder itself: inlining `_byteIn`
 and keeping the code register in a local across a whole pass.
+
+### Second pass, same day
+
+`decodeSymbol` now handles the most-probable-symbol-without-renormalisation
+case in a body small enough to inline into the coding passes and defers the
+rest to the unchanged reference routine; the sign and refinement helpers no
+longer sign-extend values that land in an `Int32List` anyway; the trace
+closures that captured hot loop variables are gone; the 5x3 synthesis and the
+inverse wavelet temporaries are `Int32List`. AOT, best of 20 warm runs:
+
+| Build | file1.jp2 | relax.jp2 |
+|---|---:|---:|
+| Dart AOT, start of the day | 863 ms | 47 ms |
+| Dart AOT, after the first pass | 219 ms | 24 ms |
+| Dart AOT, after this pass | 202 ms | 17 ms |
+
+Remaining profile: MQ decoding and the three passes are about 75% of the
+samples and are now within a small factor of the Java reference's structure;
+further gains need algorithmic changes (decoding several symbols per call in
+the cleanup pass, or a table-driven context update), not more typing.

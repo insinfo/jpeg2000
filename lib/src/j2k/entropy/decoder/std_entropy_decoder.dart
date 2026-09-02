@@ -125,9 +125,13 @@ class StdEntropyDecoder extends EntropyDecoder {
 
   static int _int32(int value) => Int32Utils.asInt32(value);
 
-  static int _encodeSignSample(int sign, int setmask) =>
-      Int32Utils.encodeSignSample(sign, setmask);
+  // Both results are stored straight into an Int32List, which truncates to
+  // 32 bits on its own, so the explicit sign extension of Int32Utils is not
+  // needed on this hot path.
+  @pragma('vm:prefer-inline')
+  static int _encodeSignSample(int sign, int setmask) => (sign << 31) | setmask;
 
+  @pragma('vm:prefer-inline')
   static int _refineMagnitude(
     int current,
     int resetmask,
@@ -135,7 +139,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     int bitPlane,
     int setmask,
   ) =>
-      Int32Utils.refineMagnitude(current, resetmask, symbol, bitPlane, setmask);
+      (current & resetmask) | (symbol << bitPlane) | setmask;
 
   bool tracing = false;
   void trace(String msg) {
@@ -900,7 +904,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     MQDecoder mq,
     int bitPlane,
     Uint32List state,
-    List<int> zcLut,
+    Uint8List zcLut,
     bool terminated,
   ) {
     if (tracing) {
@@ -916,16 +920,6 @@ class StdEntropyDecoder extends EntropyDecoder {
     final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
         StdEntropyCoderOptions.stripeHeight;
     final causal = (_options & StdEntropyCoderOptions.optVertStrCausal) != 0;
-
-    var sampleTraceBudget = tracing ? 32 : 0;
-    void traceSample(String stage, int k, int sym, int value) {
-      if (sampleTraceBudget <= 0) {
-        return;
-      }
-      sampleTraceBudget--;
-      _log('[TRACE] sig:$stage k=$k bp=$bitPlane sym=$sym '
-          'setmask=$setmask value=$value');
-    }
 
     final offUl = -sscanw - 1;
     final offUr = -sscanw + 1;
@@ -961,9 +955,6 @@ class StdEntropyDecoder extends EntropyDecoder {
                     'sigProgPass SC R1 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
               }
               data[k] = _encodeSignSample(sym, setmask);
-              if (tracing) {
-                traceSample('R1', k, sym, data[k]);
-              }
               if (!causal) {
                 // If in causal mode do not change contexts of previous stripe.
                 state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
@@ -1030,9 +1021,6 @@ class StdEntropyDecoder extends EntropyDecoder {
                     'sigProgPass SC R2 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
               }
               data[k] = _encodeSignSample(sym, setmask);
-              if (tracing) {
-                traceSample('R2', k, sym, data[k]);
-              }
               state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
               state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
               if (sym != 0) {
@@ -1093,9 +1081,6 @@ class StdEntropyDecoder extends EntropyDecoder {
                     'sigProgPass SC R3 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
               }
               data[k] = _encodeSignSample(sym, setmask);
-              if (tracing) {
-                traceSample('R3', k, sym, data[k]);
-              }
               state[j + offUl] |= _stateNzCtxtR2 | _stateDdrR2;
               state[j + offUr] |= _stateNzCtxtR2 | _stateDdlR2;
               if (sym != 0) {
@@ -1151,9 +1136,6 @@ class StdEntropyDecoder extends EntropyDecoder {
                     'sigProgPass SC R4 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
               }
               data[k] = _encodeSignSample(sym, setmask);
-              if (tracing) {
-                traceSample('R4', k, sym, data[k]);
-              }
               state[j + offDl] |= _stateNzCtxtR1 | _stateDurR1;
               state[j + offDr] |= _stateNzCtxtR1 | _stateDulR1;
               if (sym != 0) {
@@ -1224,16 +1206,6 @@ class StdEntropyDecoder extends EntropyDecoder {
     final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
         StdEntropyCoderOptions.stripeHeight;
 
-    var sampleTraceBudget = tracing ? 32 : 0;
-    void traceSample(String stage, int k, int sym, int value) {
-      if (sampleTraceBudget <= 0) {
-        return;
-      }
-      sampleTraceBudget--;
-      _log('[TRACE] magRef:$stage k=$k bp=$bitPlane sym=$sym '
-          'setmask=$setmask resetmask=$resetmask value=$value');
-    }
-
     var sk = cblk.offset;
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
@@ -1256,9 +1228,6 @@ class StdEntropyDecoder extends EntropyDecoder {
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
-            if (tracing) {
-              traceSample('R1', k, sym, refined);
-            }
             csj |= _statePrevMrR1;
           }
           if (stripeHeight < 2) {
@@ -1276,9 +1245,6 @@ class StdEntropyDecoder extends EntropyDecoder {
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
-            if (tracing) {
-              traceSample('R2', k, sym, refined);
-            }
             csj |= _statePrevMrR2;
           }
           state[j] = csj;
@@ -1300,9 +1266,6 @@ class StdEntropyDecoder extends EntropyDecoder {
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
-            if (tracing) {
-              traceSample('R3', k, sym, refined);
-            }
             csj |= _statePrevMrR1;
           }
           if (stripeHeight < 4) {
@@ -1320,9 +1283,6 @@ class StdEntropyDecoder extends EntropyDecoder {
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
-            if (tracing) {
-              traceSample('R4', k, sym, refined);
-            }
             csj |= _statePrevMrR2;
           }
           state[j] = csj;
@@ -1788,7 +1748,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     MQDecoder mq,
     int bitPlane,
     Uint32List state,
-    List<int> zcLut,
+    Uint8List zcLut,
     bool terminated,
   ) {
     if (tracing) {

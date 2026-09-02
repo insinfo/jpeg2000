@@ -222,6 +222,10 @@ class MQDecoder {
   ]);
 
   final ByteInputBuffer _input;
+  final Int32List _qeTable = _qe;
+  final Uint8List _nextMpsTable = _nextMps;
+  final Uint8List _nextLpsTable = _nextLps;
+  final Uint8List _switchTable = _switchLM;
   final List<int> _mps;
   final List<int> _states;
   final List<int> _initialStates;
@@ -241,7 +245,7 @@ class MQDecoder {
   /// (stored in [bits][0]).
   bool fastDecodeSymbols(List<int> bits, int context, int n) {
     var idx = _states[context];
-    var q = _qe[idx];
+    var q = _qeTable[idx];
 
     if (q < 0x4000 &&
         n <= (_interval - (_codeRegister >>> 16) - 1) ~/ q &&
@@ -252,12 +256,12 @@ class MQDecoder {
         return true;
       }
 
-      _states[context] = _nextMps[idx];
+      _states[context] = _nextMpsTable[idx];
       if (_codeBits == 0) {
         _byteIn();
       }
       _interval <<= 1;
-      _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+      _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
       _codeBits--;
       bits[0] = _mps[context];
       return true;
@@ -275,8 +279,8 @@ class MQDecoder {
         } else {
           if (localInterval >= q) {
             bits[i] = _mps[context];
-            idx = _nextMps[idx];
-            q = _qe[idx];
+            idx = _nextMpsTable[idx];
+            q = _qeTable[idx];
             if (localBits == 0) {
               _codeRegister = localCode;
               _byteIn();
@@ -284,15 +288,15 @@ class MQDecoder {
               localBits = _codeBits;
             }
             localInterval <<= 1;
-            localCode = Int32Utils.mask32(localCode << 1);
+            localCode = (localCode << 1) & 0xFFFFFFFF;
             localBits--;
           } else {
             bits[i] = 1 - _mps[context];
-            if (_switchLM[idx] == 1) {
+            if (_switchTable[idx] == 1) {
               _mps[context] = 1 - _mps[context];
             }
-            idx = _nextLps[idx];
-            q = _qe[idx];
+            idx = _nextLpsTable[idx];
+            q = _qeTable[idx];
             do {
               if (localBits == 0) {
                 _codeRegister = localCode;
@@ -301,18 +305,18 @@ class MQDecoder {
                 localBits = _codeBits;
               }
               localInterval <<= 1;
-              localCode = Int32Utils.mask32(localCode << 1);
+              localCode = (localCode << 1) & 0xFFFFFFFF;
               localBits--;
             } while (localInterval < 0x8000);
           }
         }
       } else {
-        localCode = Int32Utils.mask32(localCode - (localInterval << 16));
+        localCode = (localCode - (localInterval << 16)) & 0xFFFFFFFF;
         if (localInterval < q) {
           localInterval = q;
           bits[i] = _mps[context];
-          idx = _nextMps[idx];
-          q = _qe[idx];
+          idx = _nextMpsTable[idx];
+          q = _qeTable[idx];
           if (localBits == 0) {
             _codeRegister = localCode;
             _byteIn();
@@ -320,16 +324,16 @@ class MQDecoder {
             localBits = _codeBits;
           }
           localInterval <<= 1;
-          localCode = Int32Utils.mask32(localCode << 1);
+          localCode = (localCode << 1) & 0xFFFFFFFF;
           localBits--;
         } else {
           localInterval = q;
           bits[i] = 1 - _mps[context];
-          if (_switchLM[idx] == 1) {
+          if (_switchTable[idx] == 1) {
             _mps[context] = 1 - _mps[context];
           }
-          idx = _nextLps[idx];
-          q = _qe[idx];
+          idx = _nextLpsTable[idx];
+          q = _qeTable[idx];
           do {
             if (localBits == 0) {
               _codeRegister = localCode;
@@ -338,7 +342,7 @@ class MQDecoder {
               localBits = _codeBits;
             }
             localInterval <<= 1;
-            localCode = Int32Utils.mask32(localCode << 1);
+            localCode = (localCode << 1) & 0xFFFFFFFF;
             localBits--;
           } while (localInterval < 0x8000);
         }
@@ -361,7 +365,7 @@ class MQDecoder {
     for (var i = 0; i < n; i++) {
       final context = contexts[i];
       var idx = _states[context];
-      var q = _qe[idx];
+      var q = _qeTable[idx];
 
       localInterval -= q;
       if ((localCode >>> 16) < localInterval) {
@@ -370,7 +374,7 @@ class MQDecoder {
         } else {
           if (localInterval >= q) {
             bits[i] = _mps[context];
-            _states[context] = _nextMps[idx];
+            _states[context] = _nextMpsTable[idx];
             if (localBits == 0) {
               _codeRegister = localCode;
               _byteIn();
@@ -378,14 +382,14 @@ class MQDecoder {
               localBits = _codeBits;
             }
             localInterval <<= 1;
-            localCode = Int32Utils.mask32(localCode << 1);
+            localCode = (localCode << 1) & 0xFFFFFFFF;
             localBits--;
           } else {
             bits[i] = 1 - _mps[context];
-            if (_switchLM[idx] == 1) {
+            if (_switchTable[idx] == 1) {
               _mps[context] = 1 - _mps[context];
             }
-            _states[context] = _nextLps[idx];
+            _states[context] = _nextLpsTable[idx];
             do {
               if (localBits == 0) {
                 _codeRegister = localCode;
@@ -394,17 +398,17 @@ class MQDecoder {
                 localBits = _codeBits;
               }
               localInterval <<= 1;
-              localCode = Int32Utils.mask32(localCode << 1);
+              localCode = (localCode << 1) & 0xFFFFFFFF;
               localBits--;
             } while (localInterval < 0x8000);
           }
         }
       } else {
-        localCode = Int32Utils.mask32(localCode - (localInterval << 16));
+        localCode = (localCode - (localInterval << 16)) & 0xFFFFFFFF;
         if (localInterval < q) {
           localInterval = q;
           bits[i] = _mps[context];
-          _states[context] = _nextMps[idx];
+          _states[context] = _nextMpsTable[idx];
           if (localBits == 0) {
             _codeRegister = localCode;
             _byteIn();
@@ -412,15 +416,15 @@ class MQDecoder {
             localBits = _codeBits;
           }
           localInterval <<= 1;
-          localCode = Int32Utils.mask32(localCode << 1);
+          localCode = (localCode << 1) & 0xFFFFFFFF;
           localBits--;
         } else {
           localInterval = q;
           bits[i] = 1 - _mps[context];
-          if (_switchLM[idx] == 1) {
+          if (_switchTable[idx] == 1) {
             _mps[context] = 1 - _mps[context];
           }
-          _states[context] = _nextLps[idx];
+          _states[context] = _nextLpsTable[idx];
           do {
             if (localBits == 0) {
               _codeRegister = localCode;
@@ -429,7 +433,7 @@ class MQDecoder {
               localBits = _codeBits;
             }
             localInterval <<= 1;
-            localCode = Int32Utils.mask32(localCode << 1);
+            localCode = (localCode << 1) & 0xFFFFFFFF;
             localBits--;
           } while (localInterval < 0x8000);
         }
@@ -442,9 +446,26 @@ class MQDecoder {
   }
 
   /// Decodes a single symbol using [context].
+  ///
+  /// The most-probable-symbol case without renormalisation is by far the
+  /// most frequent decision, so it is handled here in a body small enough
+  /// for the VM to inline into the coding passes; everything else goes to
+  /// [_decodeSymbolFull], which is the reference algorithm unchanged.
+  @pragma('vm:prefer-inline')
   int decodeSymbol(int context) {
+    if (_traceData == null) {
+      final a = _interval - _qeTable[_states[context]];
+      if (a >= 0x8000 && (_codeRegister >>> 16) < a) {
+        _interval = a;
+        return _mps[context];
+      }
+    }
+    return _decodeSymbolFull(context);
+  }
+
+  int _decodeSymbolFull(int context) {
     final index = _states[context];
-    final q = _qe[index];
+    final q = _qeTable[index];
     _interval -= q;
     int decision;
 
@@ -455,25 +476,25 @@ class MQDecoder {
         var la = _interval;
         if (la >= q) {
           decision = _mps[context];
-          _states[context] = _nextMps[index];
+          _states[context] = _nextMpsTable[index];
           if (_codeBits == 0) {
             _byteIn();
           }
           la <<= 1;
-          _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+          _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
           _codeBits--;
         } else {
           decision = 1 - _mps[context];
-          if (_switchLM[index] == 1) {
+          if (_switchTable[index] == 1) {
             _mps[context] = 1 - _mps[context];
           }
-          _states[context] = _nextLps[index];
+          _states[context] = _nextLpsTable[index];
           do {
             if (_codeBits == 0) {
               _byteIn();
             }
             la <<= 1;
-            _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+            _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
             _codeBits--;
           } while (la < 0x8000);
         }
@@ -481,30 +502,30 @@ class MQDecoder {
       }
     } else {
       var la = _interval;
-      _codeRegister = Int32Utils.mask32(_codeRegister - (la << 16));
+      _codeRegister = (_codeRegister - (la << 16)) & 0xFFFFFFFF;
       if (la < q) {
         la = q;
         decision = _mps[context];
-        _states[context] = _nextMps[index];
+        _states[context] = _nextMpsTable[index];
         if (_codeBits == 0) {
           _byteIn();
         }
         la <<= 1;
-        _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+        _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
         _codeBits--;
       } else {
         la = q;
         decision = 1 - _mps[context];
-        if (_switchLM[index] == 1) {
+        if (_switchTable[index] == 1) {
           _mps[context] = 1 - _mps[context];
         }
-        _states[context] = _nextLps[index];
+        _states[context] = _nextLpsTable[index];
         do {
           if (_codeBits == 0) {
             _byteIn();
           }
           la <<= 1;
-          _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+          _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
           _codeBits--;
         } while (la < 0x8000);
       }
@@ -609,14 +630,14 @@ class MQDecoder {
       return true;
     }
 
-    _codeRegister = Int32Utils.mask32(_codeRegister - (_interval << 16));
+    _codeRegister = (_codeRegister - (_interval << 16)) & 0xFFFFFFFF;
     _interval = q;
     do {
       if (_codeBits == 0) {
         _byteIn();
       }
       _interval <<= 1;
-      _codeRegister = Int32Utils.mask32(_codeRegister << 1);
+      _codeRegister = (_codeRegister << 1) & 0xFFFFFFFF;
       _codeBits--;
     } while (_interval < 0x8000);
 
@@ -654,7 +675,7 @@ class MQDecoder {
     _lastByte = _readByte();
     _codeRegister = (_lastByte ^ 0xFF) << 16;
     _byteIn();
-    _codeRegister = Int32Utils.mask32(_codeRegister << 7);
+    _codeRegister = (_codeRegister << 7) & 0xFFFFFFFF;
     _codeBits = _codeBits - 7; // _codeBits foi definido por _byteIn() acima
     _interval = 0x8000;
   }

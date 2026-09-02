@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'syn_wt_filter_int.dart';
 import '../wavelet_filter.dart';
 
@@ -5,15 +7,15 @@ import '../wavelet_filter.dart';
 class SynWTFilterIntLift5x3 extends SynWTFilterInt {
   @override
   void synthetizeLpfInt(
-    List<int> lowSig,
+    Int32List lowSig,
     int lowOff,
     int lowLen,
     int lowStep,
-    List<int> highSig,
+    Int32List highSig,
     int highOff,
     int highLen,
     int highStep,
-    List<int> outSig,
+    Int32List outSig,
     int outOff,
     int outStep,
   ) {
@@ -62,15 +64,15 @@ class SynWTFilterIntLift5x3 extends SynWTFilterInt {
 
   @override
   void synthetizeHpfInt(
-    List<int> lowSig,
+    Int32List lowSig,
     int lowOff,
     int lowLen,
     int lowStep,
-    List<int> highSig,
+    Int32List highSig,
     int highOff,
     int highLen,
     int highStep,
-    List<int> outSig,
+    Int32List outSig,
     int outOff,
     int outStep,
   ) {

@@ -134,7 +134,7 @@ class InvWTFull extends InverseWT {
     Object? dstData;
     switch (block.getDataType()) {
       case DataBlk.typeInt:
-        var buffer = block.getData() as List<int>?;
+        var buffer = block.getData() as Int32List?;
         if (buffer == null || buffer.length < block.w * block.h) {
           buffer = Int32List(block.w * block.h);
         }
@@ -214,7 +214,7 @@ class InvWTFull extends InverseWT {
         tmp = Float32List(bufLength);
         break;
       default:
-        tmp = List<int>.filled(bufLength, 0, growable: false);
+        tmp = Int32List(bufLength);
         break;
     }
 

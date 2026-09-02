@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../image/data_blk.dart';
 import 'syn_wt_filter.dart';
 
@@ -5,30 +7,30 @@ import 'syn_wt_filter.dart';
 abstract class SynWTFilterInt extends SynWTFilter {
   /// Integer-aware implementation of [synthetizeLpf].
   void synthetizeLpfInt(
-    List<int> lowSig,
+    Int32List lowSig,
     int lowOff,
     int lowLen,
     int lowStep,
-    List<int> highSig,
+    Int32List highSig,
     int highOff,
     int highLen,
     int highStep,
-    List<int> outSig,
+    Int32List outSig,
     int outOff,
     int outStep,
   );
 
   /// Integer-aware implementation of [synthetizeHpf].
   void synthetizeHpfInt(
-    List<int> lowSig,
+    Int32List lowSig,
     int lowOff,
     int lowLen,
     int lowStep,
-    List<int> highSig,
+    Int32List highSig,
     int highOff,
     int highLen,
     int highStep,
-    List<int> outSig,
+    Int32List outSig,
     int outOff,
     int outStep,
   );
@@ -48,15 +50,15 @@ abstract class SynWTFilterInt extends SynWTFilter {
     int outStep,
   ) {
     synthetizeLpfInt(
-      lowSig as List<int>,
+      lowSig as Int32List,
       lowOff,
       lowLen,
       lowStep,
-      highSig as List<int>,
+      highSig as Int32List,
       highOff,
       highLen,
       highStep,
-      outSig as List<int>,
+      outSig as Int32List,
       outOff,
       outStep,
     );
@@ -77,15 +79,15 @@ abstract class SynWTFilterInt extends SynWTFilter {
     int outStep,
   ) {
     synthetizeHpfInt(
-      lowSig as List<int>,
+      lowSig as Int32List,
       lowOff,
       lowLen,
       lowStep,
-      highSig as List<int>,
+      highSig as Int32List,
       highOff,
       highLen,
       highStep,
-      outSig as List<int>,
+      outSig as Int32List,
       outOff,
       outStep,
     );
