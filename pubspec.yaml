@@ -28,5 +28,5 @@ dev_dependencies:
   test: ^1.25.0
 
 executables:
-  jpeg2000_decode: decode
-  jpeg2000_encode: encode
+  jp2dec: decode
+  jp2enc: encode

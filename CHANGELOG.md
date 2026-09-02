@@ -22,4 +22,4 @@ First release.
   VM, dart2js and dart2wasm. `decodeJpeg2000Source` and
   `encodeJpeg2000Source` accept files and paths on the VM and `Blob`/`File`
   in browsers.
-- Command-line tools `jpeg2000_decode` and `jpeg2000_encode`.
+- Command-line tools `jp2dec` and `jp2enc`.

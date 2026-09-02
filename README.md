@@ -28,7 +28,7 @@ against it on the bundled conformance subset. See
   budget".
 - **Encoder:** binary PGM (P5) and PPM (P6) bytes to raw J2K or JP2, lossless
   or rate-controlled, with optional tiling.
-- **Command line:** `jpeg2000_decode` and `jpeg2000_encode`.
+- **Command line:** `jp2dec` and `jp2enc`.
 
 ## Installation
 
@@ -160,7 +160,7 @@ dart run jpeg2000:encode -i input.ppm -o output.j2k -rate 1.0
 ```
 
 After `dart pub global activate jpeg2000` the tools are available as
-`jpeg2000_decode` and `jpeg2000_encode`.
+`jp2dec` and `jp2enc`.
 
 ## Limitations
 
