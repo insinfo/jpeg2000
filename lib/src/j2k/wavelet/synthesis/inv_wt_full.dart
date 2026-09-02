@@ -11,7 +11,9 @@ import '../../util/progress_watch.dart';
 import '../wavelet_transform.dart';
 import 'c_blk_wt_data_src_dec.dart';
 import 'inverse_wt.dart';
+import 'syn_wt_filter_float_lift9x7.dart';
 import 'subband_syn.dart';
+import 'syn_wt_filter.dart';
 
 /// Full-frame inverse wavelet transform mirroring JJ2000's `InvWTFull`.
 class InvWTFull extends InverseWT {
@@ -90,8 +92,12 @@ class InvWTFull extends InverseWT {
       final height = getTileCompHeight(tileIdx, component);
       switch (dtype) {
         case DataBlk.typeFloat:
+          // The row stride is rounded up to four samples so that the SIMD
+          // passes of the wavelet and of the component transform read
+          // whole aligned vectors on every row. The block's `w` is the
+          // stride; callers read `scanw` and their own width.
           reconstructedComps[component] =
-              DataBlkFloat.withGeometry(0, 0, width, height);
+              DataBlkFloat.withGeometry(0, 0, (width + 3) & ~3, height);
           break;
         default:
           reconstructedComps[component] =
@@ -208,13 +214,22 @@ class InvWTFull extends InverseWT {
     }
 
     final bufLength = math.max(width, height);
+    // Two column buffers: the vertical pass reads a column into [tmp],
+    // filters it into [tmpOut] with unit stride, and copies the result back.
+    // Writing the filter output straight into the image with a stride of one
+    // row (tens of kilobytes on a large image) touched a new cache line and
+    // often a new page per sample; the copy is the same strided traffic the
+    // read already pays, and the arithmetic runs on contiguous memory.
     Object? tmp;
+    Object? tmpOut;
     switch ((sb.hFilter ?? sb.vFilter)?.getDataType() ?? dtype) {
       case DataBlk.typeFloat:
         tmp = Float32List(bufLength);
+        tmpOut = Float32List(bufLength);
         break;
       default:
         tmp = Int32List(bufLength);
+        tmpOut = Int32List(bufLength);
         break;
     }
 
@@ -231,7 +246,32 @@ class InvWTFull extends InverseWT {
     }
 
     // Horizontal reconstruction
+    var simdRowsDone = false;
+    if (hFilter is SynWTFilterFloatLift9x7 &&
+        data is Float32List &&
+        width >= 8) {
+      // Whole rows on SIMD lanes; see synthetizeLpfRow4.
+      final scratch = SynRow97Scratch(width);
+      final lowFirstRow = sb.ulcx.isEven;
+      final lowLen = lowFirstRow ? (width + 1) >> 1 : width >> 1;
+      final highLen = width - lowLen;
+      for (var row = 0; row < height; row++, offset += rowStride) {
+        scratch.low.setRange(0, lowLen, data, offset);
+        scratch.high.setRange(0, highLen, data, offset + lowLen);
+        if (lowFirstRow) {
+          hFilter.synthetizeLpfRow4(scratch, lowLen, highLen);
+        } else {
+          hFilter.synthetizeHpfRow4(scratch, lowLen, highLen);
+        }
+        data.setRange(offset, offset + width, scratch.out);
+      }
+      offset -= height * rowStride;
+      simdRowsDone = true;
+    }
     for (var row = 0; row < height; row++, offset += rowStride) {
+      if (simdRowsDone) {
+        break;
+      }
       if (tmp is List<int> && data is List<int>) {
         tmp.setRange(0, width, data, offset);
       } else if (tmp is Float32List && data is Float32List) {
@@ -275,14 +315,15 @@ class InvWTFull extends InverseWT {
 
     // Vertical reconstruction
     offset = (uly - buffer.uly) * rowStride + (ulx - buffer.ulx);
-    if (data is List<int> && tmp is List<int>) {
+    final bool lowFirst = sb.ulcy.isEven;
+    if (data is Int32List && tmp is Int32List && tmpOut is Int32List) {
       for (var col = 0; col < width; col++, offset++) {
         for (var row = height - 1, k = offset + row * rowStride;
             row >= 0;
             row--, k -= rowStride) {
           tmp[row] = data[k];
         }
-        if (sb.ulcy.isEven) {
+        if (lowFirst) {
           vFilter.synthetizeLpf(
             tmp,
             0,
@@ -292,9 +333,9 @@ class InvWTFull extends InverseWT {
             (height + 1) >> 1,
             height >> 1,
             1,
-            data,
-            offset,
-            rowStride,
+            tmpOut,
+            0,
+            1,
           );
         } else {
           vFilter.synthetizeHpf(
@@ -306,20 +347,117 @@ class InvWTFull extends InverseWT {
             height >> 1,
             (height + 1) >> 1,
             1,
-            data,
-            offset,
-            rowStride,
+            tmpOut,
+            0,
+            1,
           );
+        }
+        for (var row = height - 1, k = offset + row * rowStride;
+            row >= 0;
+            row--, k -= rowStride) {
+          data[k] = tmpOut[row];
         }
       }
-    } else if (data is Float32List && tmp is Float32List) {
-      for (var col = 0; col < width; col++, offset++) {
+    } else if (data is Float32List &&
+        tmp is Float32List &&
+        tmpOut is Float32List) {
+      var col = 0;
+      if (vFilter is SynWTFilterFloatLift9x7 && width >= 4 && height > 1) {
+        // Four columns per pass on SIMD lanes; see synthetizeLpfFloat4.
+        // Four column groups (sixteen columns, one cache line per row)
+        // per pass, laid out group-major in the scratch buffers; each row
+        // of the image is then touched once instead of four times.
+        final Float32x4List tmp4 = Float32x4List(4 * height);
+        final Float32x4List tmpOut4 = Float32x4List(4 * height);
+        final int lowLen = (height + 1) >> 1;
+        final int highLen = height >> 1;
+        // With a row stride that is a multiple of four, the column groups
+        // starting at an aligned offset can be read as whole vectors, which
+        // is much cheaper than packing four scalar loads.
+        final bool aligned = rowStride & 3 == 0 && data.offsetInBytes & 15 == 0;
+        final Float32x4List data4 = aligned
+            ? data.buffer.asFloat32x4List(data.offsetInBytes, data.length >> 2)
+            : Float32x4List(0);
+        if (aligned) {
+          // Scalar columns up to the first aligned one.
+          for (; col < width && offset & 3 != 0; col++, offset++) {
+            _verticalColumn(data, tmp, tmpOut, offset, height, rowStride,
+                vFilter, lowFirst);
+          }
+        }
+        if (aligned) {
+          for (; col + 16 <= width; col += 16, offset += 16) {
+            for (var row = 0, k = offset >> 2, s4 = rowStride >> 2;
+                row < height;
+                row++, k += s4) {
+              tmp4[row] = data4[k];
+              tmp4[height + row] = data4[k + 1];
+              tmp4[2 * height + row] = data4[k + 2];
+              tmp4[3 * height + row] = data4[k + 3];
+            }
+            for (var g = 0, base = 0; g < 4; g++, base += height) {
+              if (lowFirst) {
+                vFilter.synthetizeLpfFloat4(tmp4, base, lowLen, tmp4,
+                    base + lowLen, highLen, tmpOut4, base);
+              } else {
+                vFilter.synthetizeHpfFloat4(tmp4, base, highLen, tmp4,
+                    base + highLen, lowLen, tmpOut4, base);
+              }
+            }
+            for (var row = 0, k = offset >> 2, s4 = rowStride >> 2;
+                row < height;
+                row++, k += s4) {
+              data4[k] = tmpOut4[row];
+              data4[k + 1] = tmpOut4[height + row];
+              data4[k + 2] = tmpOut4[2 * height + row];
+              data4[k + 3] = tmpOut4[3 * height + row];
+            }
+          }
+        }
+        for (; col + 4 <= width; col += 4, offset += 4) {
+          if (aligned) {
+            for (var row = 0, k = offset >> 2, s4 = rowStride >> 2;
+                row < height;
+                row++, k += s4) {
+              tmp4[row] = data4[k];
+            }
+          } else {
+            for (var row = 0, k = offset; row < height; row++, k += rowStride) {
+              tmp4[row] =
+                  Float32x4(data[k], data[k + 1], data[k + 2], data[k + 3]);
+            }
+          }
+          if (lowFirst) {
+            vFilter.synthetizeLpfFloat4(
+                tmp4, 0, lowLen, tmp4, lowLen, highLen, tmpOut4, 0);
+          } else {
+            vFilter.synthetizeHpfFloat4(
+                tmp4, 0, highLen, tmp4, highLen, lowLen, tmpOut4, 0);
+          }
+          if (aligned) {
+            for (var row = 0, k = offset >> 2, s4 = rowStride >> 2;
+                row < height;
+                row++, k += s4) {
+              data4[k] = tmpOut4[row];
+            }
+          } else {
+            for (var row = 0, k = offset; row < height; row++, k += rowStride) {
+              final Float32x4 v = tmpOut4[row];
+              data[k] = v.x;
+              data[k + 1] = v.y;
+              data[k + 2] = v.z;
+              data[k + 3] = v.w;
+            }
+          }
+        }
+      }
+      for (; col < width; col++, offset++) {
         for (var row = height - 1, k = offset + row * rowStride;
             row >= 0;
             row--, k -= rowStride) {
           tmp[row] = data[k];
         }
-        if (sb.ulcy.isEven) {
+        if (lowFirst) {
           vFilter.synthetizeLpf(
             tmp,
             0,
@@ -329,9 +467,9 @@ class InvWTFull extends InverseWT {
             (height + 1) >> 1,
             height >> 1,
             1,
-            data,
-            offset,
-            rowStride,
+            tmpOut,
+            0,
+            1,
           );
         } else {
           vFilter.synthetizeHpf(
@@ -343,10 +481,15 @@ class InvWTFull extends InverseWT {
             height >> 1,
             (height + 1) >> 1,
             1,
-            data,
-            offset,
-            rowStride,
+            tmpOut,
+            0,
+            1,
           );
+        }
+        for (var row = height - 1, k = offset + row * rowStride;
+            row >= 0;
+            row--, k -= rowStride) {
+          data[k] = tmpOut[row];
         }
       }
     } else {
@@ -386,6 +529,35 @@ class InvWTFull extends InverseWT {
           );
         }
       }
+    }
+  }
+
+  /// One column of the float vertical pass through [tmp]/[tmpOut].
+  static void _verticalColumn(
+      Float32List data,
+      Float32List tmp,
+      Float32List tmpOut,
+      int offset,
+      int height,
+      int rowStride,
+      SynWTFilter vFilter,
+      bool lowFirst) {
+    for (var row = height - 1, k = offset + row * rowStride;
+        row >= 0;
+        row--, k -= rowStride) {
+      tmp[row] = data[k];
+    }
+    if (lowFirst) {
+      vFilter.synthetizeLpf(tmp, 0, (height + 1) >> 1, 1, tmp,
+          (height + 1) >> 1, height >> 1, 1, tmpOut, 0, 1);
+    } else {
+      vFilter.synthetizeHpf(tmp, 0, height >> 1, 1, tmp, height >> 1,
+          (height + 1) >> 1, 1, tmpOut, 0, 1);
+    }
+    for (var row = height - 1, k = offset + row * rowStride;
+        row >= 0;
+        row--, k -= rowStride) {
+      data[k] = tmpOut[row];
     }
   }
 

@@ -391,15 +391,16 @@ class StdDequantizer extends Dequantizer {
       }
     }
 
+    // Sign-magnitude to float: the top bit is the sign, the rest the
+    // magnitude. A negative Int32List element is exactly a set sign bit.
     for (var row = 0; row < height; row++) {
       final inBase = inOffset + row * inScanw;
       final outBase = row * width;
       for (var col = 0; col < width; col++) {
-        final temp = Int32Utils.mask32(inData[inBase + col]);
-        final magnitude = temp & _magnitudeMask;
-        final double value =
-            (temp & _signMask) == 0 ? magnitude * step : -magnitude * step;
-        outData[outBase + col] = value;
+        final int temp = inData[inBase + col];
+        final int magnitude = temp & _magnitudeMask;
+        outData[outBase + col] =
+            temp < 0 ? -magnitude * step : magnitude * step;
       }
     }
 

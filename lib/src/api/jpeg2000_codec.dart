@@ -1087,7 +1087,6 @@ Jpeg2000Image _collectImage(
     pixels16 = null;
     bytes = pixels8;
   }
-  final outputMax = (1 << outputBitDepth) - 1;
 
   final bitDepths = List<int>.generate(
     outputComponents,
@@ -1112,6 +1111,16 @@ Jpeg2000Image _collectImage(
       final tileIndex = source.getTileIdx();
       final tileWidth = source.getTileCompWidth(tileIndex, channels[0]);
       final tileHeight = source.getTileCompHeight(tileIndex, channels[0]);
+      // Every channel of the tile is fetched before any pixel is written:
+      // each slot has its own block, so the decoded planes stay valid, and
+      // the RGB case can then be written one pixel at a time instead of
+      // three strided passes over the output.
+      final tileData = List<Int32List?>.filled(outputComponents, null);
+      final tileOffset = List<int>.filled(outputComponents, 0);
+      final tileScanw = List<int>.filled(outputComponents, 0);
+      final tileOffx = List<int>.filled(outputComponents, 0);
+      final tileOffy = List<int>.filled(outputComponents, 0);
+      final tileFixedPoint = List<int>.filled(outputComponents, 0);
       for (var slot = 0; slot < outputComponents; slot++) {
         final component = channels[slot];
         final block = blocks[slot]
@@ -1123,92 +1132,65 @@ Jpeg2000Image _collectImage(
         do {
           dataBlock = source.getInternCompData(block, component) as DataBlkInt;
         } while (dataBlock.progressive);
-
         final data = dataBlock.getDataInt();
         if (data == null) {
           throw const Jpeg2000CorruptedException(
             'Decoded component block has no data.',
           );
         }
-        final tOffx = source.getCompULX(component) -
+        tileData[slot] = data;
+        tileOffset[slot] = dataBlock.offset;
+        tileScanw[slot] = dataBlock.scanw;
+        tileOffx[slot] = source.getCompULX(component) -
             (source.getImgULX() / source.getCompSubsX(component)).ceil();
-        final tOffy = source.getCompULY(component) -
+        tileOffy[slot] = source.getCompULY(component) -
             (source.getImgULY() / source.getCompSubsY(component)).ceil();
-        final fixedPoint = source.getFixedPoint(component);
-        final bitDepth = bitDepths[slot];
-        final levelShift = signed[slot] ? 0 : 1 << (bitDepth - 1);
-        final maxValue = (1 << bitDepth) - 1;
-        final scanw = dataBlock.scanw;
+        tileFixedPoint[slot] = source.getFixedPoint(component);
+      }
 
-        for (var row = 0; row < tileHeight; row++) {
-          var sourceIndex = dataBlock.offset + row * scanw;
-          var targetIndex =
-              ((row + tOffy) * width + tOffx) * outputComponents + slot;
-          if (bitDepth == outputBitDepth) {
-            for (var x = 0; x < tileWidth; x++) {
-              var sample = (fixedPoint == 0
-                      ? data[sourceIndex]
-                      : data[sourceIndex] >> fixedPoint) +
-                  levelShift;
-              if (sample < 0) {
-                sample = 0;
-              } else if (sample > maxValue) {
-                sample = maxValue;
-              }
-              if (wide) {
-                pixels16![targetIndex] = sample;
-              } else {
-                pixels8![targetIndex] = sample;
-              }
-              sourceIndex++;
-              targetIndex += outputComponents;
-            }
-          } else if (bitDepth > outputBitDepth) {
-            final downShift = bitDepth - outputBitDepth;
-            for (var x = 0; x < tileWidth; x++) {
-              var sample = (fixedPoint == 0
-                      ? data[sourceIndex]
-                      : data[sourceIndex] >> fixedPoint) +
-                  levelShift;
-              if (sample < 0) {
-                sample = 0;
-              } else if (sample > maxValue) {
-                sample = maxValue;
-              }
-              sample >>= downShift;
-              if (wide) {
-                pixels16![targetIndex] = sample;
-              } else {
-                pixels8![targetIndex] = sample;
-              }
-              sourceIndex++;
-              targetIndex += outputComponents;
-            }
-          } else {
-            // Shallower source: rescale so the source maximum maps to the
-            // output maximum (255 -> 65535), not to a shifted 65280.
-            final half = maxValue ~/ 2;
-            for (var x = 0; x < tileWidth; x++) {
-              var sample = (fixedPoint == 0
-                      ? data[sourceIndex]
-                      : data[sourceIndex] >> fixedPoint) +
-                  levelShift;
-              if (sample < 0) {
-                sample = 0;
-              } else if (sample > maxValue) {
-                sample = maxValue;
-              }
-              sample = (sample * outputMax + half) ~/ maxValue;
-              if (wide) {
-                pixels16![targetIndex] = sample;
-              } else {
-                pixels8![targetIndex] = sample;
-              }
-              sourceIndex++;
-              targetIndex += outputComponents;
-            }
-          }
-        }
+      if (pixels8 != null &&
+          outputComponents == 3 &&
+          bitDepths.every((depth) => depth == outputBitDepth) &&
+          tileOffx.every((v) => v == tileOffx[0]) &&
+          tileOffy.every((v) => v == tileOffy[0])) {
+        _writeRgb8Tile(
+          pixels8,
+          width,
+          tileWidth,
+          tileHeight,
+          tileOffx[0],
+          tileOffy[0],
+          tileData[0]!,
+          tileData[1]!,
+          tileData[2]!,
+          tileOffset,
+          tileScanw,
+          tileFixedPoint,
+          signed,
+          outputBitDepth,
+        );
+        continue;
+      }
+
+      for (var slot = 0; slot < outputComponents; slot++) {
+        _writePlane(
+          pixels8,
+          pixels16,
+          tileData[slot]!,
+          tileOffset[slot],
+          tileScanw[slot],
+          tileFixedPoint[slot],
+          bitDepths[slot],
+          signed[slot],
+          outputBitDepth,
+          width,
+          tileWidth,
+          tileHeight,
+          tileOffx[slot],
+          tileOffy[slot],
+          outputComponents,
+          slot,
+        );
       }
     }
   }
@@ -1225,6 +1207,227 @@ Jpeg2000Image _collectImage(
     pixels: bytes,
     format: layout.format,
   );
+}
+
+/// Writes one decoded plane into channel [slot] of the interleaved output.
+///
+/// [data] is read from [dataOffset] with stride [scanw]; samples are shifted
+/// right by [fixedPoint], level-shifted unless [isSigned], clamped to
+/// [bitDepth] bits and converted to [outputBitDepth]. The plane is a typed
+/// parameter on purpose: taking it out of a `List<Int32List?>` inside the
+/// loop function made the AOT build treat every element read as a
+/// polymorphic call, two and a half times slower.
+void _writePlane(
+  Uint8List? pixels8,
+  Uint16List? pixels16,
+  Int32List data,
+  int dataOffset,
+  int scanw,
+  int fixedPoint,
+  int bitDepth,
+  bool isSigned,
+  int outputBitDepth,
+  int width,
+  int tileWidth,
+  int tileHeight,
+  int tOffx,
+  int tOffy,
+  int outputComponents,
+  int slot,
+) {
+  final levelShift = isSigned ? 0 : 1 << (bitDepth - 1);
+  final maxValue = (1 << bitDepth) - 1;
+  final outputMax = (1 << outputBitDepth) - 1;
+  final wide = pixels16 != null;
+  for (var row = 0; row < tileHeight; row++) {
+    var sourceIndex = dataOffset + row * scanw;
+    var targetIndex = ((row + tOffy) * width + tOffx) * outputComponents + slot;
+    if (bitDepth == outputBitDepth) {
+      // The common case. A shift by a variable count is slow in AOT
+      // code, so the usual fixed point of zero gets its own loop, and
+      // the two output widths are separated as well.
+      if (pixels8 != null && fixedPoint == 0) {
+        for (var x = 0; x < tileWidth; x++) {
+          var sample = data[sourceIndex] + levelShift;
+          if (sample < 0) {
+            sample = 0;
+          } else if (sample > maxValue) {
+            sample = maxValue;
+          }
+          pixels8[targetIndex] = sample;
+          sourceIndex++;
+          targetIndex += outputComponents;
+        }
+      } else if (pixels8 != null) {
+        for (var x = 0; x < tileWidth; x++) {
+          var sample = (data[sourceIndex] >> fixedPoint) + levelShift;
+          if (sample < 0) {
+            sample = 0;
+          } else if (sample > maxValue) {
+            sample = maxValue;
+          }
+          pixels8[targetIndex] = sample;
+          sourceIndex++;
+          targetIndex += outputComponents;
+        }
+      } else {
+        for (var x = 0; x < tileWidth; x++) {
+          var sample = (fixedPoint == 0
+                  ? data[sourceIndex]
+                  : data[sourceIndex] >> fixedPoint) +
+              levelShift;
+          if (sample < 0) {
+            sample = 0;
+          } else if (sample > maxValue) {
+            sample = maxValue;
+          }
+          pixels16![targetIndex] = sample;
+          sourceIndex++;
+          targetIndex += outputComponents;
+        }
+      }
+    } else if (bitDepth > outputBitDepth) {
+      final downShift = bitDepth - outputBitDepth;
+      for (var x = 0; x < tileWidth; x++) {
+        var sample = (fixedPoint == 0
+                ? data[sourceIndex]
+                : data[sourceIndex] >> fixedPoint) +
+            levelShift;
+        if (sample < 0) {
+          sample = 0;
+        } else if (sample > maxValue) {
+          sample = maxValue;
+        }
+        sample >>= downShift;
+        if (wide) {
+          pixels16[targetIndex] = sample;
+        } else {
+          pixels8![targetIndex] = sample;
+        }
+        sourceIndex++;
+        targetIndex += outputComponents;
+      }
+    } else {
+      // Shallower source: rescale so the source maximum maps to the
+      // output maximum (255 -> 65535), not to a shifted 65280.
+      final half = maxValue ~/ 2;
+      for (var x = 0; x < tileWidth; x++) {
+        var sample = (fixedPoint == 0
+                ? data[sourceIndex]
+                : data[sourceIndex] >> fixedPoint) +
+            levelShift;
+        if (sample < 0) {
+          sample = 0;
+        } else if (sample > maxValue) {
+          sample = maxValue;
+        }
+        sample = (sample * outputMax + half) ~/ maxValue;
+        if (wide) {
+          pixels16[targetIndex] = sample;
+        } else {
+          pixels8![targetIndex] = sample;
+        }
+        sourceIndex++;
+        targetIndex += outputComponents;
+      }
+    }
+  }
+}
+
+/// Writes one tile of three 8-bit planes as interleaved RGB, pixel by pixel.
+///
+/// [d0], [d1] and [d2] are the decoded planes (offset [tileOffset], stride
+/// [tileScanw], samples shifted right by [tileFixedPoint]); [signed] says
+/// which planes carry no level shift. The output is clamped to
+/// `bitDepth` bits, which here equals the output depth. The planes are
+/// typed parameters on purpose, see [_writePlane].
+void _writeRgb8Tile(
+  Uint8List pixels,
+  int imageWidth,
+  int tileWidth,
+  int tileHeight,
+  int tOffx,
+  int tOffy,
+  Int32List d0,
+  Int32List d1,
+  Int32List d2,
+  List<int> tileOffset,
+  List<int> tileScanw,
+  List<int> tileFixedPoint,
+  List<bool> signed,
+  int bitDepth,
+) {
+  final int fp0 = tileFixedPoint[0];
+  final int fp1 = tileFixedPoint[1];
+  final int fp2 = tileFixedPoint[2];
+  final int shift0 = signed[0] ? 0 : 1 << (bitDepth - 1);
+  final int shift1 = signed[1] ? 0 : 1 << (bitDepth - 1);
+  final int shift2 = signed[2] ? 0 : 1 << (bitDepth - 1);
+  final int maxValue = (1 << bitDepth) - 1;
+  // A shift by a variable count is a slow generic operation in AOT code
+  // (three times the cost of this loop); the usual fixed point of zero
+  // gets a loop without it.
+  if (fp0 == 0 && fp1 == 0 && fp2 == 0) {
+    for (var row = 0; row < tileHeight; row++) {
+      var s0 = tileOffset[0] + row * tileScanw[0];
+      var s1 = tileOffset[1] + row * tileScanw[1];
+      var s2 = tileOffset[2] + row * tileScanw[2];
+      var t = ((row + tOffy) * imageWidth + tOffx) * 3;
+      for (var x = 0; x < tileWidth; x++, s0++, s1++, s2++, t += 3) {
+        var r = d0[s0] + shift0;
+        var g = d1[s1] + shift1;
+        var b = d2[s2] + shift2;
+        if (r < 0) {
+          r = 0;
+        } else if (r > maxValue) {
+          r = maxValue;
+        }
+        if (g < 0) {
+          g = 0;
+        } else if (g > maxValue) {
+          g = maxValue;
+        }
+        if (b < 0) {
+          b = 0;
+        } else if (b > maxValue) {
+          b = maxValue;
+        }
+        pixels[t] = r;
+        pixels[t + 1] = g;
+        pixels[t + 2] = b;
+      }
+    }
+    return;
+  }
+  for (var row = 0; row < tileHeight; row++) {
+    var s0 = tileOffset[0] + row * tileScanw[0];
+    var s1 = tileOffset[1] + row * tileScanw[1];
+    var s2 = tileOffset[2] + row * tileScanw[2];
+    var t = ((row + tOffy) * imageWidth + tOffx) * 3;
+    for (var x = 0; x < tileWidth; x++, s0++, s1++, s2++, t += 3) {
+      var r = (d0[s0] >> fp0) + shift0;
+      var g = (d1[s1] >> fp1) + shift1;
+      var b = (d2[s2] >> fp2) + shift2;
+      if (r < 0) {
+        r = 0;
+      } else if (r > maxValue) {
+        r = maxValue;
+      }
+      if (g < 0) {
+        g = 0;
+      } else if (g > maxValue) {
+        g = maxValue;
+      }
+      if (b < 0) {
+        b = 0;
+      } else if (b > maxValue) {
+        b = maxValue;
+      }
+      pixels[t] = r;
+      pixels[t + 1] = g;
+      pixels[t + 2] = b;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../util/decoder_instrumentation.dart';
@@ -53,7 +54,17 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
   static final double _ictGreenCrFactor = _asFloat32(0.71414);
   static final double _ictBlueCbFactor = _asFloat32(1.772);
 
-  static final Float32List _f32Scratch = Float32List(1);
+  static final Float32List _f32Scratch = Float32List(2);
+
+  /// A 16-byte aligned SIMD view over [list], covering its whole-vector
+  /// prefix. Decoder buffers are allocated directly, so the offset is zero;
+  /// a misaligned view would throw, and then the scalar path is used alone.
+  static Float32x4List _asFloat32x4List(Float32List list) {
+    if (list.offsetInBytes & 15 != 0) {
+      return Float32x4List(0);
+    }
+    return list.buffer.asFloat32x4List(list.offsetInBytes, list.length >> 2);
+  }
 
   /// Rounds [value] to float32 precision, mirroring Java `float` arithmetic.
   static double _asFloat32(double value) {
@@ -157,7 +168,7 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
 
     final required = width * height;
     final existing = target.getDataInt();
-    late final List<int> buffer;
+    late final Int32List buffer;
     if (existing == null || existing.length < required) {
       final newData = Int32List(required);
       target.setDataInt(newData);
@@ -243,7 +254,7 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
 
     final required = width * height;
     final existing = target.getDataInt();
-    late final List<int> buffer;
+    late final Int32List buffer;
     if (existing == null || existing.length < required) {
       final newData = Int32List(required);
       target.setDataInt(newData);
@@ -268,39 +279,118 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
     var crIndex = cr.offset;
     var destIndex = 0;
 
+    // Mirrors: (int)(y + K*c + 0.5f) with float32 rounding at every step.
+    // The rounding is a store to and load from a one-element Float32List,
+    // done inline: through a helper it was a call plus a lazy static check
+    // per operation, four to six times per sample, and showed up as 16% of
+    // the decode of a 9/7 image.
+    final Float32List f32 = _f32Scratch;
+    final double kRedCr = _ictRedCrFactor;
+    final double kGreenCb = _ictGreenCbFactor;
+    final double kGreenCr = _ictGreenCrFactor;
+    final double kBlueCb = _ictBlueCbFactor;
+    // Four samples per step on SIMD lanes. Float32x4 arithmetic is single
+    // precision at every operation, so each lane follows Java's `float`
+    // chain exactly; the scalar head and tail emulate the same rounding with
+    // the scratch buffer. The lanes are read through Float32x4List views,
+    // which need 16-byte alignment: a row is processed on SIMD from its
+    // first aligned sample, and only when the three planes share that
+    // alignment. Building a Float32x4 from four scalar loads was measured
+    // slower than the scalar loop.
+    final Float32x4 kRedCr4 = Float32x4.splat(kRedCr);
+    final Float32x4 kGreenCb4 = Float32x4.splat(kGreenCb);
+    final Float32x4 kGreenCr4 = Float32x4.splat(kGreenCr);
+    final Float32x4 kBlueCb4 = Float32x4.splat(kBlueCb);
+    final Float32x4 half4 = Float32x4.splat(0.5);
+    final Float32x4List y4List = _asFloat32x4List(yData);
+    final Float32x4List cb4List = _asFloat32x4List(cbData);
+    final Float32x4List cr4List = _asFloat32x4List(crData);
+
     for (var row = 0; row < height; row++) {
       final yRowEnd = yIndex + width;
       var yPos = yIndex;
       var cbPos = cbIndex;
       var crPos = crIndex;
-      while (yPos < yRowEnd) {
-        final double yVal = yData[yPos];
-        final double cbVal = cbData[cbPos];
-        final double crVal = crData[crPos];
-
-        // Mirrors: (int)(y + K*c + 0.5f) with float32 rounding at every step.
-        final int sample;
-        if (isR) {
-          sample = _asFloat32(
-                  _asFloat32(yVal + _asFloat32(_ictRedCrFactor * crVal)) + 0.5)
-              .truncate();
-        } else if (isG) {
-          sample = _asFloat32(_asFloat32(
-                      _asFloat32(yVal - _asFloat32(_ictGreenCbFactor * cbVal)) -
-                          _asFloat32(_ictGreenCrFactor * crVal)) +
-                  0.5)
-              .truncate();
-        } else {
-          sample = _asFloat32(
-                  _asFloat32(yVal + _asFloat32(_ictBlueCbFactor * cbVal)) + 0.5)
-              .truncate();
+      final int lead = math.min((-yPos) & 3, width);
+      final int simdEnd = (cbPos - yPos) & 3 == 0 && (crPos - yPos) & 3 == 0
+          ? yPos + lead + ((width - lead) & ~3)
+          : yPos;
+      if (isR) {
+        for (; yPos < yIndex + lead; yPos++, crPos++) {
+          f32[0] = kRedCr * crData[crPos];
+          f32[0] = yData[yPos] + f32[0];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
         }
-
-        buffer[destIndex++] = sample;
-
-        yPos++;
-        cbPos++;
-        crPos++;
+        final int vR = (simdEnd - yPos) >> 2;
+        _ictRowRed(y4List, yPos >> 2, cr4List, crPos >> 2, vR, buffer,
+            destIndex, kRedCr4, half4);
+        yPos += vR << 2;
+        crPos += vR << 2;
+        destIndex += vR << 2;
+        cbPos += yPos - yIndex;
+      } else if (isG) {
+        for (; yPos < yIndex + lead; yPos++, cbPos++, crPos++) {
+          f32[0] = kGreenCb * cbData[cbPos];
+          f32[0] = yData[yPos] - f32[0];
+          f32[1] = kGreenCr * crData[crPos];
+          f32[0] = f32[0] - f32[1];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
+        }
+        final int vG = (simdEnd - yPos) >> 2;
+        _ictRowGreen(y4List, yPos >> 2, cb4List, cbPos >> 2, cr4List,
+            crPos >> 2, vG, buffer, destIndex, kGreenCb4, kGreenCr4, half4);
+        yPos += vG << 2;
+        cbPos += vG << 2;
+        crPos += vG << 2;
+        destIndex += vG << 2;
+      } else {
+        for (; yPos < yIndex + lead; yPos++, cbPos++) {
+          f32[0] = kBlueCb * cbData[cbPos];
+          f32[0] = yData[yPos] + f32[0];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
+        }
+        final int vB = (simdEnd - yPos) >> 2;
+        _ictRowBlue(y4List, yPos >> 2, cb4List, cbPos >> 2, vB, buffer,
+            destIndex, kBlueCb4, half4);
+        yPos += vB << 2;
+        cbPos += vB << 2;
+        destIndex += vB << 2;
+        crPos += yPos - yIndex;
+      }
+      if (isR) {
+        while (yPos < yRowEnd) {
+          f32[0] = kRedCr * crData[crPos];
+          f32[0] = yData[yPos] + f32[0];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
+          yPos++;
+          crPos++;
+        }
+      } else if (isG) {
+        while (yPos < yRowEnd) {
+          f32[0] = kGreenCb * cbData[cbPos];
+          f32[0] = yData[yPos] - f32[0];
+          final double partial = f32[0];
+          f32[0] = kGreenCr * crData[crPos];
+          f32[0] = partial - f32[0];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
+          yPos++;
+          cbPos++;
+          crPos++;
+        }
+      } else {
+        while (yPos < yRowEnd) {
+          f32[0] = kBlueCb * cbData[cbPos];
+          f32[0] = yData[yPos] + f32[0];
+          f32[0] = f32[0] + 0.5;
+          buffer[destIndex++] = f32[0].truncate();
+          yPos++;
+          cbPos++;
+        }
       }
       yIndex += y.scanw;
       cbIndex += cb.scanw;
@@ -308,6 +398,76 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
     }
 
     return target;
+  }
+
+  /// `vectors` groups of four red samples: `(int)(y + kRedCr*cr + 0.5f)`.
+  ///
+  /// The row kernels are separate small functions so the compiler keeps
+  /// the vectors unboxed in registers; inside the large transform method
+  /// the same loop ran two to three times slower.
+  static void _ictRowRed(
+      Float32x4List y4List,
+      int y4,
+      Float32x4List cr4List,
+      int cr4,
+      int vectors,
+      Int32List buffer,
+      int destIndex,
+      Float32x4 kRedCr4,
+      Float32x4 half4) {
+    for (var v = 0; v < vectors; v++, y4++, cr4++, destIndex += 4) {
+      final Float32x4 out4 = (y4List[y4] + kRedCr4 * cr4List[cr4]) + half4;
+      buffer[destIndex] = out4.x.truncate();
+      buffer[destIndex + 1] = out4.y.truncate();
+      buffer[destIndex + 2] = out4.z.truncate();
+      buffer[destIndex + 3] = out4.w.truncate();
+    }
+  }
+
+  /// `vectors` groups of four green samples:
+  /// `(int)(y - kGreenCb*cb - kGreenCr*cr + 0.5f)`.
+  static void _ictRowGreen(
+      Float32x4List y4List,
+      int y4,
+      Float32x4List cb4List,
+      int cb4,
+      Float32x4List cr4List,
+      int cr4,
+      int vectors,
+      Int32List buffer,
+      int destIndex,
+      Float32x4 kGreenCb4,
+      Float32x4 kGreenCr4,
+      Float32x4 half4) {
+    for (var v = 0; v < vectors; v++, y4++, cb4++, cr4++, destIndex += 4) {
+      final Float32x4 out4 =
+          ((y4List[y4] - kGreenCb4 * cb4List[cb4]) - kGreenCr4 * cr4List[cr4]) +
+              half4;
+      buffer[destIndex] = out4.x.truncate();
+      buffer[destIndex + 1] = out4.y.truncate();
+      buffer[destIndex + 2] = out4.z.truncate();
+      buffer[destIndex + 3] = out4.w.truncate();
+    }
+  }
+
+  /// `vectors` groups of four blue samples: `(int)(y + kBlueCb*cb + 0.5f)`.
+  static void _ictRowBlue(
+      Float32x4List y4List,
+      int y4,
+      Float32x4List cb4List,
+      int cb4,
+      int vectors,
+      Int32List buffer,
+      int destIndex,
+      Float32x4 kBlueCb4,
+      Float32x4 half4) {
+    for (var v = 0; v < vectors; v++, y4++, cb4++, destIndex += 4) {
+      final Float32x4 out4 = (y4List[y4] + kBlueCb4 * cb4List[cb4]) + half4;
+      buffer[destIndex] = out4.x.truncate();
+      buffer[destIndex + 1] = out4.y.truncate();
+      buffer[destIndex + 2] = out4.z.truncate();
+      buffer[destIndex + 3] = out4.w.truncate();
+    }
   }
 
   DataBlkInt _fetchIntBlock({

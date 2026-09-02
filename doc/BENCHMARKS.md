@@ -148,3 +148,54 @@ Remaining profile: MQ decoding and the three passes are about 75% of the
 samples and are now within a small factor of the Java reference's structure;
 further gains need algorithmic changes (decoding several symbols per call in
 the cleanup pass, or a table-driven context update), not more typing.
+
+### Third pass, same day: the 9/7 path on SIMD lanes
+
+The reversible path was already dominated by the MQ decoder; the
+irreversible (9/7, ICT) path was not. `build/samples/balloon.jp2`
+(2717x3701 RGB, three tiles, 9/7 with ICT) went from 1436 ms to 493 ms in
+AOT. Warm, best of six:
+
+| Build | file1.jp2 | relax.jp2 | balloon.jp2 |
+|---|---:|---:|---:|
+| Dart VM JIT, before | 182 ms | 11 ms | 1236 ms |
+| Dart VM JIT, after | 165 ms | 10 ms | 417 ms |
+| Dart AOT, before | 202 ms | 17 ms | 1436 ms |
+| Dart AOT, after | 176 ms | 13 ms | 493 ms |
+
+What changed, all bit-exact against the JJ2000 fixtures:
+
+- The inverse 9/7 lifting runs on `Float32x4`: horizontally as whole-row
+  vector passes over the even and odd samples, with the `x[j-1]`/`x[j+1]`
+  neighbours built by lane shuffles from adjacent vectors; vertically as
+  sixteen columns per pass (one cache line per row), four lanes per vector,
+  through contiguous scratch buffers. `Float32x4` arithmetic is single
+  precision at every operation, which is what the Java reference does.
+- The ICT reads the Y, Cb and Cr planes through `Float32x4List` views and
+  keeps its row kernels in small static functions. The reconstructed float
+  planes have their row stride rounded up to four samples so every row is
+  16-byte aligned.
+- The final pixel gather writes RGB one pixel at a time from the three
+  planes instead of three strided passes, and the fixed-point shift is
+  hoisted out of the loop.
+
+Three findings about the Dart compilers that shaped the code, measured on
+Dart 3.6.2 (JIT and `dart compile exe`, both):
+
+- Building a `Float32x4` from four scalar loads is slower than the scalar
+  loop it replaces; reading whole vectors through an aligned
+  `Float32x4List` view is 2.5x faster than scalar. Alignment is therefore
+  arranged for, not hoped for.
+- A shift by a variable count (`x >> fixedPoint`) in a hot AOT loop cost
+  three times the rest of the loop; the common zero count has its own loop.
+- Extracting a typed list from a `List<Int32List?>` with `!` inside the
+  loop's function made every element read a polymorphic call in AOT
+  (2.5x slower); the planes are passed as typed parameters instead.
+
+`Int32x4` operators were not specialised in AOT before Dart's April 2026
+change (dart-lang/sdk#53662, #63217); this code uses only `Float32x4`, which
+was already specialised, and stays fast on 3.6.
+
+Remaining profile for the 9/7 path (AOT, balloon): entropy decoding 45%,
+final pixel gather 12%, vertical synthesis 12%, horizontal synthesis 11%,
+ICT 8%. The entropy decoder is now the target for both paths.
