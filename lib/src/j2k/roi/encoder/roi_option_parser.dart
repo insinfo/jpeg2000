@@ -1,7 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../../module_spec.dart';
-import '../../image/input/img_reader_pgm.dart';
+import '../../platform/platform.dart' as platform;
 import 'roi.dart';
 
 /// Parses command-line style ROI specifications used by JJ2000's encoder.
@@ -94,7 +94,7 @@ List<ROI> parseRoiOptions(String roiSpecification, int numComponents) {
         break;
       case 'A':
         final path = nextToken('A arbitrary ROI mask path');
-        final reader = ImgReaderPGM(path);
+        final reader = platform.openRoiMaskReader(path);
         emitForComponents(
           (component) => ROI.arbitrary(
             component: component,

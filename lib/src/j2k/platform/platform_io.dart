@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:io' as io;
 import 'dart:typed_data';
 
+import '../image/input/img_reader.dart';
+import '../image/input/img_reader_pgm.dart';
+
 bool get isBrowserPlatform => false;
 
 String? get browserUserAgent => null;
@@ -52,3 +55,7 @@ Future<String> readTextSource(Object source) async {
     'Expected bytes, dart:io File, or filesystem path.',
   );
 }
+
+/// Opens the PGM file at [path] as the single-component mask of an
+/// arbitrary-shape ROI (`-Rroi A <path>` on the encoder command line).
+ImgReader openRoiMaskReader(String path) => ImgReaderPGM(path);

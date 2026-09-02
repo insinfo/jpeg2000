@@ -356,7 +356,7 @@ class ICCProfiler extends ColorSpaceMapper {
           .printmsg(MsgLogger.error, "matrix transform problem:\n${e.message}");
       if (pl!.getParameter("debug") == "on") {
         // e.printStackTrace(); // Not available in Dart
-        print(e);
+        FacilityManager.getMsgLogger().printmsg(MsgLogger.error, e.toString());
       } else {
         FacilityManager.getMsgLogger()
             .printmsg(MsgLogger.error, "Use '-debug' option for more details");
@@ -367,7 +367,7 @@ class ICCProfiler extends ColorSpaceMapper {
           MsgLogger.error, "monochrome transform problem:\n${e.message}");
       if (pl!.getParameter("debug") == "on") {
         // e.printStackTrace(); // Not available in Dart
-        print(e);
+        FacilityManager.getMsgLogger().printmsg(MsgLogger.error, e.toString());
       } else {
         FacilityManager.getMsgLogger()
             .printmsg(MsgLogger.error, "Use '-debug' option for more details");

@@ -27,3 +27,22 @@ abstract class MsgLogger {
 
   void flush();
 }
+
+/// Discards every message.
+///
+/// This is the default logger: a library must not write to the console unless
+/// the caller asked for it. The command-line tools install a
+/// `StreamMsgLogger` explicitly, and the byte API forwards warnings to the
+/// caller's callback instead.
+class SilentMsgLogger implements MsgLogger {
+  const SilentMsgLogger();
+
+  @override
+  void printmsg(int severity, String message) {}
+
+  @override
+  void println(String message, int firstLineIndent, int indent) {}
+
+  @override
+  void flush() {}
+}

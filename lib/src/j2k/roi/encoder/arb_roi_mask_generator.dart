@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../image/data_blk_int.dart';
-import '../../image/input/img_reader_pgm.dart';
 import '../../quantization/quantizer/quantizer.dart';
 import '../../wavelet/subband.dart';
 import 'roi_mask_generator.dart';
@@ -227,7 +226,7 @@ class ArbROIMaskGenerator extends ROIMaskGenerator {
       ..ulx = offX
       ..w = width
       ..h = 1;
-    const maskDcOffset = -ImgReaderPGM.DC_OFFSET;
+    final maskDcOffset = -(1 << (maskPGM.getNomRangeBits(0) - 1));
     var roiCoefficients = 0;
 
     var maskIndex = (y + height - 1) * tileWidth + x + width - 1;

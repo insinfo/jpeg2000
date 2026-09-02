@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import '../../quantization/quantizer/quantizer.dart';
 import '../../wavelet/analysis/subband_an.dart';
-import '../../image/input/img_reader_pgm.dart';
+import '../../image/input/img_reader.dart';
+import '../../platform/platform.dart' as platform;
 import '../../wavelet/analysis/c_blk_wt_data.dart';
 import '../../encoder/encoder_specs.dart';
 import '../../image/img_data_adapter.dart';
@@ -344,18 +345,21 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
         case 'A': // ROI with arbitrary shape
 
           String filename;
-          ImgReaderPGM? maskPGM;
+          ImgReader maskPGM;
 
           try {
             filename = stok[idx++];
           } catch (e) {
             throw ArgumentError(
-                "Wrong number of " "parameters for " "'-Rroi A' option.");
+                "Wrong number of parameters for '-Rroi A' option.");
           }
           try {
-            maskPGM = ImgReaderPGM(filename);
+            maskPGM = platform.openRoiMaskReader(filename);
+          } on UnsupportedError {
+            rethrow;
           } catch (e) {
-            throw Error(); // "Cannot read PGM file with ROI"
+            throw ArgumentError(
+                "Cannot read PGM file with ROI '$filename': $e");
           }
 
           // If the ROI is component-specific, check which comps.

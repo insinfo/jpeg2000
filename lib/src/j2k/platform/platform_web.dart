@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+import '../image/input/img_reader.dart';
+
 import 'package:web/web.dart' as web;
 
 bool get isBrowserPlatform => true;
@@ -96,4 +98,12 @@ class _BrowserConsoleSink implements StringSink {
       web.console.log(message.toJS);
     }
   }
+}
+
+/// Arbitrary-shape ROI masks come from PGM files, which need a filesystem.
+ImgReader openRoiMaskReader(String path) {
+  throw UnsupportedError(
+    'Arbitrary-shape ROI masks are only supported on the Dart VM: '
+    'cannot open "$path" here.',
+  );
 }

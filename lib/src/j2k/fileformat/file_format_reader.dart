@@ -1,4 +1,6 @@
+import '../../jpeg2000_exceptions.dart';
 import '../codestream/markers.dart';
+import '../io/exceptions.dart';
 import '../io/random_access_io.dart';
 import '../util/facility_manager.dart';
 import '../util/msg_logger.dart';
@@ -25,8 +27,9 @@ class FileFormatReader implements FileFormatBoxes {
   ///
   /// If the input does not start with a JP2 signature the method rewinds to
   /// position zero and verifies that the stream begins with an SOC marker,
-  /// signalling a raw codestream. Any structural inconsistencies raise a
-  /// [StateError].
+  /// signalling a raw codestream. Anything else raises a [Jpeg2000Exception]:
+  /// a format error when neither signature is present, a truncation when the
+  /// boxes end early, and a corruption for any other inconsistency.
   void readFileFormat() {
     _codestreamPositions.clear();
     _codestreamLengths.clear();
@@ -35,29 +38,33 @@ class FileFormatReader implements FileFormatBoxes {
     var jp2HeaderBoxFound = false;
     var lastBoxFound = false;
 
-    try {
-      // Inspect the first 12 bytes: a valid JP2 file starts with the signature
-      // box, otherwise treat the input as a bare codestream.
+    // Inspect the first 12 bytes: a valid JP2 file starts with the signature
+    // box, otherwise treat the input as a bare codestream. Inputs too short
+    // to hold either signature are a format error, not a truncation: there is
+    // no evidence they were ever JPEG 2000.
+    final available = _input.length();
+    var isJp2 = false;
+    if (available >= 12) {
       final firstLength = _input.readInt();
       final firstType = _input.readInt();
       final signature = _input.readInt();
-      final isJp2 = firstLength == 0x0000000c &&
+      isJp2 = firstLength == 0x0000000c &&
           firstType == FileFormatBoxes.jp2SignatureBox &&
           signature == 0x0d0a870a;
-
-      if (!isJp2) {
-        _input.seek(0);
-        final marker = _input.readUnsignedShort();
-        if (marker != Markers.SOC) {
-          throw StateError(
-            'Stream is neither a JP2 file nor a raw JPEG 2000 codestream.',
-          );
-        }
-        JP2FFUsed = false;
-        _input.seek(0);
-        return;
+    }
+    if (!isJp2) {
+      _input.seek(0);
+      if (available < 2 || _input.readUnsignedShort() != Markers.SOC) {
+        throw const Jpeg2000FormatException(
+          'Input is neither a JP2 file nor a raw JPEG 2000 codestream.',
+        );
       }
+      JP2FFUsed = false;
+      _input.seek(0);
+      return;
+    }
 
+    try {
       JP2FFUsed = true;
 
       // Validate the mandatory file type box immediately following the
@@ -126,12 +133,27 @@ class FileFormatReader implements FileFormatBoxes {
           _input.seek(boxStart + (length == 0 ? lp : length));
         }
       }
-    } catch (e) {
-      throw StateError('Error while reading JP2 file format: $e');
+    } on Jpeg2000Exception {
+      rethrow;
+    } on EOFException catch (e, stackTrace) {
+      Error.throwWithStackTrace(
+        Jpeg2000TruncatedException(
+          'JP2 container ends before its boxes are complete.',
+          cause: e,
+        ),
+        stackTrace,
+      );
+    } catch (e, stackTrace) {
+      Error.throwWithStackTrace(
+        Jpeg2000CorruptedException('Invalid JP2 container: $e', cause: e),
+        stackTrace,
+      );
     }
 
     if (foundCodeStreamBoxes == 0) {
-      throw StateError('Invalid JP2 file: missing ContiguousCodestream box');
+      throw const Jpeg2000CorruptedException(
+        'Invalid JP2 file: missing ContiguousCodestream box.',
+      );
     }
   }
 

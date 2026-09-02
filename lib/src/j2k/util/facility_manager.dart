@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'msg_logger.dart';
 import 'progress_watch.dart';
-import 'stream_msg_logger.dart';
 
 /// Manages per-zone facilities such as [MsgLogger] and [ProgressWatch].
 class FacilityManager {
   // Zone-local facilities keep concurrent decode/encode jobs isolated.
   static final Map<Zone, MsgLogger> _loggers = <Zone, MsgLogger>{};
-  static MsgLogger _defaultLogger = StreamMsgLogger.stdout(lineWidth: 512);
+  static MsgLogger _defaultLogger = const SilentMsgLogger();
 
   static final Map<Zone, ProgressWatch> _progressWatches =
       <Zone, ProgressWatch>{};

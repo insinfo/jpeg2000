@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../image/input/img_reader.dart';
+
 bool get isBrowserPlatform => false;
 
 String? get browserUserAgent => null;
@@ -47,4 +49,12 @@ class _UnsupportedSink implements StringSink {
 
   @override
   void writeln([Object? object = '']) {}
+}
+
+/// Arbitrary-shape ROI masks come from PGM files, which need a filesystem.
+ImgReader openRoiMaskReader(String path) {
+  throw UnsupportedError(
+    'Arbitrary-shape ROI masks are only supported on the Dart VM: '
+    'cannot open "$path" here.',
+  );
 }

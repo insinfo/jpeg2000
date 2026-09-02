@@ -1,4 +1,4 @@
-import '../../image/input/img_reader_pgm.dart';
+import '../../image/input/img_reader.dart';
 
 /// Describes a single region of interest used by the encoder.
 ///
@@ -56,8 +56,9 @@ class ROI {
   /// Indicates which kind of geometry the ROI uses.
   final ROIShapeType shape;
 
-  /// Optional PGM mask for arbitrary shapes.
-  final ImgReaderPGM? mask;
+  /// Optional mask image for arbitrary shapes: one component, same size as
+  /// the input, where any sample above the DC offset marks the region.
+  final ImgReader? mask;
 
   /// Upper-left x coordinate for rectangular ROIs.
   final int? upperLeftX;

@@ -1,9 +1,10 @@
-import 'dart:math' as math;
 import 'dart:typed_data';
 
+import '../colorspace/boxes/channel_definition_box.dart';
 import '../colorspace/color_space.dart';
 import '../colorspace/color_space_mapper.dart';
 import '../j2k/codestream/header_info.dart';
+import '../j2k/codestream/markers.dart';
 import '../j2k/codestream/reader/bitstream_reader_agent.dart';
 import '../j2k/codestream/reader/header_decoder.dart';
 import '../j2k/codestream/writer/header_encoder.dart';
@@ -22,52 +23,186 @@ import '../j2k/image/img_data_converter.dart';
 import '../j2k/image/input/img_reader.dart';
 import '../j2k/image/invcomptransf/inv_component_transformer.dart';
 import '../j2k/image/tiler.dart';
+import '../j2k/io/exceptions.dart';
 import '../j2k/platform/platform.dart' as platform;
 import '../j2k/quantization/quantizer/quantizer.dart';
 import '../j2k/roi/encoder/roi_scaler.dart';
 import '../j2k/roi/roi_de_scaler.dart';
-import '../j2k/util/decoder_instrumentation.dart';
-import '../j2k/util/parameter_list.dart';
+import '../j2k/util/facility_manager.dart';
 import '../j2k/util/is_random_access_io.dart';
+import '../j2k/util/msg_logger.dart';
+import '../j2k/util/parameter_list.dart';
 import '../j2k/wavelet/analysis/an_wt_filter.dart';
 import '../j2k/wavelet/analysis/forward_wt.dart';
 import '../j2k/wavelet/synthesis/inverse_wt.dart';
 import '../j2k/wavelet/synthesis/syn_wt_filter.dart';
 import '../j2k/wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
 import '../j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
+import '../jpeg2000_exceptions.dart';
 import 'memory_codestream_writer.dart';
 import 'pnm_memory_reader.dart';
 
-/// Pixel layout returned by [decodeJpeg2000].
+/// Layout of the interleaved 8-bit samples in [Jpeg2000Image.pixels].
 enum Jpeg2000PixelFormat {
+  /// One luminance sample per pixel.
   gray8,
+
+  /// Luminance followed by alpha.
+  grayAlpha8,
+
+  /// Red, green and blue.
   rgb8,
+
+  /// Red, green, blue and alpha.
+  rgba8,
+
+  /// Every codestream component in order, with no colour interpretation.
+  ///
+  /// Used for CMYK, multispectral and other images whose colour channels are
+  /// not one or three. [Jpeg2000Image.components] says how many there are.
   multiComponent8,
 }
 
-/// Decoded 8-bit interleaved image pixels.
+/// Decoded 8-bit interleaved pixels.
+///
+/// Samples are always 8 bits wide, unsigned, row-major and tightly packed:
+/// pixel `(x, y)` starts at `(y * width + x) * components`. Sources with more
+/// than 8 bits per component are scaled down to 8; the original depth is kept
+/// in [sourceBitsPerComponent].
 class Jpeg2000Image {
+  /// Creates a decoded image; normally produced by [decodeJpeg2000].
   const Jpeg2000Image({
     required this.width,
     required this.height,
     required this.components,
-    required this.bitsPerComponent,
+    required this.colorComponents,
+    required this.hasAlpha,
+    required this.alphaIsPremultiplied,
+    required this.sourceBitsPerComponent,
     required this.pixels,
     required this.format,
   });
 
+  /// Image width in pixels.
   final int width;
+
+  /// Image height in pixels.
   final int height;
+
+  /// Number of interleaved channels per pixel in [pixels], alpha included.
   final int components;
-  final List<int> bitsPerComponent;
+
+  /// Number of colour channels: 1 for gray, 3 for RGB, or every channel for
+  /// [Jpeg2000PixelFormat.multiComponent8].
+  final int colorComponents;
+
+  /// Whether the last channel of every pixel is alpha.
+  final bool hasAlpha;
+
+  /// Whether the colour channels were stored already multiplied by alpha.
+  ///
+  /// Comes from the JP2 channel definition box (`cdef` type 2). Always false
+  /// when [hasAlpha] is false.
+  final bool alphaIsPremultiplied;
+
+  /// Bit depth of each output channel in the codestream, in output order.
+  final List<int> sourceBitsPerComponent;
+
+  /// The samples; see the class comment for the layout.
   final Uint8List pixels;
+
+  /// How to interpret [pixels].
   final Jpeg2000PixelFormat format;
 
+  /// Bytes from one row to the next.
   int get rowStride => width * components;
+
+  @override
+  String toString() => 'Jpeg2000Image(${width}x$height, $format, '
+      'components=$components, alpha=$hasAlpha)';
 }
 
-/// Options for byte-based JPEG 2000 decoding.
+/// What [probeJpeg2000] learns from the headers without decoding any pixel.
+class Jpeg2000Info {
+  /// Creates a header summary; normally produced by [probeJpeg2000].
+  const Jpeg2000Info({
+    required this.isJp2,
+    required this.width,
+    required this.height,
+    required this.components,
+    required this.colorComponents,
+    required this.hasAlpha,
+    required this.alphaIsPremultiplied,
+    required this.bitsPerComponent,
+    required this.isSigned,
+    required this.subsamplingX,
+    required this.subsamplingY,
+    required this.tileWidth,
+    required this.tileHeight,
+    required this.tileColumns,
+    required this.tileRows,
+    required this.pixelFormat,
+  });
+
+  /// True for a JP2 container, false for a raw codestream.
+  final bool isJp2;
+
+  /// Image width in pixels.
+  final int width;
+
+  /// Image height in pixels.
+  final int height;
+
+  /// Number of components in the codestream.
+  final int components;
+
+  /// Number of colour channels [decodeJpeg2000] would return.
+  final int colorComponents;
+
+  /// Whether [decodeJpeg2000] would return an alpha channel.
+  final bool hasAlpha;
+
+  /// Whether that alpha is premultiplied according to the `cdef` box.
+  final bool alphaIsPremultiplied;
+
+  /// Bit depth of each codestream component.
+  final List<int> bitsPerComponent;
+
+  /// Whether each codestream component is signed.
+  final List<bool> isSigned;
+
+  /// Horizontal subsampling factor of each codestream component.
+  final List<int> subsamplingX;
+
+  /// Vertical subsampling factor of each codestream component.
+  final List<int> subsamplingY;
+
+  /// Nominal tile width.
+  final int tileWidth;
+
+  /// Nominal tile height.
+  final int tileHeight;
+
+  /// Number of tile columns.
+  final int tileColumns;
+
+  /// Number of tile rows.
+  final int tileRows;
+
+  /// The layout [decodeJpeg2000] would produce with default options.
+  final Jpeg2000PixelFormat pixelFormat;
+
+  /// Total pixel count, `width * height`.
+  int get pixelCount => width * height;
+
+  @override
+  String toString() => 'Jpeg2000Info(${width}x$height, '
+      'components=$components, $pixelFormat, jp2=$isJp2)';
+}
+
+/// Options for [decodeJpeg2000].
 class Jpeg2000DecodeOptions {
+  /// Creates decode options; every field has a safe default.
   const Jpeg2000DecodeOptions({
     this.applyColorSpace = true,
     this.applyComponentTransform = true,
@@ -75,18 +210,56 @@ class Jpeg2000DecodeOptions {
     this.bytes,
     this.resolution,
     this.parsing = true,
+    this.maxPixels,
+    this.maxDimension,
+    this.onWarning,
   });
 
+  /// Apply the JP2 colour metadata (enumerated colour space, ICC profile,
+  /// palette, channel definitions). Ignored for raw codestreams.
   final bool applyColorSpace;
+
+  /// Apply the inverse multiple-component transform (RCT/ICT) signalled in
+  /// the codestream. Turning it off returns the transformed components.
   final bool applyComponentTransform;
+
+  /// Stop decoding once this many bits per pixel have been read.
+  ///
+  /// Mutually exclusive with [bytes]. Null decodes everything.
   final double? rate;
+
+  /// Stop decoding once this many codestream bytes have been read.
+  ///
+  /// Mutually exclusive with [rate]. Null decodes everything.
   final int? bytes;
+
+  /// Number of highest resolution levels to discard. Null keeps them all.
   final int? resolution;
+
+  /// Parse packet headers even when rate limiting truncates the stream.
   final bool parsing;
+
+  /// Refuse images with more than this many pixels.
+  ///
+  /// Checked from the SIZ marker before anything is allocated. Null means no
+  /// limit; callers that decode untrusted data should set one.
+  final int? maxPixels;
+
+  /// Refuse images whose width or height exceeds this value.
+  ///
+  /// Checked from the SIZ marker before anything is allocated. Null means no
+  /// limit.
+  final int? maxDimension;
+
+  /// Receives non-fatal diagnostics, such as an ICC profile that had to be
+  /// ignored. Null discards them; the codec never writes to the console.
+  final void Function(String message)? onWarning;
 }
 
-/// Options for byte-based PNM to JPEG 2000 encoding.
+/// Options for [encodeJpeg2000].
 class Jpeg2000EncodeOptions {
+  /// Creates encode options; the default is a lossless single-tile
+  /// codestream.
   const Jpeg2000EncodeOptions({
     this.lossless = true,
     this.rate,
@@ -96,85 +269,137 @@ class Jpeg2000EncodeOptions {
     this.extraParameters = const <String, String>{},
   });
 
+  /// Use the reversible 5x3 wavelet and no quantization.
+  ///
+  /// Mutually exclusive with [rate].
   final bool lossless;
+
+  /// Target bit rate in bits per pixel for lossy encoding.
+  ///
+  /// Mutually exclusive with [lossless].
   final double? rate;
+
+  /// Wrap the codestream in a JP2 container with sRGB or greyscale colour
+  /// metadata; false returns the raw J2K codestream.
   final bool wrapInJp2;
+
+  /// Nominal tile width; 0 uses a single tile.
   final int tileWidth;
+
+  /// Nominal tile height; 0 uses a single tile.
   final int tileHeight;
+
+  /// Raw JJ2000 encoder parameters (for example `Clayers`, `Cblksiz`,
+  /// `Aptype`) applied after the typed options. Meant for experiments; the
+  /// names and syntax are those of the original JJ2000 command line and are
+  /// not part of the stable API.
   final Map<String, String> extraParameters;
 }
 
-/// Synchronous byte-oriented facade for JPEG 2000.
-class Jpeg2000Codec {
-  const Jpeg2000Codec();
-
-  Jpeg2000Image decode(
-    Uint8List bytes, {
-    Jpeg2000DecodeOptions options = const Jpeg2000DecodeOptions(),
-  }) {
-    return decodeJpeg2000(bytes, options: options);
-  }
-
-  Future<Jpeg2000Image> decodeSource(
-    Object source, {
-    Jpeg2000DecodeOptions options = const Jpeg2000DecodeOptions(),
-  }) {
-    return decodeJpeg2000Source(source, options: options);
-  }
-
-  Uint8List encodePnm(
-    Uint8List bytes, {
-    Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
-  }) {
-    return encodeJpeg2000(bytes, options: options);
-  }
-
-  Future<Uint8List> encodePnmSource(
-    Object source, {
-    Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
-  }) {
-    return encodeJpeg2000Source(source, options: options);
-  }
+/// Reads the headers of JP2 or raw J2K [bytes] without decoding pixels.
+///
+/// Use it to apply size policies before [decodeJpeg2000] allocates anything,
+/// or to tell callers what layout to expect. Throws a [Jpeg2000Exception]
+/// subtype for input problems.
+Jpeg2000Info probeJpeg2000(Uint8List bytes) {
+  return _guardDecode(null, () {
+    final input = ISRandomAccessIO(bytes);
+    try {
+      final opened = _open(input);
+      final siz = opened.siz;
+      ColorSpace? colorSpace;
+      if (opened.isJp2) {
+        input.seek(opened.codestreamStart);
+        final headerDecoder = HeaderDecoder.readMainHeader(
+          input: input,
+          headerInfo: HeaderInfo(),
+        );
+        colorSpace = _loadColorSpace(
+          input,
+          headerDecoder,
+          _buildDecodeParameters(const Jpeg2000DecodeOptions()),
+          required: false,
+        );
+      }
+      final layout = _channelLayout(siz.components, colorSpace);
+      return Jpeg2000Info(
+        isJp2: opened.isJp2,
+        width: siz.width,
+        height: siz.height,
+        components: siz.components,
+        colorComponents: layout.colorComponents,
+        hasAlpha: layout.alpha != null,
+        alphaIsPremultiplied: layout.alphaIsPremultiplied,
+        bitsPerComponent: List<int>.unmodifiable(siz.bitDepths),
+        isSigned: List<bool>.unmodifiable(siz.signed),
+        subsamplingX: List<int>.unmodifiable(siz.subsamplingX),
+        subsamplingY: List<int>.unmodifiable(siz.subsamplingY),
+        tileWidth: siz.tileWidth,
+        tileHeight: siz.tileHeight,
+        tileColumns: siz.tileColumns,
+        tileRows: siz.tileRows,
+        pixelFormat: layout.format,
+      );
+    } finally {
+      input.close();
+    }
+  });
 }
 
-/// Decodes JP2 or raw J2K bytes into 8-bit interleaved pixels.
+/// Decodes JP2 or raw J2K [bytes] into 8-bit interleaved pixels.
+///
+/// Throws a [Jpeg2000Exception] subtype for input problems and an
+/// [ArgumentError] for invalid [options].
 Jpeg2000Image decodeJpeg2000(
   Uint8List bytes, {
   Jpeg2000DecodeOptions options = const Jpeg2000DecodeOptions(),
 }) {
-  final input = ISRandomAccessIO(bytes);
+  _validateDecodeOptions(options);
   final params = _buildDecodeParameters(options);
-  DecoderInstrumentation.configure(false);
 
-  try {
-    final headerInfo = HeaderInfo();
-    final fileFormat = FileFormatReader(input)..readFileFormat();
-    final jp2WrapperUsed = fileFormat.JP2FFUsed;
-    if (jp2WrapperUsed) {
-      input.seek(fileFormat.getFirstCodeStreamPos());
+  return _guardDecode(options.onWarning, () {
+    final input = ISRandomAccessIO(bytes);
+    try {
+      final opened = _open(input);
+      _checkBudget(opened.siz, options);
+
+      final headerInfo = HeaderInfo();
+      input.seek(opened.codestreamStart);
+      final headerDecoder = HeaderDecoder.readMainHeader(
+        input: input,
+        headerInfo: headerInfo,
+      );
+      final decoderSpecs = headerDecoder.decSpec;
+      _scanTileParts(input, headerDecoder);
+
+      ColorSpace? colorSpace;
+      if (opened.isJp2) {
+        colorSpace = _loadColorSpace(
+          input,
+          headerDecoder,
+          params,
+          required: options.applyColorSpace,
+        );
+      }
+
+      final source = _buildDecodePipeline(
+        input: input,
+        params: params,
+        headerInfo: headerInfo,
+        headerDecoder: headerDecoder,
+        decoderSpecs: decoderSpecs,
+        colorSpace: options.applyColorSpace ? colorSpace : null,
+        applyComponentTransform: options.applyComponentTransform,
+      );
+      return _collectImage(
+        source,
+        headerDecoder,
+        options.applyColorSpace ? colorSpace : null,
+      );
+    } finally {
+      input.close();
     }
-
-    final headerDecoder = HeaderDecoder.readMainHeader(
-      input: input,
-      headerInfo: headerInfo,
-    );
-    final decoderSpecs = headerDecoder.decSpec;
-    _scanTileParts(input, headerDecoder);
-
-    final source = _buildDecodePipeline(
-      input: input,
-      params: params,
-      headerInfo: headerInfo,
-      headerDecoder: headerDecoder,
-      decoderSpecs: decoderSpecs,
-      jp2WrapperUsed: jp2WrapperUsed,
-      applyColorSpace: options.applyColorSpace,
-      applyComponentTransform: options.applyComponentTransform,
-    );
-    return _collectImage(source, headerDecoder);
-  } finally {
-    input.close();
-  }
+  });
 }
 
 /// Loads bytes with the platform abstraction and decodes them.
@@ -189,7 +414,10 @@ Future<Jpeg2000Image> decodeJpeg2000Source(
   return decodeJpeg2000(bytes, options: options);
 }
 
-/// Encodes binary PGM (P5) or PPM (P6) bytes to raw J2K or JP2 bytes.
+/// Encodes binary PGM (P5) or PPM (P6) [pnmBytes] to raw J2K or JP2 bytes.
+///
+/// Throws an [ArgumentError] when the PNM header is invalid or the options
+/// contradict each other.
 Uint8List encodeJpeg2000(
   Uint8List pnmBytes, {
   Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
@@ -231,14 +459,276 @@ Future<Uint8List> encodeJpeg2000Source(
   return encodeJpeg2000(bytes, options: options);
 }
 
+// ---------------------------------------------------------------------------
+// Error translation and logging
+// ---------------------------------------------------------------------------
+
+/// Runs [body] with warnings routed to [onWarning] and every internal failure
+/// translated into the public exception hierarchy.
+T _guardDecode<T>(void Function(String)? onWarning, T Function() body) {
+  try {
+    return FacilityManager.runWithLogger(_CallbackMsgLogger(onWarning), body);
+  } on Jpeg2000Exception {
+    rethrow;
+  } on EOFException catch (error, stackTrace) {
+    Error.throwWithStackTrace(
+      Jpeg2000TruncatedException(
+        'Data ends before the codestream is complete.',
+        cause: error,
+      ),
+      stackTrace,
+    );
+  } on UnsupportedError catch (error, stackTrace) {
+    Error.throwWithStackTrace(
+      Jpeg2000UnsupportedException(
+        error.message ?? 'Unsupported JPEG 2000 feature.',
+        cause: error,
+      ),
+      stackTrace,
+    );
+  } on StateError catch (error, stackTrace) {
+    Error.throwWithStackTrace(
+      Jpeg2000CorruptedException(error.message, cause: error),
+      stackTrace,
+    );
+  } on ArgumentError catch (error, stackTrace) {
+    // RangeError and IndexError included: inside the decoder they mean the
+    // data pointed somewhere it should not have.
+    Error.throwWithStackTrace(
+      Jpeg2000CorruptedException(
+        error.message?.toString() ?? 'Invalid value in codestream.',
+        cause: error,
+      ),
+      stackTrace,
+    );
+  } on Exception catch (error, stackTrace) {
+    Error.throwWithStackTrace(
+      Jpeg2000CorruptedException(error.toString(), cause: error),
+      stackTrace,
+    );
+  }
+}
+
+class _CallbackMsgLogger implements MsgLogger {
+  const _CallbackMsgLogger(this.onWarning);
+
+  final void Function(String)? onWarning;
+
+  @override
+  void printmsg(int severity, String message) {
+    final callback = onWarning;
+    if (callback == null || severity < MsgLogger.warning) {
+      return;
+    }
+    callback(message);
+  }
+
+  @override
+  void println(String message, int firstLineIndent, int indent) {}
+
+  @override
+  void flush() {}
+}
+
+void _validateDecodeOptions(Jpeg2000DecodeOptions options) {
+  if (options.rate != null && options.bytes != null) {
+    throw ArgumentError('rate and bytes are mutually exclusive.');
+  }
+  final rate = options.rate;
+  if (rate != null && (rate.isNaN || rate <= 0)) {
+    throw ArgumentError.value(rate, 'rate', 'must be positive');
+  }
+  final bytes = options.bytes;
+  if (bytes != null && bytes <= 0) {
+    throw ArgumentError.value(bytes, 'bytes', 'must be positive');
+  }
+  final resolution = options.resolution;
+  if (resolution != null && resolution < 0) {
+    throw ArgumentError.value(resolution, 'resolution', 'must not be negative');
+  }
+  final maxPixels = options.maxPixels;
+  if (maxPixels != null && maxPixels <= 0) {
+    throw ArgumentError.value(maxPixels, 'maxPixels', 'must be positive');
+  }
+  final maxDimension = options.maxDimension;
+  if (maxDimension != null && maxDimension <= 0) {
+    throw ArgumentError.value(maxDimension, 'maxDimension', 'must be positive');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Container and SIZ marker
+// ---------------------------------------------------------------------------
+
+/// Geometry read straight from the SIZ marker, before the full header parser
+/// allocates its per-tile and per-component tables.
+class _SizSummary {
+  _SizSummary({
+    required this.width,
+    required this.height,
+    required this.components,
+    required this.bitDepths,
+    required this.signed,
+    required this.subsamplingX,
+    required this.subsamplingY,
+    required this.tileWidth,
+    required this.tileHeight,
+    required this.tileColumns,
+    required this.tileRows,
+  });
+
+  final int width;
+  final int height;
+  final int components;
+  final List<int> bitDepths;
+  final List<bool> signed;
+  final List<int> subsamplingX;
+  final List<int> subsamplingY;
+  final int tileWidth;
+  final int tileHeight;
+  final int tileColumns;
+  final int tileRows;
+}
+
+({bool isJp2, int codestreamStart, _SizSummary siz}) _open(
+  ISRandomAccessIO input,
+) {
+  final fileFormat = FileFormatReader(input)..readFileFormat();
+  final isJp2 = fileFormat.JP2FFUsed;
+  final codestreamStart = isJp2 ? fileFormat.getFirstCodeStreamPos() : 0;
+  final siz = _readSizSummary(input, codestreamStart);
+  input.seek(codestreamStart);
+  return (isJp2: isJp2, codestreamStart: codestreamStart, siz: siz);
+}
+
+_SizSummary _readSizSummary(ISRandomAccessIO input, int codestreamStart) {
+  input.seek(codestreamStart);
+  if (input.readUnsignedShort() != Markers.SOC) {
+    throw const Jpeg2000CorruptedException(
+      'Codestream does not start with the SOC marker.',
+    );
+  }
+  if (input.readUnsignedShort() != Markers.SIZ) {
+    throw const Jpeg2000CorruptedException(
+      'The SIZ marker must follow SOC.',
+    );
+  }
+  int readUint32() => input.readInt() & 0xffffffff;
+
+  final lsiz = input.readUnsignedShort();
+  input.readUnsignedShort(); // Rsiz: capabilities, not needed here.
+  final xsiz = readUint32();
+  final ysiz = readUint32();
+  final x0siz = readUint32();
+  final y0siz = readUint32();
+  final xtsiz = readUint32();
+  final ytsiz = readUint32();
+  final xt0siz = readUint32();
+  final yt0siz = readUint32();
+  final csiz = input.readUnsignedShort();
+
+  if (csiz < 1 || csiz > 16384) {
+    throw Jpeg2000CorruptedException(
+      'SIZ declares $csiz components; the standard allows 1 to 16384.',
+    );
+  }
+  if (lsiz != 38 + 3 * csiz) {
+    throw Jpeg2000CorruptedException(
+      'SIZ length $lsiz does not match $csiz components.',
+    );
+  }
+  if (xsiz <= x0siz || ysiz <= y0siz) {
+    throw const Jpeg2000CorruptedException(
+      'SIZ declares an empty image area.',
+    );
+  }
+  if (xtsiz == 0 || ytsiz == 0) {
+    throw const Jpeg2000CorruptedException('SIZ declares a zero tile size.');
+  }
+  if (xt0siz > x0siz ||
+      yt0siz > y0siz ||
+      xt0siz + xtsiz <= x0siz ||
+      yt0siz + ytsiz <= y0siz) {
+    throw const Jpeg2000CorruptedException(
+      'SIZ tile grid does not cover the image origin.',
+    );
+  }
+
+  final bitDepths = List<int>.filled(csiz, 0);
+  final signed = List<bool>.filled(csiz, false);
+  final subsamplingX = List<int>.filled(csiz, 1);
+  final subsamplingY = List<int>.filled(csiz, 1);
+  for (var c = 0; c < csiz; c++) {
+    final ssiz = input.readUnsignedByte();
+    final xrsiz = input.readUnsignedByte();
+    final yrsiz = input.readUnsignedByte();
+    if (xrsiz == 0 || yrsiz == 0) {
+      throw Jpeg2000CorruptedException(
+        'SIZ declares a zero subsampling factor for component $c.',
+      );
+    }
+    bitDepths[c] = (ssiz & 0x7f) + 1;
+    signed[c] = (ssiz & 0x80) != 0;
+    subsamplingX[c] = xrsiz;
+    subsamplingY[c] = yrsiz;
+  }
+
+  final tileColumns = (xsiz - xt0siz + xtsiz - 1) ~/ xtsiz;
+  final tileRows = (ysiz - yt0siz + ytsiz - 1) ~/ ytsiz;
+  return _SizSummary(
+    width: xsiz - x0siz,
+    height: ysiz - y0siz,
+    components: csiz,
+    bitDepths: bitDepths,
+    signed: signed,
+    subsamplingX: subsamplingX,
+    subsamplingY: subsamplingY,
+    tileWidth: xtsiz,
+    tileHeight: ytsiz,
+    tileColumns: tileColumns,
+    tileRows: tileRows,
+  );
+}
+
+void _checkBudget(_SizSummary siz, Jpeg2000DecodeOptions options) {
+  final maxDimension = options.maxDimension;
+  if (maxDimension != null) {
+    final largest = siz.width > siz.height ? siz.width : siz.height;
+    if (largest > maxDimension) {
+      throw Jpeg2000BudgetException(
+        budget: 'maxDimension',
+        limit: maxDimension,
+        actual: largest,
+        message: 'Image is ${siz.width}x${siz.height}; '
+            'maxDimension is $maxDimension.',
+      );
+    }
+  }
+  final maxPixels = options.maxPixels;
+  if (maxPixels != null) {
+    final pixels = siz.width * siz.height;
+    if (pixels > maxPixels) {
+      throw Jpeg2000BudgetException(
+        budget: 'maxPixels',
+        limit: maxPixels,
+        actual: pixels,
+        message: 'Image has $pixels pixels; maxPixels is $maxPixels.',
+      );
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Decode pipeline
+// ---------------------------------------------------------------------------
+
 BlkImgDataSrc _buildDecodePipeline({
   required ISRandomAccessIO input,
   required ParameterList params,
   required HeaderInfo headerInfo,
   required HeaderDecoder headerDecoder,
   required DecoderSpecs decoderSpecs,
-  required bool jp2WrapperUsed,
-  required bool applyColorSpace,
+  required ColorSpace? colorSpace,
   required bool applyComponentTransform,
 }) {
   final bitstreamReader = BitstreamReaderAgent.createInstance(
@@ -280,16 +770,11 @@ BlkImgDataSrc _buildDecodePipeline({
       imageDataConverter,
       decoderSpecs.cts,
       enableComponentTransforms: applyComponentTransform,
-      originalBitDepths: List<int>.generate(
-        headerDecoder.getNumComps(),
-        headerDecoder.getOriginalBitDepth,
-        growable: false,
-      ),
+      originalBitDepths: rangeBits,
     );
   }
 
-  if (jp2WrapperUsed && applyColorSpace) {
-    final colorSpace = _loadColorSpace(input, headerDecoder, params);
+  if (colorSpace != null) {
     var colorSource = pipelineSource;
     colorSource = headerDecoder.createChannelDefinitionMapper(
       colorSource,
@@ -316,6 +801,267 @@ BlkImgDataSrc _buildDecodePipeline({
     'public-writer-img-data-converter',
   );
 }
+
+/// Which source channels become colour and which one becomes alpha.
+class _ChannelLayout {
+  const _ChannelLayout({
+    required this.channels,
+    required this.colorComponents,
+    required this.alpha,
+    required this.alphaIsPremultiplied,
+    required this.format,
+  });
+
+  /// Source channel index for each output channel, colour first, alpha last.
+  final List<int> channels;
+
+  /// Number of leading colour channels in [channels].
+  final int colorComponents;
+
+  /// Source index of the alpha channel, or null.
+  final int? alpha;
+
+  final bool alphaIsPremultiplied;
+
+  final Jpeg2000PixelFormat format;
+}
+
+/// Decides the output layout from the JP2 channel definitions when present,
+/// and from the component count otherwise.
+///
+/// Without a `cdef` box the standard says every channel is colour, but in
+/// practice a 2-channel greyscale or 4-channel RGB file carries alpha in the
+/// last channel; that reading is applied only when the colour space is a
+/// known 1- or 3-channel space, so CMYK and multispectral images keep all
+/// their channels.
+_ChannelLayout _channelLayout(int components, ColorSpace? colorSpace) {
+  final cdef = colorSpace?.cdbox;
+  if (colorSpace != null && cdef != null && cdef.getNDefs() > 0) {
+    final layout = _layoutFromChannelDefinitions(components, colorSpace, cdef);
+    if (layout != null) {
+      return layout;
+    }
+  }
+
+  final knownSpace = colorSpace == null || _isKnownColourSpace(colorSpace);
+  if (knownSpace && components == 2) {
+    return _makeLayout(const <int>[0], alpha: 1, premultiplied: false);
+  }
+  if (knownSpace && components == 4) {
+    return _makeLayout(const <int>[0, 1, 2], alpha: 3, premultiplied: false);
+  }
+  return _makeLayout(
+    List<int>.generate(components, (i) => i, growable: false),
+    alpha: null,
+    premultiplied: false,
+  );
+}
+
+_ChannelLayout? _layoutFromChannelDefinitions(
+  int components,
+  ColorSpace colorSpace,
+  ChannelDefinitionBox cdef,
+) {
+  const colourType = 0;
+  const opacityType = 1;
+  const premultipliedOpacityType = 2;
+
+  final colour = <int>[];
+  int? alpha;
+  var premultiplied = false;
+  for (var c = 0; c < components; c++) {
+    final sourceChannel = colorSpace.getChannelDefinition(c);
+    if (sourceChannel < 0 || sourceChannel >= components) {
+      return null;
+    }
+    final definition = cdef.definitions[sourceChannel];
+    final type = definition == null ? colourType : definition[1];
+    if (type == colourType) {
+      colour.add(c);
+    } else if ((type == opacityType || type == premultipliedOpacityType) &&
+        alpha == null) {
+      alpha = c;
+      premultiplied = type == premultipliedOpacityType;
+    }
+  }
+  if (colour.isEmpty) {
+    return null;
+  }
+  return _makeLayout(colour, alpha: alpha, premultiplied: premultiplied);
+}
+
+_ChannelLayout _makeLayout(
+  List<int> colour, {
+  required int? alpha,
+  required bool premultiplied,
+}) {
+  if (colour.length != 1 && colour.length != 3) {
+    final all = <int>[...colour, if (alpha != null) alpha]..sort();
+    return _ChannelLayout(
+      channels: all,
+      colorComponents: all.length,
+      alpha: null,
+      alphaIsPremultiplied: false,
+      format: Jpeg2000PixelFormat.multiComponent8,
+    );
+  }
+  final channels = <int>[...colour, if (alpha != null) alpha];
+  final Jpeg2000PixelFormat format;
+  if (colour.length == 1) {
+    format = alpha != null
+        ? Jpeg2000PixelFormat.grayAlpha8
+        : Jpeg2000PixelFormat.gray8;
+  } else {
+    format =
+        alpha != null ? Jpeg2000PixelFormat.rgba8 : Jpeg2000PixelFormat.rgb8;
+  }
+  return _ChannelLayout(
+    channels: channels,
+    colorComponents: colour.length,
+    alpha: alpha,
+    alphaIsPremultiplied: alpha != null && premultiplied,
+    format: format,
+  );
+}
+
+bool _isKnownColourSpace(ColorSpace colorSpace) {
+  if (colorSpace.csbox == null) {
+    return true;
+  }
+  try {
+    if (colorSpace.getMethod() == ColorSpace.ICC_PROFILED) {
+      // Restricted ICC profiles are monochrome or three-component RGB.
+      return true;
+    }
+    final space = colorSpace.getColorSpace();
+    return space == ColorSpace.sRGB ||
+        space == ColorSpace.GreyScale ||
+        space == ColorSpace.sYCC;
+  } on Exception {
+    return false;
+  }
+}
+
+Jpeg2000Image _collectImage(
+  BlkImgDataSrc source,
+  HeaderDecoder headerDecoder,
+  ColorSpace? colorSpace,
+) {
+  final sourceComponents = source.getNumComps();
+  if (sourceComponents <= 0) {
+    throw const Jpeg2000CorruptedException('Decoded image has no components.');
+  }
+
+  final layout = _channelLayout(sourceComponents, colorSpace);
+  final channels = layout.channels;
+  final outputComponents = channels.length;
+  final width = source.getImgWidth();
+  final height = source.getImgHeight();
+
+  for (final component in channels) {
+    if (source.getCompImgWidth(component) != width ||
+        source.getCompImgHeight(component) != height) {
+      throw Jpeg2000UnsupportedException(
+        'Component $component is subsampled and the file carries no JP2 '
+        'colour metadata to resample it; subsampled raw codestreams are not '
+        'supported yet.',
+      );
+    }
+  }
+
+  final pixels = Uint8List(width * height * outputComponents);
+  final bitDepths = List<int>.generate(
+    outputComponents,
+    (i) => source.getNomRangeBits(channels[i]),
+    growable: false,
+  );
+  final signed = List<bool>.generate(
+    outputComponents,
+    (i) => headerDecoder.isOriginalSigned(channels[i]),
+    growable: false,
+  );
+
+  final blocks = List<DataBlkInt>.generate(
+    outputComponents,
+    (_) => DataBlkInt(),
+    growable: false,
+  );
+  final tileCount = source.getNumTilesCoord(null);
+  for (var tileY = 0; tileY < tileCount.y; tileY++) {
+    for (var tileX = 0; tileX < tileCount.x; tileX++) {
+      source.setTile(tileX, tileY);
+      final tileIndex = source.getTileIdx();
+      final tileWidth = source.getTileCompWidth(tileIndex, channels[0]);
+      final tileHeight = source.getTileCompHeight(tileIndex, channels[0]);
+      for (var row = 0; row < tileHeight; row++) {
+        for (var slot = 0; slot < outputComponents; slot++) {
+          final component = channels[slot];
+          final block = blocks[slot]
+            ..ulx = 0
+            ..uly = row
+            ..w = tileWidth
+            ..h = 1;
+          DataBlkInt dataBlock;
+          do {
+            dataBlock =
+                source.getInternCompData(block, component) as DataBlkInt;
+          } while (dataBlock.progressive);
+
+          final data = dataBlock.getDataInt();
+          if (data == null) {
+            throw const Jpeg2000CorruptedException(
+              'Decoded component block has no data.',
+            );
+          }
+          final tOffx = source.getCompULX(component) -
+              (source.getImgULX() / source.getCompSubsX(component)).ceil();
+          final tOffy = source.getCompULY(component) -
+              (source.getImgULY() / source.getCompSubsY(component)).ceil();
+          final imageRow = row + tOffy;
+          final imageCol = tOffx;
+          final base = (imageRow * width + imageCol) * outputComponents + slot;
+          final fixedPoint = source.getFixedPoint(component);
+          final bitDepth = bitDepths[slot];
+          final levelShift = signed[slot] ? 0 : 1 << (bitDepth - 1);
+          final maxValue = (1 << bitDepth) - 1;
+          final downShift = bitDepth > 8 ? bitDepth - 8 : 0;
+          var sourceIndex = dataBlock.offset;
+          var targetIndex = base;
+          for (var x = 0; x < tileWidth; x++) {
+            var sample = fixedPoint == 0
+                ? data[sourceIndex]
+                : data[sourceIndex] >> fixedPoint;
+            sample += levelShift;
+            if (sample < 0) {
+              sample = 0;
+            } else if (sample > maxValue) {
+              sample = maxValue;
+            }
+            pixels[targetIndex] = downShift == 0 ? sample : sample >> downShift;
+            sourceIndex++;
+            targetIndex += outputComponents;
+          }
+        }
+      }
+    }
+  }
+
+  return Jpeg2000Image(
+    width: width,
+    height: height,
+    components: outputComponents,
+    colorComponents: layout.colorComponents,
+    hasAlpha: layout.alpha != null,
+    alphaIsPremultiplied: layout.alphaIsPremultiplied,
+    sourceBitsPerComponent: List<int>.unmodifiable(bitDepths),
+    pixels: pixels,
+    format: layout.format,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Encode pipeline
+// ---------------------------------------------------------------------------
 
 Uint8List _encodeReader(
   ImgReader reader,
@@ -393,106 +1139,9 @@ Uint8List _encodeReader(
   return writer.toBytes();
 }
 
-Jpeg2000Image _collectImage(
-  BlkImgDataSrc source,
-  HeaderDecoder headerDecoder,
-) {
-  final components = source.getNumComps();
-  if (components <= 0) {
-    throw StateError('Decoded image has no components.');
-  }
-
-  final outputComponents = components == 1 ? 1 : math.min(components, 3);
-  final width = source.getImgWidth();
-  final height = source.getImgHeight();
-  final pixels = Uint8List(width * height * outputComponents);
-  final bitDepths = List<int>.generate(
-    outputComponents,
-    source.getNomRangeBits,
-    growable: false,
-  );
-  final signed = List<bool>.generate(
-    outputComponents,
-    (component) => headerDecoder.isOriginalSigned(component),
-    growable: false,
-  );
-
-  final blocks = List<DataBlkInt>.generate(
-    outputComponents,
-    (_) => DataBlkInt(),
-    growable: false,
-  );
-  final tileCount = source.getNumTilesCoord(null);
-  for (var tileY = 0; tileY < tileCount.y; tileY++) {
-    for (var tileX = 0; tileX < tileCount.x; tileX++) {
-      source.setTile(tileX, tileY);
-      final tileIndex = source.getTileIdx();
-      final tileWidth = source.getTileCompWidth(tileIndex, 0);
-      final tileHeight = source.getTileCompHeight(tileIndex, 0);
-      for (var row = 0; row < tileHeight; row++) {
-        for (var component = 0; component < outputComponents; component++) {
-          final block = blocks[component]
-            ..ulx = 0
-            ..uly = row
-            ..w = tileWidth
-            ..h = 1;
-          DataBlkInt dataBlock;
-          do {
-            dataBlock =
-                source.getInternCompData(block, component) as DataBlkInt;
-          } while (dataBlock.progressive);
-
-          final data = dataBlock.getDataInt();
-          if (data == null) {
-            throw StateError('Decoded component block has no data.');
-          }
-          final tOffx = source.getCompULX(component) -
-              (source.getImgULX() / source.getCompSubsX(component)).ceil();
-          final tOffy = source.getCompULY(component) -
-              (source.getImgULY() / source.getCompSubsY(component)).ceil();
-          final imageRow = row + tOffy;
-          final imageCol = tOffx;
-          final base =
-              (imageRow * width + imageCol) * outputComponents + component;
-          final fixedPoint = source.getFixedPoint(component);
-          final bitDepth = bitDepths[component];
-          final levelShift = signed[component] ? 0 : 1 << (bitDepth - 1);
-          final maxValue = (1 << bitDepth) - 1;
-          final downShift = bitDepth > 8 ? bitDepth - 8 : 0;
-          var sourceIndex = dataBlock.offset;
-          var targetIndex = base;
-          for (var x = 0; x < tileWidth; x++) {
-            var sample = fixedPoint == 0
-                ? data[sourceIndex]
-                : data[sourceIndex] >> fixedPoint;
-            sample += levelShift;
-            if (sample < 0) {
-              sample = 0;
-            } else if (sample > maxValue) {
-              sample = maxValue;
-            }
-            pixels[targetIndex] = downShift == 0 ? sample : sample >> downShift;
-            sourceIndex++;
-            targetIndex += outputComponents;
-          }
-        }
-      }
-    }
-  }
-
-  return Jpeg2000Image(
-    width: width,
-    height: height,
-    components: outputComponents,
-    bitsPerComponent: bitDepths,
-    pixels: pixels,
-    format: outputComponents == 1
-        ? Jpeg2000PixelFormat.gray8
-        : outputComponents == 3
-            ? Jpeg2000PixelFormat.rgb8
-            : Jpeg2000PixelFormat.multiComponent8,
-  );
-}
+// ---------------------------------------------------------------------------
+// Parameters
+// ---------------------------------------------------------------------------
 
 ParameterList _buildDecodeParameters(Jpeg2000DecodeOptions options) {
   final defaults = ParameterList();
@@ -595,6 +1244,10 @@ bool _parameterListIsEmpty(ParameterList list) {
   return true;
 }
 
+// ---------------------------------------------------------------------------
+// Codestream helpers
+// ---------------------------------------------------------------------------
+
 void _scanTileParts(ISRandomAccessIO input, HeaderDecoder decoder) {
   while (true) {
     final start = input.getPos();
@@ -624,15 +1277,26 @@ void _scanTileParts(ISRandomAccessIO input, HeaderDecoder decoder) {
   }
 }
 
-ColorSpace _loadColorSpace(
+/// Parses the JP2 header boxes that describe colour.
+///
+/// When [required] is false, a container without usable colour metadata
+/// yields null instead of failing, so callers that only want the channel
+/// definitions (or asked not to apply colour) still get what exists.
+ColorSpace? _loadColorSpace(
   ISRandomAccessIO input,
   HeaderDecoder decoder,
-  ParameterList params,
-) {
+  ParameterList params, {
+  required bool required,
+}) {
   final bookmark = input.getPos();
   try {
     input.seek(0);
     return ColorSpace(input, decoder, params);
+  } on Exception {
+    if (required) {
+      rethrow;
+    }
+    return null;
   } finally {
     input.seek(bookmark);
   }
@@ -674,6 +1338,10 @@ List<List<SynWTFilter>> _createDefaultFilters(
     List<SynWTFilter>.generate(levelCount, (_) => factory(), growable: false),
   ];
 }
+
+// ---------------------------------------------------------------------------
+// JP2 wrapper
+// ---------------------------------------------------------------------------
 
 Uint8List _wrapJp2(
   Uint8List codestream, {
