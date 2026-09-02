@@ -2,7 +2,7 @@
 
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
 
-Pure Dart JPEG 2000 codec based on the JJ2000/JAI ImageIO implementation. The
+Pure Dart JPEG 2000 codec inspired on the JJ2000/JAI ImageIO implementation. The
 package decodes JP2/J2K codestreams, provides a basic encoder for binary PGM and
 PPM inputs, and ships bit-exact regression fixtures inside the repository.
 
