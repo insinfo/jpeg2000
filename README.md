@@ -1,5 +1,7 @@
 # j2k
 
+[![pub package](https://img.shields.io/pub/v/j2k.svg)](https://pub.dev/packages/j2k)
+[![pub points](https://img.shields.io/pub/points/j2k)](https://pub.dev/packages/j2k/score)
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
 
 Pure Dart JPEG 2000 codec, published as `package:j2k`. It decodes JP2 files
