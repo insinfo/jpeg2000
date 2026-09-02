@@ -24,11 +24,11 @@ class PktDecoderHarness extends PktDecoder {
   int get packetsDecoded => _packetsDecoded;
 
   @override
-  _CodeBlockGrid restart(
+  CodeBlockGrid restart(
     int numComponents,
     List<int> maxDecompositionLevels,
     int numLayers,
-    _CodeBlockGrid? existing,
+    CodeBlockGrid? existing,
     bool packedHeaders,
     Uint8List? packedHeaderData,
   ) {

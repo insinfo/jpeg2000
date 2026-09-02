@@ -119,14 +119,14 @@ Uint8List buildSizMarkerPayload({
     ...uint16Bytes(0),
     ...uint32Bytes(xsize),
     ...uint32Bytes(ysize),
-    ...uint32Bytes(0)
-  ]
-    ..addAll(uint32Bytes(0))
-    ..addAll(uint32Bytes(tileWidth))
-    ..addAll(uint32Bytes(tileHeight))
-    ..addAll(uint32Bytes(0))
-    ..addAll(uint32Bytes(0))
-    ..addAll(uint16Bytes(numComps));
+    ...uint32Bytes(0),
+    ...uint32Bytes(0),
+    ...uint32Bytes(tileWidth),
+    ...uint32Bytes(tileHeight),
+    ...uint32Bytes(0),
+    ...uint32Bytes(0),
+    ...uint16Bytes(numComps),
+  ];
 
   for (var i = 0; i < numComps; i++) {
     body
@@ -186,7 +186,7 @@ void addMarker(BytesBuilder builder, int marker) {
   required int bodyLength,
 }) {
   final headerBuilder = BytesBuilder()
-    ..add(<int>[(Markers.SOD >> 8) & 0xff, Markers.SOD & 0xff]);
+    ..add(<int>[(Markers.sod >> 8) & 0xff, Markers.sod & 0xff]);
   final headerBytes = headerBuilder.toBytes();
   final bodyBytes = Uint8List.fromList(
     List<int>.generate(
@@ -194,7 +194,7 @@ void addMarker(BytesBuilder builder, int marker) {
   );
   final tilePartLength = 2 + 2 + 8 + headerBytes.length + bodyBytes.length;
   final builder = BytesBuilder();
-  addMarker(builder, Markers.SOT);
+  addMarker(builder, Markers.sot);
   builder.add(
     buildSotMarkerPayload(
       tileIdx: tileIdx,

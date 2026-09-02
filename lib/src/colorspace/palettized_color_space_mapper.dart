@@ -35,16 +35,16 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getCompData(DataBlk out, int c) {
+  DataBlk getCompData(DataBlk out, int component) {
     final palette = pbox;
     if (palette == null) {
-      return src!.getCompData(out, c);
+      return src!.getCompData(out, component);
     }
     if (ncomps != 1) {
       final msg =
           'PalettizedColorSpaceMapper: color palette not applied, incorrect number ($ncomps) of components';
       FacilityManager.getMsgLogger().printmsg(MsgLogger.warning, msg);
-      return src!.getCompData(out, c);
+      return src!.getCompData(out, component);
     }
 
     ColorSpaceMapper.setInternalBuffer(out);
@@ -55,7 +55,7 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
         inInt[0] = src!.getInternCompData(inInt[0]!, 0) as DataBlkInt;
         dataInt[0] = inInt[0]!.getDataInt();
         final outData = (out as DataBlkInt).getDataInt()!;
-        _mapPaletteInt(out, c, palette, outData);
+        _mapPaletteInt(out, component, palette, outData);
         out.progressive = inInt[0]!.progressive;
         break;
       case DataBlk.typeFloat:
@@ -63,7 +63,7 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
         inFloat[0] = src!.getInternCompData(inFloat[0]!, 0) as DataBlkFloat;
         dataFloat[0] = inFloat[0]!.getDataFloat();
         final outData = (out as DataBlkFloat).getDataFloat()!;
-        _mapPaletteFloat(out, c, palette, outData);
+        _mapPaletteFloat(out, component, palette, outData);
         out.progressive = inFloat[0]!.progressive;
         break;
       default:
@@ -76,7 +76,7 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
   }
 
   void _mapPaletteInt(
-      DataBlk out, int c, PaletteBox palette, List<int> outData) {
+      DataBlk out, int component, PaletteBox palette, List<int> outData) {
     final srcData = dataInt[0]!;
     for (var row = 0; row < out.h; ++row) {
       final leftIn = inInt[0]!.offset + row * inInt[0]!.scanw;
@@ -85,14 +85,14 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       var kOut = leftOut;
       for (var kIn = leftIn; kIn < rightIn; ++kIn, ++kOut) {
         outData[kOut] =
-            palette.getEntry(c, srcData[kIn] + shiftValueArray![0]) -
-                outShiftValueArray[c];
+            palette.getEntry(component, srcData[kIn] + shiftValueArray![0]) -
+                outShiftValueArray[component];
       }
     }
   }
 
   void _mapPaletteFloat(
-      DataBlk out, int c, PaletteBox palette, List<double> outData) {
+      DataBlk out, int component, PaletteBox palette, List<double> outData) {
     final srcData = dataFloat[0]!;
     for (var row = 0; row < out.h; ++row) {
       final leftIn = inFloat[0]!.offset + row * inFloat[0]!.scanw;
@@ -101,23 +101,25 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       var kOut = leftOut;
       for (var kIn = leftIn; kIn < rightIn; ++kIn, ++kOut) {
         outData[kOut] = (palette.getEntry(
-                  c,
+                  component,
                   srcData[kIn].toInt() + shiftValueArray![0],
                 ) -
-                outShiftValueArray[c])
+                outShiftValueArray[component])
             .toDouble();
       }
     }
   }
 
   @override
-  DataBlk getInternCompData(DataBlk out, int c) {
-    return getCompData(out, c);
+  DataBlk getInternCompData(DataBlk out, int component) {
+    return getCompData(out, component);
   }
 
   @override
-  int getNomRangeBits(int c) {
-    return pbox == null ? src!.getNomRangeBits(c) : pbox!.getBitDepth(c);
+  int getNomRangeBits(int component) {
+    return pbox == null
+        ? src!.getNomRangeBits(component)
+        : pbox!.getBitDepth(component);
   }
 
   @override
@@ -126,42 +128,42 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
   }
 
   @override
-  int getCompSubsX(int c) {
+  int getCompSubsX(int component) {
     return src!.getCompSubsX(srcChannel);
   }
 
   @override
-  int getCompSubsY(int c) {
+  int getCompSubsY(int component) {
     return src!.getCompSubsY(srcChannel);
   }
 
   @override
-  int getTileCompWidth(int t, int c) {
-    return src!.getTileCompWidth(t, srcChannel);
+  int getTileCompWidth(int tile, int component) {
+    return src!.getTileCompWidth(tile, srcChannel);
   }
 
   @override
-  int getTileCompHeight(int t, int c) {
-    return src!.getTileCompHeight(t, srcChannel);
+  int getTileCompHeight(int tile, int component) {
+    return src!.getTileCompHeight(tile, srcChannel);
   }
 
   @override
-  int getCompImgWidth(int c) {
+  int getCompImgWidth(int component) {
     return src!.getCompImgWidth(srcChannel);
   }
 
   @override
-  int getCompImgHeight(int c) {
+  int getCompImgHeight(int component) {
     return src!.getCompImgHeight(srcChannel);
   }
 
   @override
-  int getCompULX(int c) {
+  int getCompULX(int component) {
     return src!.getCompULX(srcChannel);
   }
 
   @override
-  int getCompULY(int c) {
+  int getCompULY(int component) {
     return src!.getCompULY(srcChannel);
   }
 
@@ -173,10 +175,10 @@ class PalettizedColorSpaceMapper extends ColorSpaceMapper {
       body
         ..write('ncomps=${getNumComps()}, scomp=$srcChannel')
         ..write(ColorSpaceMapper.eol);
-      for (var c = 0; c < getNumComps(); ++c) {
+      for (var component = 0; component < getNumComps(); ++component) {
         body
-          ..write('column=$c, ${pbox!.getBitDepth(c)} bit ')
-          ..write(pbox!.isSigned(c) ? 'signed entry' : 'unsigned entry')
+          ..write('column=$component, ${pbox!.getBitDepth(component)} bit ')
+          ..write(pbox!.isSigned(component) ? 'signed entry' : 'unsigned entry')
           ..write(ColorSpaceMapper.eol);
       }
     } else {

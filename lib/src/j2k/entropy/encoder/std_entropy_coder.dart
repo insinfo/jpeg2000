@@ -24,193 +24,191 @@ import '../std_entropy_coder_options.dart';
 /// specified in the JPEG 2000 standard.
 class StdEntropyCoder extends EntropyCoder {
   /// The identifier for the termination of each coding pass option
-  static const int OPT_TERM_PASS = StdEntropyCoderOptions.OPT_TERM_PASS;
+  static const int optTermPass = StdEntropyCoderOptions.optTermPass;
 
   /// The identifier for the reset MQ coder option
-  static const int OPT_RESET_MQ = StdEntropyCoderOptions.OPT_RESET_MQ;
+  static const int optResetMq = StdEntropyCoderOptions.optResetMq;
 
   /// The identifier for the vertically stripe causal context option
-  static const int OPT_VERT_STR_CAUSAL =
-      StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+  static const int optVertStrCausal = StdEntropyCoderOptions.optVertStrCausal;
 
   /// The identifier for the lazy coding mode option (bypass MQ coder)
-  static const int OPT_BYPASS = StdEntropyCoderOptions.OPT_BYPASS;
+  static const int optBypass = StdEntropyCoderOptions.optBypass;
 
   /// The identifier for the segmentation symbols option
-  static const int OPT_SEG_SYMBOLS = StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+  static const int optSegSymbols = StdEntropyCoderOptions.optSegSymbols;
 
   /// The identifier for the predictable termination option
-  static const int OPT_PRED_TERM = StdEntropyCoderOptions.OPT_PRED_TERM;
+  static const int optPredTerm = StdEntropyCoderOptions.optPredTerm;
 
-  static const int NUM_NON_BYPASS_MS_BP =
-      StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP;
+  static const int numNonBypassMsBp = StdEntropyCoderOptions.numNonBypassMsBp;
 
   /// The mask for the significant state bit.
-  static const int STATE_SIG_R1 = 1 << 15;
+  static const int stateSigR1 = 1 << 15;
 
   /// The mask for the visited state bit.
-  static const int STATE_VISITED_R1 = 1 << 14;
+  static const int stateVisitedR1 = 1 << 14;
 
   /// The mask for the "non-zero context" state bit.
-  static const int STATE_NZ_CTXT_R1 = 1 << 13;
+  static const int stateNzCtxtR1 = 1 << 13;
 
   /// The mask for the "horizontal high-pass sign" state bit.
-  static const int STATE_H_L_SIGN_R1 = 1 << 12;
+  static const int stateHLSignR1 = 1 << 12;
 
   /// The mask for the "horizontal low-pass sign" state bit.
-  static const int STATE_H_R_SIGN_R1 = 1 << 11;
+  static const int stateHRSignR1 = 1 << 11;
 
   /// The mask for the "vertical high-pass sign" state bit.
-  static const int STATE_V_U_SIGN_R1 = 1 << 10;
+  static const int stateVUSignR1 = 1 << 10;
 
   /// The mask for the "vertical low-pass sign" state bit.
-  static const int STATE_V_D_SIGN_R1 = 1 << 9;
+  static const int stateVDSignR1 = 1 << 9;
 
   /// The mask for the "previous MR" state bit.
-  static const int STATE_PREV_MR_R1 = 1 << 8;
+  static const int statePrevMrR1 = 1 << 8;
 
   /// The mask for the "horizontal high-pass" state bit.
-  static const int STATE_H_L_R1 = 1 << 7;
+  static const int stateHLR1 = 1 << 7;
 
   /// The mask for the "horizontal low-pass" state bit.
-  static const int STATE_H_R_R1 = 1 << 6;
+  static const int stateHRR1 = 1 << 6;
 
   /// The mask for the "vertical high-pass" state bit.
-  static const int STATE_V_U_R1 = 1 << 5;
+  static const int stateVUR1 = 1 << 5;
 
   /// The mask for the "vertical low-pass" state bit.
-  static const int STATE_V_D_R1 = 1 << 4;
+  static const int stateVDR1 = 1 << 4;
 
   /// The mask for the "diagonal high-pass" state bit.
-  static const int STATE_D_UL_R1 = 1 << 3;
+  static const int stateDUlR1 = 1 << 3;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_UR_R1 = 1 << 2;
+  static const int stateDUrR1 = 1 << 2;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_DL_R1 = 1 << 1;
+  static const int stateDDlR1 = 1 << 1;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_DR_R1 = 1;
+  static const int stateDDrR1 = 1;
 
   /// The separation between the row 1 and row 2 states.
-  static const int STATE_SEP = 16;
+  static const int stateSep = 16;
 
   /// The mask for the significant state bit.
-  static const int STATE_SIG_R2 = STATE_SIG_R1 << STATE_SEP;
+  static const int stateSigR2 = stateSigR1 << stateSep;
 
   /// The mask for the visited state bit.
-  static const int STATE_VISITED_R2 = STATE_VISITED_R1 << STATE_SEP;
+  static const int stateVisitedR2 = stateVisitedR1 << stateSep;
 
   /// The mask for the "non-zero context" state bit.
-  static const int STATE_NZ_CTXT_R2 = STATE_NZ_CTXT_R1 << STATE_SEP;
+  static const int stateNzCtxtR2 = stateNzCtxtR1 << stateSep;
 
   /// The mask for the "horizontal high-pass sign" state bit.
-  static const int STATE_H_L_SIGN_R2 = STATE_H_L_SIGN_R1 << STATE_SEP;
+  static const int stateHLSignR2 = stateHLSignR1 << stateSep;
 
   /// The mask for the "horizontal low-pass sign" state bit.
-  static const int STATE_H_R_SIGN_R2 = STATE_H_R_SIGN_R1 << STATE_SEP;
+  static const int stateHRSignR2 = stateHRSignR1 << stateSep;
 
   /// The mask for the "vertical high-pass sign" state bit.
-  static const int STATE_V_U_SIGN_R2 = STATE_V_U_SIGN_R1 << STATE_SEP;
+  static const int stateVUSignR2 = stateVUSignR1 << stateSep;
 
   /// The mask for the "vertical low-pass sign" state bit.
-  static const int STATE_V_D_SIGN_R2 = STATE_V_D_SIGN_R1 << STATE_SEP;
+  static const int stateVDSignR2 = stateVDSignR1 << stateSep;
 
   /// The mask for the "previous MR" state bit.
-  static const int STATE_PREV_MR_R2 = STATE_PREV_MR_R1 << STATE_SEP;
+  static const int statePrevMrR2 = statePrevMrR1 << stateSep;
 
   /// The mask for the "horizontal high-pass" state bit.
-  static const int STATE_H_L_R2 = STATE_H_L_R1 << STATE_SEP;
+  static const int stateHLR2 = stateHLR1 << stateSep;
 
   /// The mask for the "horizontal low-pass" state bit.
-  static const int STATE_H_R_R2 = STATE_H_R_R1 << STATE_SEP;
+  static const int stateHRR2 = stateHRR1 << stateSep;
 
   /// The mask for the "vertical high-pass" state bit.
-  static const int STATE_V_U_R2 = STATE_V_U_R1 << STATE_SEP;
+  static const int stateVUR2 = stateVUR1 << stateSep;
 
   /// The mask for the "vertical low-pass" state bit.
-  static const int STATE_V_D_R2 = STATE_V_D_R1 << STATE_SEP;
+  static const int stateVDR2 = stateVDR1 << stateSep;
 
   /// The mask for the "diagonal high-pass" state bit.
-  static const int STATE_D_UL_R2 = STATE_D_UL_R1 << STATE_SEP;
+  static const int stateDUlR2 = stateDUlR1 << stateSep;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_UR_R2 = STATE_D_UR_R1 << STATE_SEP;
+  static const int stateDUrR2 = stateDUrR1 << stateSep;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_DL_R2 = STATE_D_DL_R1 << STATE_SEP;
+  static const int stateDDlR2 = stateDDlR1 << stateSep;
 
   /// The mask for the "diagonal low-pass" state bit.
-  static const int STATE_D_DR_R2 = STATE_D_DR_R1 << STATE_SEP;
+  static const int stateDDrR2 = stateDDrR1 << stateSep;
 
   /// The mask to isolate the significance bits for row 1 and 2 of the state
   /// array.
-  static const int SIG_MASK_R1R2 = STATE_SIG_R1 | STATE_SIG_R2;
+  static const int sigMaskR1r2 = stateSigR1 | stateSigR2;
 
   /// The mask to isolate the visited bits for row 1 and 2 of the state
   /// array.
-  static const int VSTD_MASK_R1R2 = STATE_VISITED_R1 | STATE_VISITED_R2;
+  static const int vstdMaskR1r2 = stateVisitedR1 | stateVisitedR2;
 
   /// The mask to isolate the bits necessary to identify RLC coding state
   /// (significant, visited and non-zero context, for row 1 and 2).
-  static const int RLC_MASK_R1R2 = STATE_SIG_R1 |
-      STATE_SIG_R2 |
-      STATE_VISITED_R1 |
-      STATE_VISITED_R2 |
-      STATE_NZ_CTXT_R1 |
-      STATE_NZ_CTXT_R2;
+  static const int rlcMaskR1r2 = stateSigR1 |
+      stateSigR2 |
+      stateVisitedR1 |
+      stateVisitedR2 |
+      stateNzCtxtR1 |
+      stateNzCtxtR2;
 
   /// The mask to obtain the ZC_LUT index from the state information
-  static const int ZC_MASK = (1 << 8) - 1;
+  static const int zcMask = (1 << 8) - 1;
 
   /// The shift to obtain the SC index to 'SC_LUT' from the state
   /// information, for row 1.
-  static const int SC_SHIFT_R1 = 4;
+  static const int scShiftR1 = 4;
 
   /// The shift to obtain the SC index to 'SC_LUT' from the state
   /// information, for row 2.
-  static const int SC_SHIFT_R2 = SC_SHIFT_R1 + STATE_SEP;
+  static const int scShiftR2 = scShiftR1 + stateSep;
 
   /// The number of bits used for the Sign Coding lookup table
-  static const int SC_LUT_BITS = 9;
+  static const int scLutBits = 9;
 
   /// The bit mask to isolate the state bits relative to the sign coding
   /// lookup table ('SC_LUT').
-  static const int SC_MASK = (1 << SC_LUT_BITS) - 1;
+  static const int scMask = (1 << scLutBits) - 1;
 
   /// The number of bits used for the Magnitude Refinement lookup table
-  static const int MR_LUT_BITS = 9;
+  static const int mrLutBits = 9;
 
   /// The mask to obtain the MR index to 'MR_LUT' from the 'state'
   /// information. It is to be applied after the 'MR_SHIFT'.
-  static const int MR_MASK = (1 << MR_LUT_BITS) - 1;
+  static const int mrMask = (1 << mrLutBits) - 1;
 
   /// The number of bits used to index in the 'fm' lookup table, 7. The 'fs'
   /// table is indexed with one less bit.
-  static const int MSE_LKP_BITS = 7;
+  static const int mseLkpBits = 7;
 
   /// The number of fractional bits used to store data in the 'fm' and 'fs'
   /// lookup tables.
-  static const int MSE_LKP_FRAC_BITS = 13;
+  static const int mseLkpFracBits = 13;
 
   /// The stripe height.
-  static const int STRIPE_HEIGHT = StdEntropyCoderOptions.STRIPE_HEIGHT;
+  static const int stripeHeight = StdEntropyCoderOptions.stripeHeight;
 
   /// The context for the RLC coding.
-  static const int RLC_CTXT = 1;
+  static const int rlcCtxt = 1;
 
   /// The context for the uniform coding.
-  static const int UNIF_CTXT = 0;
+  static const int unifCtxt = 0;
 
   /// The number of contexts used
-  static const int NUM_CTXTS = 19;
+  static const int numCtxts = 19;
 
   /// The sign bit for int data
-  static const int INT_SIGN_BIT = 1 << 31;
+  static const int intSignBit = 1 << 31;
 
   /// The initial states for the MQ coder
-  static final List<int> MQ_INIT = [
+  static final List<int> mqInit = [
     46,
     3,
     4,
@@ -233,60 +231,59 @@ class StdEntropyCoder extends EntropyCoder {
   ];
 
   /// The 4 bits of the error resilience segmentation symbol (1010)
-  static final List<int> SEG_SYMBOLS = [1, 0, 1, 0];
+  static final List<int> segSymbols = [1, 0, 1, 0];
 
   /// The 4 contexts for the error resilience segmentation symbol (always
   /// the UNIFORM context, UNIF_CTXT)
-  static final List<int> SEG_SYMB_CTXTS = [
-    UNIF_CTXT,
-    UNIF_CTXT,
-    UNIF_CTXT,
-    UNIF_CTXT
+  static final List<int> segSymbCtxts = [
+    unifCtxt,
+    unifCtxt,
+    unifCtxt,
+    unifCtxt
   ];
 
   /// Number of bits used for the Zero Coding lookup table
-  static const int ZC_LUT_BITS = 8;
+  static const int zcLutBits = 8;
 
   /// Zero Coding context lookup tables for the LH global orientation
-  static final List<int> ZC_LUT_LH = List<int>.filled(1 << ZC_LUT_BITS, 0);
+  static final List<int> zcLutLh = List<int>.filled(1 << zcLutBits, 0);
 
   /// Zero Coding context lookup tables for the HL global orientation
-  static final List<int> ZC_LUT_HL = List<int>.filled(1 << ZC_LUT_BITS, 0);
+  static final List<int> zcLutHl = List<int>.filled(1 << zcLutBits, 0);
 
   /// Zero Coding context lookup tables for the HH global orientation
-  static final List<int> ZC_LUT_HH = List<int>.filled(1 << ZC_LUT_BITS, 0);
+  static final List<int> zcLutHh = List<int>.filled(1 << zcLutBits, 0);
 
   /// Sign Coding context lookup table.
-  static final List<int> SC_LUT = List<int>.filled(1 << SC_LUT_BITS, 0);
+  static final List<int> scLut = List<int>.filled(1 << scLutBits, 0);
 
   /// The mask to obtain the context index from the 'SC_LUT'
-  static const int SC_LUT_MASK = (1 << 4) - 1;
+  static const int scLutMask = (1 << 4) - 1;
 
   /// The shift to obtain the sign predictor from the 'SC_LUT'. It must be
   /// an unsigned shift.
-  static const int SC_SPRED_SHIFT = 31;
+  static const int scSpredShift = 31;
 
   /// Magnitude Refinement context lookup table
-  static final List<int> MR_LUT = List<int>.filled(1 << MR_LUT_BITS, 0);
+  static final List<int> mrLut = List<int>.filled(1 << mrLutBits, 0);
 
   /// Distortion estimation lookup table for bits coded using the sign-code
   /// (SC) primative, for lossy coding (i.e. normal).
-  static final List<int> FS_LOSSY =
-      List<int>.filled(1 << (MSE_LKP_BITS - 1), 0);
+  static final List<int> fsLossy = List<int>.filled(1 << (mseLkpBits - 1), 0);
 
   /// Distortion estimation lookup table for bits coded using the
   /// magnitude-refinement (MR) primative, for lossy coding (i.e. normal)
-  static final List<int> FM_LOSSY = List<int>.filled(1 << MSE_LKP_BITS, 0);
+  static final List<int> fmLossy = List<int>.filled(1 << mseLkpBits, 0);
 
   /// Distortion estimation lookup table for bits coded using the sign-code
   /// (SC) primative, for lossless coding and last bit-plane.
-  static final List<int> FS_LOSSLESS =
-      List<int>.filled(1 << (MSE_LKP_BITS - 1), 0);
+  static final List<int> fsLossless =
+      List<int>.filled(1 << (mseLkpBits - 1), 0);
 
   /// Distortion estimation lookup table for bits coded using the
   /// magnitude-refinement (MR) primative, for lossless coding and last
   /// bit-plane.
-  static final List<int> FM_LOSSLESS = List<int>.filled(1 << MSE_LKP_BITS, 0);
+  static final List<int> fmLossless = List<int>.filled(1 << mseLkpBits, 0);
 
   /// The code-block size specifications
   late CBlkSizeSpec cblks;
@@ -378,89 +375,89 @@ class StdEntropyCoder extends EntropyCoder {
     // LH
 
     // - No neighbors significant
-    ZC_LUT_LH[0] = 2;
+    zcLutLh[0] = 2;
 
     // - No horizontal or vertical neighbors significant
     for (i = 1; i < 16; i++) {
       // Two or more diagonal coeffs significant
-      ZC_LUT_LH[i] = 4;
+      zcLutLh[i] = 4;
     }
     for (i = 0; i < 4; i++) {
       // Only one diagonal coeff significant
-      ZC_LUT_LH[1 << i] = 3;
+      zcLutLh[1 << i] = 3;
     }
     // - No horizontal neighbors significant, diagonal irrelevant
     for (i = 0; i < 16; i++) {
       // Only one vertical coeff significant
-      ZC_LUT_LH[STATE_V_U_R1 | i] = 5;
-      ZC_LUT_LH[STATE_V_D_R1 | i] = 5;
+      zcLutLh[stateVUR1 | i] = 5;
+      zcLutLh[stateVDR1 | i] = 5;
       // The two vertical coeffs significant
-      ZC_LUT_LH[STATE_V_U_R1 | STATE_V_D_R1 | i] = 6;
+      zcLutLh[stateVUR1 | stateVDR1 | i] = 6;
     }
     // - One horiz. neighbor significant, diagonal/vertical non-significant
-    ZC_LUT_LH[STATE_H_L_R1] = 7;
-    ZC_LUT_LH[STATE_H_R_R1] = 7;
+    zcLutLh[stateHLR1] = 7;
+    zcLutLh[stateHRR1] = 7;
     // - One horiz. significant, no vertical significant, one or more
     // diagonal significant
     for (i = 1; i < 16; i++) {
-      ZC_LUT_LH[STATE_H_L_R1 | i] = 8;
-      ZC_LUT_LH[STATE_H_R_R1 | i] = 8;
+      zcLutLh[stateHLR1 | i] = 8;
+      zcLutLh[stateHRR1 | i] = 8;
     }
     // - One horiz. significant, one or more vertical significant,
     // diagonal irrelevant
     for (i = 1; i < 4; i++) {
       for (j = 0; j < 16; j++) {
-        ZC_LUT_LH[STATE_H_L_R1 | (i << 4) | j] = 9;
-        ZC_LUT_LH[STATE_H_R_R1 | (i << 4) | j] = 9;
+        zcLutLh[stateHLR1 | (i << 4) | j] = 9;
+        zcLutLh[stateHRR1 | (i << 4) | j] = 9;
       }
     }
     // - Two horiz. significant, others irrelevant
     for (i = 0; i < 64; i++) {
-      ZC_LUT_LH[STATE_H_L_R1 | STATE_H_R_R1 | i] = 10;
+      zcLutLh[stateHLR1 | stateHRR1 | i] = 10;
     }
 
     // HL
 
     // - No neighbors significant
-    ZC_LUT_HL[0] = 2;
+    zcLutHl[0] = 2;
     // - No horizontal or vertical neighbors significant
     for (i = 1; i < 16; i++) {
       // Two or more diagonal coeffs significant
-      ZC_LUT_HL[i] = 4;
+      zcLutHl[i] = 4;
     }
     for (i = 0; i < 4; i++) {
       // Only one diagonal coeff significant
-      ZC_LUT_HL[1 << i] = 3;
+      zcLutHl[1 << i] = 3;
     }
     // - No vertical significant, diagonal irrelevant
     for (i = 0; i < 16; i++) {
       // One horiz. significant
-      ZC_LUT_HL[STATE_H_L_R1 | i] = 5;
-      ZC_LUT_HL[STATE_H_R_R1 | i] = 5;
+      zcLutHl[stateHLR1 | i] = 5;
+      zcLutHl[stateHRR1 | i] = 5;
       // Two horiz. significant
-      ZC_LUT_HL[STATE_H_L_R1 | STATE_H_R_R1 | i] = 6;
+      zcLutHl[stateHLR1 | stateHRR1 | i] = 6;
     }
     // - One vert. significant, diagonal/horizontal non-significant
-    ZC_LUT_HL[STATE_V_U_R1] = 7;
-    ZC_LUT_HL[STATE_V_D_R1] = 7;
+    zcLutHl[stateVUR1] = 7;
+    zcLutHl[stateVDR1] = 7;
     // - One vert. significant, horizontal non-significant, one or more
     // diag. significant
     for (i = 1; i < 16; i++) {
-      ZC_LUT_HL[STATE_V_U_R1 | i] = 8;
-      ZC_LUT_HL[STATE_V_D_R1 | i] = 8;
+      zcLutHl[stateVUR1 | i] = 8;
+      zcLutHl[stateVDR1 | i] = 8;
     }
     // - One vertical significant, one or more horizontal significant,
     // diagonal irrelevant
     for (i = 1; i < 4; i++) {
       for (j = 0; j < 16; j++) {
-        ZC_LUT_HL[(i << 6) | STATE_V_U_R1 | j] = 9;
-        ZC_LUT_HL[(i << 6) | STATE_V_D_R1 | j] = 9;
+        zcLutHl[(i << 6) | stateVUR1 | j] = 9;
+        zcLutHl[(i << 6) | stateVDR1 | j] = 9;
       }
     }
     // - Two vertical significant, others irrelevant
     for (i = 0; i < 4; i++) {
       for (j = 0; j < 16; j++) {
-        ZC_LUT_HL[(i << 6) | STATE_V_U_R1 | STATE_V_D_R1 | j] = 10;
+        zcLutHl[(i << 6) | stateVUR1 | stateVDR1 | j] = 10;
       }
     }
 
@@ -471,53 +468,53 @@ class StdEntropyCoder extends EntropyCoder {
     List<int> threeLeast = [7, 11, 13, 14, 15];
 
     // - None significant
-    ZC_LUT_HH[0] = 2;
+    zcLutHh[0] = 2;
 
     // - One horizontal+vertical significant, none diagonal
     for (i = 0; i < oneBit.length; i++) {
-      ZC_LUT_HH[oneBit[i] << 4] = 3;
+      zcLutHh[oneBit[i] << 4] = 3;
     }
 
     // - Two or more horizontal+vertical significant, diagonal non-signif
     for (i = 0; i < twoLeast.length; i++) {
-      ZC_LUT_HH[twoLeast[i] << 4] = 4;
+      zcLutHh[twoLeast[i] << 4] = 4;
     }
 
     // - One diagonal significant, horiz./vert. non-significant
     for (i = 0; i < oneBit.length; i++) {
-      ZC_LUT_HH[oneBit[i]] = 5;
+      zcLutHh[oneBit[i]] = 5;
     }
 
     // - One diagonal significant, one horiz.+vert. significant
     for (i = 0; i < oneBit.length; i++) {
       for (j = 0; j < oneBit.length; j++) {
-        ZC_LUT_HH[(oneBit[i] << 4) | oneBit[j]] = 6;
+        zcLutHh[(oneBit[i] << 4) | oneBit[j]] = 6;
       }
     }
 
     // - One diag signif, two or more horiz+vert signif
     for (i = 0; i < twoLeast.length; i++) {
       for (j = 0; j < oneBit.length; j++) {
-        ZC_LUT_HH[(twoLeast[i] << 4) | oneBit[j]] = 7;
+        zcLutHh[(twoLeast[i] << 4) | oneBit[j]] = 7;
       }
     }
 
     // - Two diagonal significant, none horiz+vert significant
     for (i = 0; i < twoBits.length; i++) {
-      ZC_LUT_HH[twoBits[i]] = 8;
+      zcLutHh[twoBits[i]] = 8;
     }
 
     // - Two diagonal significant, one or more horiz+vert significant
     for (j = 0; j < twoBits.length; j++) {
       for (i = 1; i < 16; i++) {
-        ZC_LUT_HH[(i << 4) | twoBits[j]] = 9;
+        zcLutHh[(i << 4) | twoBits[j]] = 9;
       }
     }
 
     // - Three or more diagonal significant, horiz+vert irrelevant
     for (i = 0; i < 16; i++) {
       for (j = 0; j < threeLeast.length; j++) {
-        ZC_LUT_HH[(i << 4) | threeLeast[j]] = 10;
+        zcLutHh[(i << 4) | threeLeast[j]] = 10;
       }
     }
 
@@ -528,12 +525,12 @@ class StdEntropyCoder extends EntropyCoder {
     interScLut[(2 << 3) | 0] = 13;
     interScLut[(1 << 3) | 2] = 12;
     interScLut[(1 << 3) | 1] = 11;
-    interScLut[(1 << 3) | 0] = 12 | INT_SIGN_BIT;
-    interScLut[(0 << 3) | 2] = 13 | INT_SIGN_BIT;
-    interScLut[(0 << 3) | 1] = 14 | INT_SIGN_BIT;
-    interScLut[(0 << 3) | 0] = 15 | INT_SIGN_BIT;
+    interScLut[(1 << 3) | 0] = 12 | intSignBit;
+    interScLut[(0 << 3) | 2] = 13 | intSignBit;
+    interScLut[(0 << 3) | 1] = 14 | intSignBit;
+    interScLut[(0 << 3) | 0] = 15 | intSignBit;
 
-    for (i = 0; i < (1 << SC_LUT_BITS) - 1; i++) {
+    for (i = 0; i < (1 << scLutBits) - 1; i++) {
       ds = i & 0x01;
       us = (i >> 1) & 0x01;
       rs = (i >> 2) & 0x01;
@@ -550,40 +547,40 @@ class StdEntropyCoder extends EntropyCoder {
       v = (v >= -1) ? v : -1;
       v = (v <= 1) ? v : 1;
 
-      SC_LUT[i] = interScLut[(h + 1) << 3 | (v + 1)];
+      scLut[i] = interScLut[(h + 1) << 3 | (v + 1)];
     }
     interScLut = null;
 
     // Initialize the MR lookup tables
-    MR_LUT[0] = 16;
-    for (i = 1; i < (1 << (MR_LUT_BITS - 1)); i++) {
-      MR_LUT[i] = 17;
+    mrLut[0] = 16;
+    for (i = 1; i < (1 << (mrLutBits - 1)); i++) {
+      mrLut[i] = 17;
     }
-    for (; i < (1 << MR_LUT_BITS); i++) {
-      MR_LUT[i] = 18;
+    for (; i < (1 << mrLutBits); i++) {
+      mrLut[i] = 18;
     }
 
     // Initialize the distortion estimation lookup tables
-    for (i = 0; i < (1 << (MSE_LKP_BITS - 1)); i++) {
-      val = i.toDouble() / (1 << (MSE_LKP_BITS - 1)) + 1.0;
+    for (i = 0; i < (1 << (mseLkpBits - 1)); i++) {
+      val = i.toDouble() / (1 << (mseLkpBits - 1)) + 1.0;
       deltaMSE = val * val;
-      FS_LOSSLESS[i] =
-          (deltaMSE * ((1 << MSE_LKP_FRAC_BITS).toDouble()) + 0.5).floor();
+      fsLossless[i] =
+          (deltaMSE * ((1 << mseLkpFracBits).toDouble()) + 0.5).floor();
       val -= 1.5;
       deltaMSE -= val * val;
-      FS_LOSSY[i] =
-          (deltaMSE * ((1 << MSE_LKP_FRAC_BITS).toDouble()) + 0.5).floor();
+      fsLossy[i] =
+          (deltaMSE * ((1 << mseLkpFracBits).toDouble()) + 0.5).floor();
     }
 
-    for (i = 0; i < (1 << MSE_LKP_BITS); i++) {
-      val = i.toDouble() / (1 << (MSE_LKP_BITS - 1));
+    for (i = 0; i < (1 << mseLkpBits); i++) {
+      val = i.toDouble() / (1 << (mseLkpBits - 1));
       deltaMSE = (val - 1.0) * (val - 1.0);
-      FM_LOSSLESS[i] =
-          (deltaMSE * ((1 << MSE_LKP_FRAC_BITS).toDouble()) + 0.5).floor();
-      val -= (i < (1 << (MSE_LKP_BITS - 1))) ? 0.5 : 1.5;
+      fmLossless[i] =
+          (deltaMSE * ((1 << mseLkpFracBits).toDouble()) + 0.5).floor();
+      val -= (i < (1 << (mseLkpBits - 1))) ? 0.5 : 1.5;
       deltaMSE -= val * val;
-      FM_LOSSY[i] =
-          (deltaMSE * ((1 << MSE_LKP_FRAC_BITS).toDouble()) + 0.5).floor();
+      fmLossy[i] =
+          (deltaMSE * ((1 << mseLkpFracBits).toDouble()) + 0.5).floor();
     }
   }
 
@@ -598,26 +595,22 @@ class StdEntropyCoder extends EntropyCoder {
     maxCBlkHeight = cblks.getMaxCBlkHeight();
 
     outT = List.generate(tsl, (_) => ByteOutputBuffer());
-    mqT = List.generate(tsl, (idx) => MQCoder(outT[idx], NUM_CTXTS, MQ_INIT));
+    mqT = List.generate(tsl, (idx) => MQCoder(outT[idx], numCtxts, mqInit));
     boutT = List.filled(tsl, null);
     stateT = List.generate(
         tsl,
         (_) => List<int>.filled(
             (maxCBlkWidth + 2) * ((maxCBlkHeight + 1) ~/ 2 + 2), 0));
-    symbufT = List.generate(tsl,
-        (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
-    ctxtbufT = List.generate(tsl,
-        (_) => List<int>.filled(maxCBlkWidth * (STRIPE_HEIGHT * 2 + 2), 0));
-    distbufT = List.generate(
-        tsl,
-        (_) =>
-            List<double>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0.0));
-    ratebufT = List.generate(tsl,
-        (_) => List<int>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, 0));
-    istermbufT = List.generate(
-        tsl,
-        (_) =>
-            List<bool>.filled(32 * StdEntropyCoderOptions.NUM_PASSES, false));
+    symbufT = List.generate(
+        tsl, (_) => List<int>.filled(maxCBlkWidth * (stripeHeight * 2 + 2), 0));
+    ctxtbufT = List.generate(
+        tsl, (_) => List<int>.filled(maxCBlkWidth * (stripeHeight * 2 + 2), 0));
+    distbufT = List.generate(tsl,
+        (_) => List<double>.filled(32 * StdEntropyCoderOptions.numPasses, 0.0));
+    ratebufT = List.generate(
+        tsl, (_) => List<int>.filled(32 * StdEntropyCoderOptions.numPasses, 0));
+    istermbufT = List.generate(tsl,
+        (_) => List<bool>.filled(32 * StdEntropyCoderOptions.numPasses, false));
     srcblkT = List.filled(tsl, null);
 
     precinctPartition = List.generate(
@@ -637,12 +630,12 @@ class StdEntropyCoder extends EntropyCoder {
 
   @override
   int getCBlkWidth(int t, int c) {
-    return cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, t, c);
+    return cblks.getCBlkWidth(ModuleSpec.specTileComp, t, c);
   }
 
   @override
   int getCBlkHeight(int t, int c) {
-    return cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, t, c);
+    return cblks.getCBlkHeight(ModuleSpec.specTileComp, t, c);
   }
 
   @override
@@ -656,7 +649,7 @@ class StdEntropyCoder extends EntropyCoder {
 
     final tIdx = getTileIdx();
 
-    if ((opts[tIdx][c] & OPT_BYPASS) != 0 && boutT[0] == null) {
+    if ((opts[tIdx][c] & optBypass) != 0 && boutT[0] == null) {
       boutT[0] = BitToByteOutput(outT[0]);
     }
 
@@ -693,28 +686,28 @@ class StdEntropyCoder extends EntropyCoder {
         opts[t][c] = 0;
 
         if ((bms.getTileCompVal(t, c) as String).toLowerCase() == "on") {
-          opts[t][c] |= OPT_BYPASS;
+          opts[t][c] |= optBypass;
         }
         if ((mqrs.getTileCompVal(t, c) as String).toLowerCase() == "on") {
-          opts[t][c] |= OPT_RESET_MQ;
+          opts[t][c] |= optResetMq;
         }
         if ((rts.getTileCompVal(t, c) as String).toLowerCase() == "on") {
-          opts[t][c] |= OPT_TERM_PASS;
+          opts[t][c] |= optTermPass;
         }
         if ((css.getTileCompVal(t, c) as String).toLowerCase() == "on") {
-          opts[t][c] |= OPT_VERT_STR_CAUSAL;
+          opts[t][c] |= optVertStrCausal;
         }
         if ((sss.getTileCompVal(t, c) as String).toLowerCase() == "on") {
-          opts[t][c] |= OPT_SEG_SYMBOLS;
+          opts[t][c] |= optSegSymbols;
         }
 
         String lCalcType = lcs.getTileCompVal(t, c) as String;
         if (lCalcType == "near_opt") {
-          lenCalc[t][c] = MQCoder.LENGTH_NEAR_OPT;
+          lenCalc[t][c] = MQCoder.lengthNearOpt;
         } else if (lCalcType == "lazy_good") {
-          lenCalc[t][c] = MQCoder.LENGTH_LAZY_GOOD;
+          lenCalc[t][c] = MQCoder.lengthLazyGood;
         } else if (lCalcType == "lazy") {
-          lenCalc[t][c] = MQCoder.LENGTH_LAZY;
+          lenCalc[t][c] = MQCoder.lengthLazy;
         } else {
           throw ArgumentError(
               "Unrecognized or unsupported MQ length calculation.");
@@ -722,15 +715,15 @@ class StdEntropyCoder extends EntropyCoder {
 
         String termType = tts.getTileCompVal(t, c) as String;
         if (termType.toLowerCase() == "easy") {
-          tType[t][c] = MQCoder.TERM_EASY;
+          tType[t][c] = MQCoder.termEasy;
         } else if (termType.toLowerCase() == "full") {
-          tType[t][c] = MQCoder.TERM_FULL;
+          tType[t][c] = MQCoder.termFull;
         } else if (termType.toLowerCase() == "near_opt") {
-          tType[t][c] = MQCoder.TERM_NEAR_OPT;
+          tType[t][c] = MQCoder.termNearOpt;
         } else if (termType.toLowerCase() == "predict") {
-          tType[t][c] = MQCoder.TERM_PRED_ER;
-          opts[t][c] |= OPT_PRED_TERM;
-          if ((opts[t][c] & (OPT_TERM_PASS | OPT_BYPASS)) == 0) {
+          tType[t][c] = MQCoder.termPredEr;
+          opts[t][c] |= optPredTerm;
+          if ((opts[t][c] & (optTermPass | optBypass)) == 0) {
             FacilityManager.getMsgLogger().printmsg(
                 MsgLogger.info,
                 "Using error resilient MQ termination, but terminating only at "
@@ -774,7 +767,7 @@ class StdEntropyCoder extends EntropyCoder {
     double totdist;
     int ltpidx;
 
-    if ((options & OPT_PRED_TERM) != 0 && tType != MQCoder.TERM_PRED_ER) {
+    if ((options & optPredTerm) != 0 && tType != MQCoder.termPredEr) {
       throw ArgumentError("Embedded error-resilient info in MQ termination "
           "option specified but incorrect MQ termination policy specified");
     }
@@ -802,23 +795,23 @@ class StdEntropyCoder extends EntropyCoder {
 
     switch (srcblk.sb!.orientation) {
       case Subband.wtOrientHl:
-        zcLut = ZC_LUT_HL;
+        zcLut = zcLutHl;
         break;
       case Subband.wtOrientLl:
       case Subband.wtOrientLh:
-        zcLut = ZC_LUT_LH;
+        zcLut = zcLutLh;
         break;
       case Subband.wtOrientHh:
-        zcLut = ZC_LUT_HH;
+        zcLut = zcLutHh;
         break;
       default:
         throw Error();
     }
 
     curbp = 30 - skipbp;
-    fs = FS_LOSSY;
-    fm = FM_LOSSY;
-    msew = math.pow(2, ((curbp - lmb) << 1) - MSE_LKP_FRAC_BITS) *
+    fs = fsLossy;
+    fm = fmLossy;
+    msew = math.pow(2, ((curbp - lmb) << 1) - mseLkpFracBits) *
         srcblk.sb!.stepWMSE *
         srcblk.wmseScaling;
     totdist = 0.0;
@@ -827,12 +820,12 @@ class StdEntropyCoder extends EntropyCoder {
 
     if (curbp >= lmb) {
       if (rev && curbp == lmb) {
-        fs = FM_LOSSLESS;
+        fs = fmLossless;
       }
-      istermbuf[npass] = (options & OPT_TERM_PASS) != 0 ||
+      istermbuf[npass] = (options & optTermPass) != 0 ||
           curbp == lmb ||
-          ((options & OPT_BYPASS) != 0 &&
-              (31 - NUM_NON_BYPASS_MS_BP - skipbp) >= curbp);
+          ((options & optBypass) != 0 &&
+              (31 - numNonBypassMsBp - skipbp) >= curbp);
       totdist += cleanuppass(srcblk, mq, istermbuf[npass], curbp, state, fs,
               zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
           msew;
@@ -845,18 +838,18 @@ class StdEntropyCoder extends EntropyCoder {
 
     while (curbp >= lmb) {
       if (rev && curbp == lmb) {
-        fs = FS_LOSSLESS;
-        fm = FM_LOSSLESS;
+        fs = fsLossless;
+        fm = fmLossless;
       }
 
-      istermbuf[npass] = (options & OPT_TERM_PASS) != 0;
-      if ((options & OPT_BYPASS) == 0 ||
-          (31 - NUM_NON_BYPASS_MS_BP - skipbp <= curbp)) {
+      istermbuf[npass] = (options & optTermPass) != 0;
+      if ((options & optBypass) == 0 ||
+          (31 - numNonBypassMsBp - skipbp <= curbp)) {
         totdist += sigProgPass(srcblk, mq, istermbuf[npass], curbp, state, fs,
                 zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
             msew;
       } else {
-        bout!.setPredTerm((options & OPT_PRED_TERM) != 0);
+        bout!.setPredTerm((options & optPredTerm) != 0);
         totdist += rawSigProgPass(srcblk, bout, istermbuf[npass], curbp, state,
                 fs, ratebuf, npass, ltpidx, options) *
             msew;
@@ -865,16 +858,16 @@ class StdEntropyCoder extends EntropyCoder {
       if (istermbuf[npass]) ltpidx = npass;
       npass++;
 
-      istermbuf[npass] = (options & OPT_TERM_PASS) != 0 ||
-          ((options & OPT_BYPASS) != 0 &&
-              (31 - NUM_NON_BYPASS_MS_BP - skipbp > curbp));
-      if ((options & OPT_BYPASS) == 0 ||
-          (31 - NUM_NON_BYPASS_MS_BP - skipbp <= curbp)) {
+      istermbuf[npass] = (options & optTermPass) != 0 ||
+          ((options & optBypass) != 0 &&
+              (31 - numNonBypassMsBp - skipbp > curbp));
+      if ((options & optBypass) == 0 ||
+          (31 - numNonBypassMsBp - skipbp <= curbp)) {
         totdist += magRefPass(srcblk, mq, istermbuf[npass], curbp, state, fm,
                 symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
             msew;
       } else {
-        bout!.setPredTerm((options & OPT_PRED_TERM) != 0);
+        bout!.setPredTerm((options & optPredTerm) != 0);
         totdist += rawMagRefPass(srcblk, bout, istermbuf[npass], curbp, state,
                 fm, ratebuf, npass, ltpidx, options) *
             msew;
@@ -883,10 +876,10 @@ class StdEntropyCoder extends EntropyCoder {
       if (istermbuf[npass]) ltpidx = npass;
       npass++;
 
-      istermbuf[npass] = (options & OPT_TERM_PASS) != 0 ||
+      istermbuf[npass] = (options & optTermPass) != 0 ||
           curbp == lmb ||
-          ((options & OPT_BYPASS) != 0 &&
-              (31 - NUM_NON_BYPASS_MS_BP - skipbp) >= curbp);
+          ((options & optBypass) != 0 &&
+              (31 - numNonBypassMsBp - skipbp) >= curbp);
       totdist += cleanuppass(srcblk, mq, istermbuf[npass], curbp, state, fs,
               zcLut, symbuf, ctxtbuf, ratebuf, npass, ltpidx, options) *
           msew;
@@ -905,7 +898,7 @@ class StdEntropyCoder extends EntropyCoder {
     ccb.selectConvexHull(
         ratebuf,
         distbuf,
-        (options & (OPT_BYPASS | OPT_TERM_PASS)) != 0 ? istermbuf : null,
+        (options & (optBypass | optTermPass)) != 0 ? istermbuf : null,
         npass,
         rev);
 
@@ -986,16 +979,16 @@ class StdEntropyCoder extends EntropyCoder {
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
-    jstep = sscanw * STRIPE_HEIGHT ~/ 2 - srcblk.w;
-    kstep = dscanw * STRIPE_HEIGHT - srcblk.w;
+    jstep = sscanw * stripeHeight ~/ 2 - srcblk.w;
+    kstep = dscanw * stripeHeight - srcblk.w;
     mask = 1 << bp;
     data = srcblk.getData() as List<int>;
-    nstripes = (srcblk.h + STRIPE_HEIGHT - 1) ~/ STRIPE_HEIGHT;
+    nstripes = (srcblk.h + stripeHeight - 1) ~/ stripeHeight;
     dist = 0;
-    shift = bp - (MSE_LKP_BITS - 1);
+    shift = bp - (mseLkpBits - 1);
     upshift = (shift >= 0) ? 0 : -shift;
     downshift = (shift <= 0) ? 0 : shift;
-    causal = (options & OPT_VERT_STR_CAUSAL) != 0;
+    causal = (options & optVertStrCausal) != 0;
 
     offUl = -sscanw - 1;
     offUr = -sscanw + 1;
@@ -1006,118 +999,103 @@ class StdEntropyCoder extends EntropyCoder {
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
       sheight =
-          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+          (s != 0) ? stripeHeight : srcblk.h - (nstripes - 1) * stripeHeight;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
         csj = state[j];
-        if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
+        if ((((~csj) & (csj << 2)) & sigMaskR1r2) != 0) {
           k = sk;
-          if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
-            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
+          if ((csj & (stateSigR1 | stateNzCtxtR1)) == stateNzCtxtR1) {
+            ctxtbuf[nsym] = zcLut[csj & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
+              ctxt = scLut[(csj >> scShiftR1) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
               if (!causal) {
-                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+                state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               }
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
                 if (!causal) {
                   state[j - sscanw] |=
-                      STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
+                      stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
                 if (!causal) {
-                  state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
+                  state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R1;
+              csj |= stateVisitedR1;
             }
           }
           if (sheight < 2) {
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
+          if ((csj & (stateSigR2 | stateNzCtxtR2)) == stateNzCtxtR2) {
             k += dscanw;
-            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> stateSep) & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              ctxt = scLut[(csj >> scShiftR2) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 |
+                    stateVisitedR2 |
+                    stateNzCtxtR1 |
+                    stateVDR1 |
+                    stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R2;
+              csj |= stateVisitedR2;
             }
           }
           state[j] = csj;
@@ -1125,107 +1103,91 @@ class StdEntropyCoder extends EntropyCoder {
         if (sheight < 3) continue;
         j += sscanw;
         csj = state[j];
-        if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
+        if ((((~csj) & (csj << 2)) & sigMaskR1r2) != 0) {
           k = sk + (dscanw << 1);
-          if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
-            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
+          if ((csj & (stateSigR1 | stateNzCtxtR1)) == stateNzCtxtR1) {
+            ctxtbuf[nsym] = zcLut[csj & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              ctxt = scLut[(csj >> scShiftR1) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+              state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
-                state[j - sscanw] |=
-                    STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
-                state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R1;
+              csj |= stateVisitedR1;
             }
           }
           if (sheight < 4) {
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
+          if ((csj & (stateSigR2 | stateNzCtxtR2)) == stateNzCtxtR2) {
             k += dscanw;
-            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> stateSep) & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              ctxt = scLut[(csj >> scShiftR2) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 |
+                    stateVisitedR2 |
+                    stateNzCtxtR1 |
+                    stateVDR1 |
+                    stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R2;
+              csj |= stateVisitedR2;
             }
           }
           state[j] = csj;
@@ -1234,7 +1196,7 @@ class StdEntropyCoder extends EntropyCoder {
       mq.codeSymbols(symbuf, ctxtbuf, nsym);
     }
 
-    if ((options & OPT_RESET_MQ) != 0) {
+    if ((options & optResetMq) != 0) {
       mq.resetCtxts();
     }
 
@@ -1288,16 +1250,16 @@ class StdEntropyCoder extends EntropyCoder {
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
-    jstep = sscanw * STRIPE_HEIGHT ~/ 2 - srcblk.w;
-    kstep = dscanw * STRIPE_HEIGHT - srcblk.w;
+    jstep = sscanw * stripeHeight ~/ 2 - srcblk.w;
+    kstep = dscanw * stripeHeight - srcblk.w;
     mask = 1 << bp;
     data = srcblk.getData() as List<int>;
-    nstripes = (srcblk.h + STRIPE_HEIGHT - 1) ~/ STRIPE_HEIGHT;
+    nstripes = (srcblk.h + stripeHeight - 1) ~/ stripeHeight;
     dist = 0;
-    shift = bp - (MSE_LKP_BITS - 1);
+    shift = bp - (mseLkpBits - 1);
     upshift = (shift >= 0) ? 0 : -shift;
     downshift = (shift <= 0) ? 0 : shift;
-    causal = (options & OPT_VERT_STR_CAUSAL) != 0;
+    causal = (options & optVertStrCausal) != 0;
 
     offUl = -sscanw - 1;
     offUr = -sscanw + 1;
@@ -1308,114 +1270,99 @@ class StdEntropyCoder extends EntropyCoder {
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
       sheight =
-          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+          (s != 0) ? stripeHeight : srcblk.h - (nstripes - 1) * stripeHeight;
       stopsk = sk + srcblk.w;
       for (; sk < stopsk; sk++, sj++) {
         j = sj;
         csj = state[j];
-        if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
+        if ((((~csj) & (csj << 2)) & sigMaskR1r2) != 0) {
           k = sk;
-          if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
+          if ((csj & (stateSigR1 | stateNzCtxtR1)) == stateNzCtxtR1) {
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
               if (!causal) {
-                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+                state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               }
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
                 if (!causal) {
                   state[j - sscanw] |=
-                      STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
+                      stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
                 if (!causal) {
-                  state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
+                  state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R1;
+              csj |= stateVisitedR1;
             }
           }
           if (sheight < 2) {
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
+          if ((csj & (stateSigR2 | stateNzCtxtR2)) == stateNzCtxtR2) {
             k += dscanw;
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 |
+                    stateVisitedR2 |
+                    stateNzCtxtR1 |
+                    stateVDR1 |
+                    stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R2;
+              csj |= stateVisitedR2;
             }
           }
           state[j] = csj;
@@ -1423,103 +1370,87 @@ class StdEntropyCoder extends EntropyCoder {
         if (sheight < 3) continue;
         j += sscanw;
         csj = state[j];
-        if ((((~csj) & (csj << 2)) & SIG_MASK_R1R2) != 0) {
+        if ((((~csj) & (csj << 2)) & sigMaskR1r2) != 0) {
           k = sk + (dscanw << 1);
-          if ((csj & (STATE_SIG_R1 | STATE_NZ_CTXT_R1)) == STATE_NZ_CTXT_R1) {
+          if ((csj & (stateSigR1 | stateNzCtxtR1)) == stateNzCtxtR1) {
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+              state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
-                state[j - sscanw] |=
-                    STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
-                state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R1;
+              csj |= stateVisitedR1;
             }
           }
           if (sheight < 4) {
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_NZ_CTXT_R2)) == STATE_NZ_CTXT_R2) {
+          if ((csj & (stateSigR2 | stateNzCtxtR2)) == stateNzCtxtR2) {
             k += dscanw;
             if ((sym = (data[k] & mask) >> bp) != 0) {
               bout.writeBit(sym);
               sym = (data[k] >> 31) & 1;
               bout.writeBit(sym);
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 |
+                    stateVisitedR2 |
+                    stateNzCtxtR1 |
+                    stateVDR1 |
+                    stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             } else {
-              csj |= STATE_VISITED_R2;
+              csj |= stateVisitedR2;
             }
           }
           state[j] = csj;
@@ -1574,13 +1505,13 @@ class StdEntropyCoder extends EntropyCoder {
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
-    jstep = sscanw * STRIPE_HEIGHT ~/ 2 - srcblk.w;
-    kstep = dscanw * STRIPE_HEIGHT - srcblk.w;
+    jstep = sscanw * stripeHeight ~/ 2 - srcblk.w;
+    kstep = dscanw * stripeHeight - srcblk.w;
     mask = 1 << bp;
     data = srcblk.getData() as List<int>;
-    nstripes = (srcblk.h + STRIPE_HEIGHT - 1) ~/ STRIPE_HEIGHT;
+    nstripes = (srcblk.h + stripeHeight - 1) ~/ stripeHeight;
     dist = 0;
-    shift = bp - (MSE_LKP_BITS - 1);
+    shift = bp - (mseLkpBits - 1);
     upshift = (shift >= 0) ? 0 : -shift;
     downshift = (shift <= 0) ? 0 : shift;
 
@@ -1588,57 +1519,57 @@ class StdEntropyCoder extends EntropyCoder {
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
       sheight =
-          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+          (s != 0) ? stripeHeight : srcblk.h - (nstripes - 1) * stripeHeight;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
         csj = state[j];
-        if ((((csj >> 1) & (~csj)) & VSTD_MASK_R1R2) != 0) {
+        if ((((csj >> 1) & (~csj)) & vstdMaskR1r2) != 0) {
           k = sk;
-          if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == STATE_SIG_R1) {
+          if ((csj & (stateSigR1 | stateVisitedR1)) == stateSigR1) {
             symbuf[nsym] = (data[k] & mask) >> bp;
-            ctxtbuf[nsym++] = MR_LUT[csj & MR_MASK];
-            csj |= STATE_PREV_MR_R1;
+            ctxtbuf[nsym++] = mrLut[csj & mrMask];
+            csj |= statePrevMrR1;
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           if (sheight < 2) {
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == STATE_SIG_R2) {
+          if ((csj & (stateSigR2 | stateVisitedR2)) == stateSigR2) {
             k += dscanw;
             symbuf[nsym] = (data[k] & mask) >> bp;
-            ctxtbuf[nsym++] = MR_LUT[(csj >> STATE_SEP) & MR_MASK];
-            csj |= STATE_PREV_MR_R2;
+            ctxtbuf[nsym++] = mrLut[(csj >> stateSep) & mrMask];
+            csj |= statePrevMrR2;
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           state[j] = csj;
         }
         if (sheight < 3) continue;
         j += sscanw;
         csj = state[j];
-        if ((((csj >> 1) & (~csj)) & VSTD_MASK_R1R2) != 0) {
+        if ((((csj >> 1) & (~csj)) & vstdMaskR1r2) != 0) {
           k = sk + (dscanw << 1);
-          if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == STATE_SIG_R1) {
+          if ((csj & (stateSigR1 | stateVisitedR1)) == stateSigR1) {
             symbuf[nsym] = (data[k] & mask) >> bp;
-            ctxtbuf[nsym++] = MR_LUT[csj & MR_MASK];
-            csj |= STATE_PREV_MR_R1;
+            ctxtbuf[nsym++] = mrLut[csj & mrMask];
+            csj |= statePrevMrR1;
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           if (sheight < 4) {
             state[j] = csj;
             continue;
           }
-          if ((state[j] & (STATE_SIG_R2 | STATE_VISITED_R2)) == STATE_SIG_R2) {
+          if ((state[j] & (stateSigR2 | stateVisitedR2)) == stateSigR2) {
             k += dscanw;
             symbuf[nsym] = (data[k] & mask) >> bp;
-            ctxtbuf[nsym++] = MR_LUT[(csj >> STATE_SEP) & MR_MASK];
-            csj |= STATE_PREV_MR_R2;
+            ctxtbuf[nsym++] = mrLut[(csj >> stateSep) & mrMask];
+            csj |= statePrevMrR2;
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           state[j] = csj;
         }
@@ -1646,7 +1577,7 @@ class StdEntropyCoder extends EntropyCoder {
       if (nsym > 0) mq.codeSymbols(symbuf, ctxtbuf, nsym);
     }
 
-    if ((options & OPT_RESET_MQ) != 0) {
+    if ((options & optResetMq) != 0) {
       mq.resetCtxts();
     }
 
@@ -1697,13 +1628,13 @@ class StdEntropyCoder extends EntropyCoder {
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
-    jstep = sscanw * STRIPE_HEIGHT ~/ 2 - srcblk.w;
-    kstep = dscanw * STRIPE_HEIGHT - srcblk.w;
+    jstep = sscanw * stripeHeight ~/ 2 - srcblk.w;
+    kstep = dscanw * stripeHeight - srcblk.w;
     mask = 1 << bp;
     data = srcblk.getData() as List<int>;
-    nstripes = (srcblk.h + STRIPE_HEIGHT - 1) ~/ STRIPE_HEIGHT;
+    nstripes = (srcblk.h + stripeHeight - 1) ~/ stripeHeight;
     dist = 0;
-    shift = bp - (MSE_LKP_BITS - 1);
+    shift = bp - (mseLkpBits - 1);
     upshift = (shift >= 0) ? 0 : -shift;
     downshift = (shift <= 0) ? 0 : shift;
 
@@ -1711,42 +1642,42 @@ class StdEntropyCoder extends EntropyCoder {
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
       sheight =
-          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+          (s != 0) ? stripeHeight : srcblk.h - (nstripes - 1) * stripeHeight;
       stopsk = sk + srcblk.w;
       for (; sk < stopsk; sk++, sj++) {
         j = sj;
         csj = state[j];
-        if ((((csj >> 1) & (~csj)) & VSTD_MASK_R1R2) != 0) {
+        if ((((csj >> 1) & (~csj)) & vstdMaskR1r2) != 0) {
           k = sk;
-          if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == STATE_SIG_R1) {
+          if ((csj & (stateSigR1 | stateVisitedR1)) == stateSigR1) {
             bout.writeBit((data[k] & mask) >> bp);
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           if (sheight < 2) continue;
-          if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == STATE_SIG_R2) {
+          if ((csj & (stateSigR2 | stateVisitedR2)) == stateSigR2) {
             k += dscanw;
             bout.writeBit((data[k] & mask) >> bp);
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
         }
         if (sheight < 3) continue;
         j += sscanw;
         csj = state[j];
-        if ((((csj >> 1) & (~csj)) & VSTD_MASK_R1R2) != 0) {
+        if ((((csj >> 1) & (~csj)) & vstdMaskR1r2) != 0) {
           k = sk + (dscanw << 1);
-          if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == STATE_SIG_R1) {
+          if ((csj & (stateSigR1 | stateVisitedR1)) == stateSigR1) {
             bout.writeBit((data[k] & mask) >> bp);
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
           if (sheight < 4) continue;
-          if ((state[j] & (STATE_SIG_R2 | STATE_VISITED_R2)) == STATE_SIG_R2) {
+          if ((state[j] & (stateSigR2 | stateVisitedR2)) == stateSigR2) {
             k += dscanw;
             bout.writeBit((data[k] & mask) >> bp);
             normval = (data[k] >> downshift) << upshift;
-            dist += fm[normval & ((1 << MSE_LKP_BITS) - 1)];
+            dist += fm[normval & ((1 << mseLkpBits) - 1)];
           }
         }
       }
@@ -1806,16 +1737,16 @@ class StdEntropyCoder extends EntropyCoder {
 
     dscanw = srcblk.scanw;
     sscanw = srcblk.w + 2;
-    jstep = sscanw * STRIPE_HEIGHT ~/ 2 - srcblk.w;
-    kstep = dscanw * STRIPE_HEIGHT - srcblk.w;
+    jstep = sscanw * stripeHeight ~/ 2 - srcblk.w;
+    kstep = dscanw * stripeHeight - srcblk.w;
     mask = 1 << bp;
     data = srcblk.getData() as List<int>;
-    nstripes = (srcblk.h + STRIPE_HEIGHT - 1) ~/ STRIPE_HEIGHT;
+    nstripes = (srcblk.h + stripeHeight - 1) ~/ stripeHeight;
     dist = 0;
-    shift = bp - (MSE_LKP_BITS - 1);
+    shift = bp - (mseLkpBits - 1);
     upshift = (shift >= 0) ? 0 : -shift;
     downshift = (shift <= 0) ? 0 : shift;
-    causal = (options & OPT_VERT_STR_CAUSAL) != 0;
+    causal = (options & optVertStrCausal) != 0;
 
     offUl = -sscanw - 1;
     offUr = -sscanw + 1;
@@ -1826,7 +1757,7 @@ class StdEntropyCoder extends EntropyCoder {
     sj = sscanw + 1;
     for (s = nstripes - 1; s >= 0; s--, sk += kstep, sj += jstep) {
       sheight =
-          (s != 0) ? STRIPE_HEIGHT : srcblk.h - (nstripes - 1) * STRIPE_HEIGHT;
+          (s != 0) ? stripeHeight : srcblk.h - (nstripes - 1) * stripeHeight;
       stopsk = sk + srcblk.w;
       for (nsym = 0; sk < stopsk; sk++, sj++) {
         j = sj;
@@ -1835,7 +1766,7 @@ class StdEntropyCoder extends EntropyCoder {
 
         // top_half:
         {
-          if (csj == 0 && state[j + sscanw] == 0 && sheight == STRIPE_HEIGHT) {
+          if (csj == 0 && state[j + sscanw] == 0 && sheight == stripeHeight) {
             k = sk;
             if ((data[k] & mask) != 0) {
               rlclen = 0;
@@ -1851,100 +1782,85 @@ class StdEntropyCoder extends EntropyCoder {
               csj = state[j];
             } else {
               symbuf[nsym] = 0;
-              ctxtbuf[nsym++] = RLC_CTXT;
+              ctxtbuf[nsym++] = rlcCtxt;
               continue;
             }
             symbuf[nsym] = 1;
-            ctxtbuf[nsym++] = RLC_CTXT;
+            ctxtbuf[nsym++] = rlcCtxt;
             symbuf[nsym] = rlclen >> 1;
-            ctxtbuf[nsym++] = UNIF_CTXT;
+            ctxtbuf[nsym++] = unifCtxt;
             symbuf[nsym] = rlclen & 0x01;
-            ctxtbuf[nsym++] = UNIF_CTXT;
+            ctxtbuf[nsym++] = unifCtxt;
             normval = (data[k] >> downshift) << upshift;
-            dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+            dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             sym = (data[k] >> 31) & 1;
             if ((rlclen & 0x01) == 0) {
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
+              ctxt = scLut[(csj >> scShiftR1) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
               if (rlclen != 0 || !causal) {
-                state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+                state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               }
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
                 if (rlclen != 0 || !causal) {
                   state[j - sscanw] |=
-                      STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
+                      stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
                 if (rlclen != 0 || !causal) {
-                  state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
+                  state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
                 }
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               if ((rlclen >> 1) != 0) {
                 broken = true;
               }
             } else {
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              ctxt = scLut[(csj >> scShiftR2) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 | stateNzCtxtR1 | stateVDR1 | stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 | STATE_NZ_CTXT_R1 | STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               state[j] = csj;
               if ((rlclen >> 1) != 0) {
@@ -1958,232 +1874,204 @@ class StdEntropyCoder extends EntropyCoder {
         }
 
         if (!broken) {
-          if ((((csj >> 1) | csj) & VSTD_MASK_R1R2) != VSTD_MASK_R1R2) {
+          if ((((csj >> 1) | csj) & vstdMaskR1r2) != vstdMaskR1r2) {
             k = sk;
-            if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
-              ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
+            if ((csj & (stateSigR1 | stateVisitedR1)) == 0) {
+              ctxtbuf[nsym] = zcLut[csj & zcMask];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
                 sym = (data[k] >> 31) & 1;
-                ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
-                symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-                ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
+                ctxt = scLut[(csj >> scShiftR1) & scMask];
+                symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+                ctxtbuf[nsym++] = ctxt & scLutMask;
                 if (!causal) {
-                  state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-                  state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+                  state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+                  state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
                 }
                 if (sym != 0) {
-                  csj |= STATE_SIG_R1 |
-                      STATE_VISITED_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_V_U_R2 |
-                      STATE_V_U_SIGN_R2;
+                  csj |= stateSigR1 |
+                      stateVisitedR1 |
+                      stateNzCtxtR2 |
+                      stateVUR2 |
+                      stateVUSignR2;
                   if (!causal) {
                     state[j - sscanw] |=
-                        STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
+                        stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
                   }
-                  state[j + 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_H_L_R1 |
-                      STATE_H_L_SIGN_R1 |
-                      STATE_D_UL_R2;
-                  state[j - 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_H_R_R1 |
-                      STATE_H_R_SIGN_R1 |
-                      STATE_D_UR_R2;
+                  state[j + 1] |= stateNzCtxtR1 |
+                      stateNzCtxtR2 |
+                      stateHLR1 |
+                      stateHLSignR1 |
+                      stateDUlR2;
+                  state[j - 1] |= stateNzCtxtR1 |
+                      stateNzCtxtR2 |
+                      stateHRR1 |
+                      stateHRSignR1 |
+                      stateDUrR2;
                 } else {
-                  csj |= STATE_SIG_R1 |
-                      STATE_VISITED_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_V_U_R2;
+                  csj |=
+                      stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
                   if (!causal) {
-                    state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
+                    state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
                   }
-                  state[j + 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_H_L_R1 |
-                      STATE_D_UL_R2;
-                  state[j - 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_H_R_R1 |
-                      STATE_D_UR_R2;
+                  state[j + 1] |=
+                      stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                  state[j - 1] |=
+                      stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
                 }
                 normval = (data[k] >> downshift) << upshift;
-                dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+                dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
               }
             }
             if (sheight < 2) {
-              csj &= ~(STATE_VISITED_R1 | STATE_VISITED_R2);
+              csj &= ~(stateVisitedR1 | stateVisitedR2);
               state[j] = csj;
               continue;
             }
-            if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == 0) {
+            if ((csj & (stateSigR2 | stateVisitedR2)) == 0) {
               k += dscanw;
-              ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
+              ctxtbuf[nsym] = zcLut[(csj >> stateSep) & zcMask];
               if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
                 sym = (data[k] >> 31) & 1;
-                ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
-                symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-                ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-                state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-                state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+                ctxt = scLut[(csj >> scShiftR2) & scMask];
+                symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+                ctxtbuf[nsym++] = ctxt & scLutMask;
+                state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+                state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
                 if (sym != 0) {
-                  csj |= STATE_SIG_R2 |
-                      STATE_VISITED_R2 |
-                      STATE_NZ_CTXT_R1 |
-                      STATE_V_D_R1 |
-                      STATE_V_D_SIGN_R1;
+                  csj |= stateSigR2 |
+                      stateVisitedR2 |
+                      stateNzCtxtR1 |
+                      stateVDR1 |
+                      stateVDSignR1;
                   state[j + sscanw] |=
-                      STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                  state[j + 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_D_DL_R1 |
-                      STATE_H_L_R2 |
-                      STATE_H_L_SIGN_R2;
-                  state[j - 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_D_DR_R1 |
-                      STATE_H_R_R2 |
-                      STATE_H_R_SIGN_R2;
+                      stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                  state[j + 1] |= stateNzCtxtR1 |
+                      stateNzCtxtR2 |
+                      stateDDlR1 |
+                      stateHLR2 |
+                      stateHLSignR2;
+                  state[j - 1] |= stateNzCtxtR1 |
+                      stateNzCtxtR2 |
+                      stateDDrR1 |
+                      stateHRR2 |
+                      stateHRSignR2;
                 } else {
-                  csj |= STATE_SIG_R2 |
-                      STATE_VISITED_R2 |
-                      STATE_NZ_CTXT_R1 |
-                      STATE_V_D_R1;
-                  state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                  state[j + 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_D_DL_R1 |
-                      STATE_H_L_R2;
-                  state[j - 1] |= STATE_NZ_CTXT_R1 |
-                      STATE_NZ_CTXT_R2 |
-                      STATE_D_DR_R1 |
-                      STATE_H_R_R2;
+                  csj |=
+                      stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                  state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                  state[j + 1] |=
+                      stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                  state[j - 1] |=
+                      stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
                 }
                 normval = (data[k] >> downshift) << upshift;
-                dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+                dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
               }
             }
           }
-          csj &= ~(STATE_VISITED_R1 | STATE_VISITED_R2);
+          csj &= ~(stateVisitedR1 | stateVisitedR2);
           state[j] = csj;
           if (sheight < 3) continue;
           j += sscanw;
           csj = state[j];
         }
 
-        if ((((csj >> 1) | csj) & VSTD_MASK_R1R2) != VSTD_MASK_R1R2) {
+        if ((((csj >> 1) | csj) & vstdMaskR1r2) != vstdMaskR1r2) {
           k = sk + (dscanw << 1);
-          if ((csj & (STATE_SIG_R1 | STATE_VISITED_R1)) == 0) {
-            ctxtbuf[nsym] = zcLut[csj & ZC_MASK];
+          if ((csj & (stateSigR1 | stateVisitedR1)) == 0) {
+            ctxtbuf[nsym] = zcLut[csj & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R1) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offUl] |= STATE_NZ_CTXT_R2 | STATE_D_DR_R2;
-              state[j + offUr] |= STATE_NZ_CTXT_R2 | STATE_D_DL_R2;
+              ctxt = scLut[(csj >> scShiftR1) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offUl] |= stateNzCtxtR2 | stateDDrR2;
+              state[j + offUr] |= stateNzCtxtR2 | stateDDlR2;
               if (sym != 0) {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2 |
-                    STATE_V_U_SIGN_R2;
-                state[j - sscanw] |=
-                    STATE_NZ_CTXT_R2 | STATE_V_D_R2 | STATE_V_D_SIGN_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_H_L_SIGN_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_H_R_SIGN_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 |
+                    stateVisitedR1 |
+                    stateNzCtxtR2 |
+                    stateVUR2 |
+                    stateVUSignR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2 | stateVDSignR2;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHLR1 |
+                    stateHLSignR1 |
+                    stateDUlR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateHRR1 |
+                    stateHRSignR1 |
+                    stateDUrR2;
               } else {
-                csj |= STATE_SIG_R1 |
-                    STATE_VISITED_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_V_U_R2;
-                state[j - sscanw] |= STATE_NZ_CTXT_R2 | STATE_V_D_R2;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_L_R1 |
-                    STATE_D_UL_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_H_R_R1 |
-                    STATE_D_UR_R2;
+                csj |= stateSigR1 | stateVisitedR1 | stateNzCtxtR2 | stateVUR2;
+                state[j - sscanw] |= stateNzCtxtR2 | stateVDR2;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHLR1 | stateDUlR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateHRR1 | stateDUrR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             }
           }
           if (sheight < 4) {
-            csj &= ~(STATE_VISITED_R1 | STATE_VISITED_R2);
+            csj &= ~(stateVisitedR1 | stateVisitedR2);
             state[j] = csj;
             continue;
           }
-          if ((csj & (STATE_SIG_R2 | STATE_VISITED_R2)) == 0) {
+          if ((csj & (stateSigR2 | stateVisitedR2)) == 0) {
             k += dscanw;
-            ctxtbuf[nsym] = zcLut[(csj >> STATE_SEP) & ZC_MASK];
+            ctxtbuf[nsym] = zcLut[(csj >> stateSep) & zcMask];
             if ((symbuf[nsym++] = (data[k] & mask) >> bp) != 0) {
               sym = (data[k] >> 31) & 1;
-              ctxt = SC_LUT[(csj >> SC_SHIFT_R2) & SC_MASK];
-              symbuf[nsym] = sym ^ (ctxt >> SC_SPRED_SHIFT);
-              ctxtbuf[nsym++] = ctxt & SC_LUT_MASK;
-              state[j + offDl] |= STATE_NZ_CTXT_R1 | STATE_D_UR_R1;
-              state[j + offDr] |= STATE_NZ_CTXT_R1 | STATE_D_UL_R1;
+              ctxt = scLut[(csj >> scShiftR2) & scMask];
+              symbuf[nsym] = sym ^ (ctxt >> scSpredShift);
+              ctxtbuf[nsym++] = ctxt & scLutMask;
+              state[j + offDl] |= stateNzCtxtR1 | stateDUrR1;
+              state[j + offDr] |= stateNzCtxtR1 | stateDUlR1;
               if (sym != 0) {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1 |
-                    STATE_V_D_SIGN_R1;
-                state[j + sscanw] |=
-                    STATE_NZ_CTXT_R1 | STATE_V_U_R1 | STATE_V_U_SIGN_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2 |
-                    STATE_H_L_SIGN_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2 |
-                    STATE_H_R_SIGN_R2;
+                csj |= stateSigR2 |
+                    stateVisitedR2 |
+                    stateNzCtxtR1 |
+                    stateVDR1 |
+                    stateVDSignR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1 | stateVUSignR1;
+                state[j + 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDlR1 |
+                    stateHLR2 |
+                    stateHLSignR2;
+                state[j - 1] |= stateNzCtxtR1 |
+                    stateNzCtxtR2 |
+                    stateDDrR1 |
+                    stateHRR2 |
+                    stateHRSignR2;
               } else {
-                csj |= STATE_SIG_R2 |
-                    STATE_VISITED_R2 |
-                    STATE_NZ_CTXT_R1 |
-                    STATE_V_D_R1;
-                state[j + sscanw] |= STATE_NZ_CTXT_R1 | STATE_V_U_R1;
-                state[j + 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DL_R1 |
-                    STATE_H_L_R2;
-                state[j - 1] |= STATE_NZ_CTXT_R1 |
-                    STATE_NZ_CTXT_R2 |
-                    STATE_D_DR_R1 |
-                    STATE_H_R_R2;
+                csj |= stateSigR2 | stateVisitedR2 | stateNzCtxtR1 | stateVDR1;
+                state[j + sscanw] |= stateNzCtxtR1 | stateVUR1;
+                state[j + 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDlR1 | stateHLR2;
+                state[j - 1] |=
+                    stateNzCtxtR1 | stateNzCtxtR2 | stateDDrR1 | stateHRR2;
               }
               normval = (data[k] >> downshift) << upshift;
-              dist += fs[normval & ((1 << (MSE_LKP_BITS - 1)) - 1)];
+              dist += fs[normval & ((1 << (mseLkpBits - 1)) - 1)];
             }
           }
         }
-        csj &= ~(STATE_VISITED_R1 | STATE_VISITED_R2);
+        csj &= ~(stateVisitedR1 | stateVisitedR2);
         state[j] = csj;
       }
       if (nsym > 0) mq.codeSymbols(symbuf, ctxtbuf, nsym);
     }
 
-    if ((options & OPT_SEG_SYMBOLS) != 0) {
-      mq.codeSymbols(SEG_SYMBOLS, SEG_SYMB_CTXTS, SEG_SYMBOLS.length);
+    if ((options & optSegSymbols) != 0) {
+      mq.codeSymbols(segSymbols, segSymbCtxts, segSymbols.length);
     }
 
-    if ((options & OPT_RESET_MQ) != 0) {
+    if ((options & optResetMq) != 0) {
       mq.resetCtxts();
     }
 

@@ -9,18 +9,18 @@ class ModuleSpec<T> {
         nComp = numComps,
         specValType = List<List<int>>.generate(
           numTiles,
-          (_) => List<int>.filled(numComps, SPEC_DEF),
+          (_) => List<int>.filled(numComps, specDef),
           growable: false,
         );
 
-  static const int SPEC_TYPE_COMP = 0;
-  static const int SPEC_TYPE_TILE = 1;
-  static const int SPEC_TYPE_TILE_COMP = 2;
+  static const int specTypeComp = 0;
+  static const int specTypeTile = 1;
+  static const int specTypeTileComp = 2;
 
-  static const int SPEC_DEF = 0;
-  static const int SPEC_COMP_DEF = 1;
-  static const int SPEC_TILE_DEF = 2;
-  static const int SPEC_TILE_COMP = 3;
+  static const int specDef = 0;
+  static const int specCompDef = 1;
+  static const int specTileDef = 2;
+  static const int specTileComp = 3;
 
   final int specType;
   final int nTiles;
@@ -50,7 +50,7 @@ class ModuleSpec<T> {
   void rotate90(Coord newTiles) {
     final rotatedType = List<List<int>>.generate(
       nTiles,
-      (_) => List<int>.filled(nComp, SPEC_DEF),
+      (_) => List<int>.filled(nComp, specDef),
       growable: false,
     );
     final rotatedCoord = Coord(newTiles.y, newTiles.x);
@@ -101,22 +101,22 @@ class ModuleSpec<T> {
   T? getDefault() => def;
 
   void setCompDef(int component, T value) {
-    if (specType == SPEC_TYPE_TILE) {
+    if (specType == specTypeTile) {
       throw StateError(
         "Option whose value is '$value' cannot be specified for components",
       );
     }
     compDef ??= List<T?>.filled(nComp, null);
     for (var tile = 0; tile < nTiles; tile++) {
-      if (specValType[tile][component] < SPEC_COMP_DEF) {
-        specValType[tile][component] = SPEC_COMP_DEF;
+      if (specValType[tile][component] < specCompDef) {
+        specValType[tile][component] = specCompDef;
       }
     }
     compDef![component] = value;
   }
 
   T? getCompDef(int component) {
-    if (specType == SPEC_TYPE_TILE) {
+    if (specType == specTypeTile) {
       throw StateError('Illegal use of ModuleSpec for component query');
     }
     if (compDef == null || compDef![component] == null) {
@@ -126,22 +126,22 @@ class ModuleSpec<T> {
   }
 
   void setTileDef(int tile, T value) {
-    if (specType == SPEC_TYPE_COMP) {
+    if (specType == specTypeComp) {
       throw StateError(
         "Option whose value is '$value' cannot be specified for tiles",
       );
     }
     tileDef ??= List<T?>.filled(nTiles, null);
     for (var c = 0; c < nComp; c++) {
-      if (specValType[tile][c] < SPEC_TILE_DEF) {
-        specValType[tile][c] = SPEC_TILE_DEF;
+      if (specValType[tile][c] < specTileDef) {
+        specValType[tile][c] = specTileDef;
       }
     }
     tileDef![tile] = value;
   }
 
   T? getTileDef(int tile) {
-    if (specType == SPEC_TYPE_COMP) {
+    if (specType == specTypeComp) {
       throw StateError('Illegal use of ModuleSpec for tile query');
     }
     if (tileDef == null || tileDef![tile] == null) {
@@ -151,26 +151,26 @@ class ModuleSpec<T> {
   }
 
   void setTileCompVal(int tile, int component, T value) {
-    if (specType != SPEC_TYPE_TILE_COMP) {
+    if (specType != specTypeTileComp) {
       final buffer = StringBuffer()
         ..write("Option whose value is '$value' cannot be specified for ");
       switch (specType) {
-        case SPEC_TYPE_TILE:
+        case specTypeTile:
           buffer.write('components as it is tile-only');
           break;
-        case SPEC_TYPE_COMP:
+        case specTypeComp:
           buffer.write('tiles as it is component-only');
           break;
       }
       throw StateError(buffer.toString());
     }
     tileCompVal ??= <String, T>{};
-    specValType[tile][component] = SPEC_TILE_COMP;
+    specValType[tile][component] = specTileComp;
     tileCompVal!['t${tile}c$component'] = value;
   }
 
   T? getTileCompVal(int tile, int component) {
-    if (specType != SPEC_TYPE_TILE_COMP) {
+    if (specType != specTypeTileComp) {
       throw StateError('Illegal use of ModuleSpec for tile-component query');
     }
     return getSpec(tile, component);
@@ -178,13 +178,13 @@ class ModuleSpec<T> {
 
   T? getSpec(int tile, int component) {
     switch (specValType[tile][component]) {
-      case SPEC_DEF:
+      case specDef:
         return def;
-      case SPEC_COMP_DEF:
+      case specCompDef:
         return getCompDef(component);
-      case SPEC_TILE_DEF:
+      case specTileDef:
         return getTileDef(tile);
-      case SPEC_TILE_COMP:
+      case specTileComp:
         return tileCompVal?['t${tile}c$component'];
       default:
         throw ArgumentError('Unrecognised spec type');

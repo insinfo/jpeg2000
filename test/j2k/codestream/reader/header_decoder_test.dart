@@ -234,7 +234,7 @@ void main() {
         spcodCw: 0x04,
         spcodCh: 0x04,
         spcodCs: 0x00,
-        spcodT: FilterTypes.W5X3,
+        spcodT: FilterTypes.w5x3,
       );
       decoder.parseCodMarker(codPayload, isMainHeader: true, tileIdx: 0);
 
@@ -253,7 +253,7 @@ void main() {
       );
 
       final offsetsPayload = buildCodMarkerPayload(
-        scod: Markers.SCOX_HOR_CB_PART | Markers.SCOX_VER_CB_PART,
+        scod: Markers.scoxHorCbPart | Markers.scoxVerCbPart,
         sgcodPo: 0x00,
         sgcodNl: 1,
         sgcodMct: 0x00,
@@ -297,7 +297,7 @@ void main() {
       );
 
       final payload = buildCodMarkerPayload(
-        scod: Markers.SCOX_HOR_CB_PART | Markers.SCOX_VER_CB_PART,
+        scod: Markers.scoxHorCbPart | Markers.scoxVerCbPart,
         sgcodPo: 0x00,
         sgcodNl: 1,
         sgcodMct: 0x00,
@@ -338,7 +338,7 @@ void main() {
       decoder.parseCodMarker(mainPayload, isMainHeader: true, tileIdx: 0);
 
       final tilePayload = buildCodMarkerPayload(
-        scod: Markers.SCOX_HOR_CB_PART,
+        scod: Markers.scoxHorCbPart,
         sgcodPo: 0x00,
         sgcodNl: 1,
         sgcodMct: 0x00,
@@ -422,8 +422,8 @@ void main() {
       expect(specs.pss.isTileSpecified(1), isTrue);
       final precincts = specs.pss.getTileDef(1);
       expect(precincts, isNotNull);
-      expect(precincts![0], equals(<int>[Markers.PRECINCT_PARTITION_DEF_SIZE]));
-      expect(precincts[1], equals(<int>[Markers.PRECINCT_PARTITION_DEF_SIZE]));
+      expect(precincts![0], equals(<int>[Markers.precinctPartitionDefSize]));
+      expect(precincts[1], equals(<int>[Markers.precinctPartitionDefSize]));
     });
 
     test('applies component-level wavelet filter overrides from COC', () {
@@ -444,7 +444,7 @@ void main() {
         spcodCw: 0x04,
         spcodCh: 0x04,
         spcodCs: 0x00,
-        spcodT: FilterTypes.W5X3,
+        spcodT: FilterTypes.w5x3,
       );
       decoder.parseCodMarker(codPayload, isMainHeader: true, tileIdx: 0);
 
@@ -455,7 +455,7 @@ void main() {
         spcocCw: 0x04,
         spcocCh: 0x04,
         spcocCs: 0x00,
-        spcocT: FilterTypes.W9X7,
+        spcocT: FilterTypes.w9x7,
       );
       decoder.parseCocMarker(cocPayload, isMainHeader: true, tileIdx: 0);
 
@@ -500,8 +500,8 @@ void main() {
       expect(specs.pss.isCompSpecified(0), isTrue);
       final precincts = specs.pss.getCompDef(0);
       expect(precincts, isNotNull);
-      expect(precincts![0], equals(<int>[Markers.PRECINCT_PARTITION_DEF_SIZE]));
-      expect(precincts[1], equals(<int>[Markers.PRECINCT_PARTITION_DEF_SIZE]));
+      expect(precincts![0], equals(<int>[Markers.precinctPartitionDefSize]));
+      expect(precincts[1], equals(<int>[Markers.precinctPartitionDefSize]));
     });
   });
 
@@ -699,18 +699,17 @@ void main() {
       );
       decoder.parseCodMarker(mainCod, isMainHeader: true, tileIdx: 0);
 
-      final mainSqcd =
-          (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+      final mainSqcd = (2 << Markers.sqcxGbShift) | Markers.sqcxNoQuantization;
       final mainQcd = buildQcdMarkerPayload(
         sqcd: mainSqcd,
         stepBytes: <int>[
-          5 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
+          5 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
         ],
       );
       decoder.parseQcdMarker(mainQcd, isMainHeader: true, tileIdx: 0);
@@ -732,7 +731,7 @@ void main() {
       expect(sot, isNotNull);
 
       final tileCod = buildCodMarkerPayload(
-        scod: Markers.SCOX_PRECINCT_PARTITION,
+        scod: Markers.scoxPrecinctPartition,
         sgcodPo: 0x00,
         sgcodNl: 2,
         sgcodMct: 0x00,
@@ -752,14 +751,12 @@ void main() {
         spcocCs: 0x03,
         spcocT: 0x01,
       );
-      final tileSqcd =
-          (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
+      final tileSqcd = (3 << Markers.sqcxGbShift) | Markers.sqcxScalarDerived;
       final tileQcd = buildQcdMarkerPayload(
         sqcd: tileSqcd,
         stepBytes: uint16List(<int>[0x6400]),
       );
-      final tileSqcc =
-          (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
+      final tileSqcc = (4 << Markers.sqcxGbShift) | Markers.sqcxScalarExpounded;
       final tileQcc = buildQccMarkerPayload(
         component: 1,
         sqcc: tileSqcc,
@@ -767,11 +764,11 @@ void main() {
       );
 
       final builder = BytesBuilder();
-      addMarkerSegment(builder, Markers.COD, tileCod);
-      addMarkerSegment(builder, Markers.COC, tileCoc);
-      addMarkerSegment(builder, Markers.QCD, tileQcd);
-      addMarkerSegment(builder, Markers.QCC, tileQcc);
-      addMarker(builder, Markers.SOD);
+      addMarkerSegment(builder, Markers.cod, tileCod);
+      addMarkerSegment(builder, Markers.coc, tileCoc);
+      addMarkerSegment(builder, Markers.qcd, tileQcd);
+      addMarkerSegment(builder, Markers.qcc, tileQcc);
+      addMarker(builder, Markers.sod);
 
       final tileHeaderData = builder.toBytes();
       final io = ISRandomAccessIO(tileHeaderData);
@@ -830,7 +827,7 @@ void main() {
       expect(tileQccInfo!.sqcc, equals(tileSqcc));
 
       expect(io.getPos(), equals(tileHeaderData.length - 2));
-      expect(io.readUnsignedShort(), equals(Markers.SOD));
+      expect(io.readUnsignedShort(), equals(Markers.sod));
     });
   });
 
@@ -846,7 +843,7 @@ void main() {
 
       final payload = buildRgnMarkerPayload(
         component: 2,
-        srgn: Markers.SRGN_IMPLICIT,
+        srgn: Markers.srgnImplicit,
         sprgn: 7,
       );
 
@@ -869,7 +866,7 @@ void main() {
 
       final payload = buildRgnMarkerPayload(
         component: 0,
-        srgn: Markers.SRGN_IMPLICIT,
+        srgn: Markers.srgnImplicit,
         sprgn: 5,
       );
 
@@ -900,7 +897,7 @@ void main() {
 
       final payload = buildRgnMarkerPayload(
         component: 0,
-        srgn: Markers.SRGN_IMPLICIT,
+        srgn: Markers.srgnImplicit,
         sprgn: 3,
       );
 
@@ -929,7 +926,7 @@ void main() {
 
       final payload = buildRgnMarkerPayload(
         component: 0,
-        srgn: Markers.SRGN_IMPLICIT,
+        srgn: Markers.srgnImplicit,
         sprgn: 2,
       );
 
@@ -953,23 +950,22 @@ void main() {
         spcodCs: 0x00,
         spcodT: 0x01,
       );
-      final mainSqcd =
-          (2 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+      final mainSqcd = (2 << Markers.sqcxGbShift) | Markers.sqcxNoQuantization;
       final mainQcd = buildQcdMarkerPayload(
         sqcd: mainSqcd,
         stepBytes: <int>[
-          5 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          4 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
-          3 << Markers.SQCX_EXP_SHIFT,
+          5 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          4 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
+          3 << Markers.sqcxExpShift,
         ],
       );
 
       final tileCod = buildCodMarkerPayload(
-        scod: Markers.SCOX_PRECINCT_PARTITION,
+        scod: Markers.scoxPrecinctPartition,
         sgcodPo: 0x00,
         sgcodNl: 2,
         sgcodMct: 0x00,
@@ -989,14 +985,12 @@ void main() {
         spcocCs: 0x03,
         spcocT: 0x01,
       );
-      final tileSqcd =
-          (3 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_DERIVED;
+      final tileSqcd = (3 << Markers.sqcxGbShift) | Markers.sqcxScalarDerived;
       final tileQcd = buildQcdMarkerPayload(
         sqcd: tileSqcd,
         stepBytes: uint16List(<int>[0x6400]),
       );
-      final tileSqcc =
-          (4 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
+      final tileSqcc = (4 << Markers.sqcxGbShift) | Markers.sqcxScalarExpounded;
       final tileQcc = buildQccMarkerPayload(
         component: 1,
         sqcc: tileSqcc,
@@ -1004,10 +998,10 @@ void main() {
       );
 
       final builder = BytesBuilder();
-      addMarker(builder, Markers.SOC);
+      addMarker(builder, Markers.soc);
       addMarkerSegment(
         builder,
-        Markers.SIZ,
+        Markers.siz,
         buildSizMarkerPayload(
           xsize: 128,
           ysize: 96,
@@ -1019,10 +1013,10 @@ void main() {
           bitDepths: const <int>[0x07, 0x07],
         ),
       );
-      addMarkerSegment(builder, Markers.COD, mainCod);
-      addMarkerSegment(builder, Markers.QCD, mainQcd);
+      addMarkerSegment(builder, Markers.cod, mainCod);
+      addMarkerSegment(builder, Markers.qcd, mainQcd);
 
-      addMarker(builder, Markers.SOT);
+      addMarker(builder, Markers.sot);
       builder.add(
         buildSotMarkerPayload(
           tileIdx: 0,
@@ -1031,12 +1025,12 @@ void main() {
           numTileParts: 1,
         ),
       );
-      addMarkerSegment(builder, Markers.COD, tileCod);
-      addMarkerSegment(builder, Markers.COC, tileCoc);
-      addMarkerSegment(builder, Markers.QCD, tileQcd);
-      addMarkerSegment(builder, Markers.QCC, tileQcc);
-      addMarker(builder, Markers.SOD);
-      addMarker(builder, Markers.EOC);
+      addMarkerSegment(builder, Markers.cod, tileCod);
+      addMarkerSegment(builder, Markers.coc, tileCoc);
+      addMarkerSegment(builder, Markers.qcd, tileQcd);
+      addMarkerSegment(builder, Markers.qcc, tileQcc);
+      addMarker(builder, Markers.sod);
+      addMarker(builder, Markers.eoc);
 
       final data = builder.toBytes();
       final io = ISRandomAccessIO(data);
@@ -1048,7 +1042,7 @@ void main() {
       );
 
       expect(io.getPos(), lessThan(data.length));
-      expect(io.readUnsignedShort(), equals(Markers.SOT));
+      expect(io.readUnsignedShort(), equals(Markers.sot));
       io.seek(io.getPos() - 2);
 
       final sot = decoder.parseNextTilePart(io);
@@ -1086,7 +1080,7 @@ void main() {
       expect(tileCompParams.exp[1][1], equals(18));
 
       final nextMarker = io.readUnsignedShort();
-      expect(nextMarker, equals(Markers.EOC));
+      expect(nextMarker, equals(Markers.eoc));
       io.close();
     });
 
@@ -1103,10 +1097,10 @@ void main() {
         spcodT: 0x01,
       );
       final builder = BytesBuilder();
-      addMarker(builder, Markers.SOC);
+      addMarker(builder, Markers.soc);
       addMarkerSegment(
         builder,
-        Markers.SIZ,
+        Markers.siz,
         buildSizMarkerPayload(
           xsize: 128,
           ysize: 96,
@@ -1118,7 +1112,7 @@ void main() {
           bitDepths: const <int>[0x07],
         ),
       );
-      addMarkerSegment(builder, Markers.COD, mainCod);
+      addMarkerSegment(builder, Markers.cod, mainCod);
 
       final tilePart00 = buildTilePart(
           tileIdx: 0, tilePartIdx: 0, numTileParts: 2, bodyLength: 6);
@@ -1131,7 +1125,7 @@ void main() {
         ..add(tilePart00.bytes)
         ..add(tilePart01.bytes)
         ..add(tilePart10.bytes);
-      addMarker(builder, Markers.EOC);
+      addMarker(builder, Markers.eoc);
 
       final data = builder.toBytes();
       final io = ISRandomAccessIO(data);

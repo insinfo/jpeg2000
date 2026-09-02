@@ -349,7 +349,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
 
     var errorDetected = false;
-    if ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0) {
+    if ((_options & StdEntropyCoderOptions.optBypass) != 0) {
       _bin ??= ByteToBitInput(_mq!.getByteInputBuffer());
     }
 
@@ -372,10 +372,10 @@ class StdEntropyDecoder extends EntropyDecoder {
 
     if (curBitPlane >= 0 && npasses > 0) {
       final isTerminated =
-          (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0 ||
-              ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+          (_options & StdEntropyCoderOptions.optTermPass) != 0 ||
+              ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
                   (31 -
-                          StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                          StdEntropyCoderOptions.numNonBypassMsBp -
                           currentBlock.skipMSBP) >=
                       curBitPlane);
       _logPass('cleanup-initial', curBitPlane, npasses, segmentIndex, tsLengths,
@@ -397,17 +397,17 @@ class StdEntropyDecoder extends EntropyDecoder {
 
     if (!errorDetected || !_doErrorDetection) {
       while (curBitPlane >= 0 && npasses > 0) {
-        if ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+        if ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
             curBitPlane <
                 31 -
-                    StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                    StdEntropyCoderOptions.numNonBypassMsBp -
                     currentBlock.skipMSBP) {
           final rawSigLength = _segmentLength(tsLengths, ++segmentIndex);
           _logPass('raw-sig', curBitPlane, npasses, segmentIndex, tsLengths,
               rawSigLength);
           _bin!.setByteArray(null, -1, rawSigLength);
           final isTerminated =
-              (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0;
+              (_options & StdEntropyCoderOptions.optTermPass) != 0;
           errorDetected = _rawSigProgPass(
             outBlk,
             _bin!,
@@ -421,7 +421,7 @@ class StdEntropyDecoder extends EntropyDecoder {
             break;
           }
 
-          if ((_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+          if ((_options & StdEntropyCoderOptions.optTermPass) != 0) {
             final rawMagTermLength = _segmentLength(tsLengths, ++segmentIndex);
             _logPass('raw-mag-term', curBitPlane, npasses, segmentIndex,
                 tsLengths, rawMagTermLength);
@@ -429,10 +429,10 @@ class StdEntropyDecoder extends EntropyDecoder {
           }
 
           final isTerminatedMag =
-              (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0 ||
-                  ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+              (_options & StdEntropyCoderOptions.optTermPass) != 0 ||
+                  ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
                       (31 -
-                              StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                              StdEntropyCoderOptions.numNonBypassMsBp -
                               currentBlock.skipMSBP >
                           curBitPlane));
           final rawMagLength = _segmentLengthOrFallback(
@@ -449,12 +449,12 @@ class StdEntropyDecoder extends EntropyDecoder {
           _logPassResult('raw-mag', curBitPlane, outBlk);
         } else {
           int? sigSegmentLength;
-          if ((_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+          if ((_options & StdEntropyCoderOptions.optTermPass) != 0) {
             sigSegmentLength = _segmentLength(tsLengths, ++segmentIndex);
             _mq!.nextSegment(null, -1, sigSegmentLength);
           }
           final isTerminatedSig =
-              (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0;
+              (_options & StdEntropyCoderOptions.optTermPass) != 0;
           final effectiveSigLength = sigSegmentLength ??
               _segmentLengthOrFallback(
                   tsLengths, segmentIndex, currentBlock.dl);
@@ -475,15 +475,15 @@ class StdEntropyDecoder extends EntropyDecoder {
           }
 
           int? magSegmentLength;
-          if ((_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+          if ((_options & StdEntropyCoderOptions.optTermPass) != 0) {
             magSegmentLength = _segmentLength(tsLengths, ++segmentIndex);
             _mq!.nextSegment(null, -1, magSegmentLength);
           }
           final isTerminatedMag =
-              (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0 ||
-                  ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+              (_options & StdEntropyCoderOptions.optTermPass) != 0 ||
+                  ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
                       (31 -
-                              StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                              StdEntropyCoderOptions.numNonBypassMsBp -
                               currentBlock.skipMSBP >
                           curBitPlane));
           final effectiveMagLength = magSegmentLength ??
@@ -507,20 +507,20 @@ class StdEntropyDecoder extends EntropyDecoder {
         }
 
         int? cleanupSegmentLength;
-        if ((_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0 ||
-            ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+        if ((_options & StdEntropyCoderOptions.optTermPass) != 0 ||
+            ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
                 curBitPlane <
                     31 -
-                        StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                        StdEntropyCoderOptions.numNonBypassMsBp -
                         currentBlock.skipMSBP)) {
           cleanupSegmentLength = _segmentLength(tsLengths, ++segmentIndex);
           _mq!.nextSegment(null, -1, cleanupSegmentLength);
         }
         final isTerminatedCleanup =
-            (_options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0 ||
-                ((_options & StdEntropyCoderOptions.OPT_BYPASS) != 0 &&
+            (_options & StdEntropyCoderOptions.optTermPass) != 0 ||
+                ((_options & StdEntropyCoderOptions.optBypass) != 0 &&
                     (31 -
-                            StdEntropyCoderOptions.NUM_NON_BYPASS_MS_BP -
+                            StdEntropyCoderOptions.numNonBypassMsBp -
                             currentBlock.skipMSBP) >=
                         curBitPlane);
         final effectiveCleanupLength = cleanupSegmentLength ??
@@ -665,22 +665,22 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
     _debugOptionCounts[key] = seen + 1;
     final flags = <String>[];
-    if ((options & StdEntropyCoderOptions.OPT_BYPASS) != 0) {
+    if ((options & StdEntropyCoderOptions.optBypass) != 0) {
       flags.add('bypass');
     }
-    if ((options & StdEntropyCoderOptions.OPT_RESET_MQ) != 0) {
+    if ((options & StdEntropyCoderOptions.optResetMq) != 0) {
       flags.add('reset-mq');
     }
-    if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+    if ((options & StdEntropyCoderOptions.optTermPass) != 0) {
       flags.add('term-pass');
     }
-    if ((options & StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL) != 0) {
+    if ((options & StdEntropyCoderOptions.optVertStrCausal) != 0) {
       flags.add('vsc');
     }
-    if ((options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if ((options & StdEntropyCoderOptions.optPredTerm) != 0) {
       flags.add('pred-term');
     }
-    if ((options & StdEntropyCoderOptions.OPT_SEG_SYMBOLS) != 0) {
+    if ((options & StdEntropyCoderOptions.optSegSymbols) != 0) {
       flags.add('seg-symbols');
     }
     if (flags.isEmpty) {
@@ -911,13 +911,13 @@ class StdEntropyDecoder extends EntropyDecoder {
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
-    final jstep = sscanw * StdEntropyCoderOptions.STRIPE_HEIGHT ~/ 2 - cblk.w;
-    final kstep = dscanw * StdEntropyCoderOptions.STRIPE_HEIGHT - cblk.w;
+    final jstep = sscanw * StdEntropyCoderOptions.stripeHeight ~/ 2 - cblk.w;
+    final kstep = dscanw * StdEntropyCoderOptions.stripeHeight - cblk.w;
     final one = 1 << bitPlane;
     final setmask = one | (one >> 1);
-    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
-        StdEntropyCoderOptions.STRIPE_HEIGHT;
-    final causal = (_options & StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL) != 0;
+    final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
+        StdEntropyCoderOptions.stripeHeight;
+    final causal = (_options & StdEntropyCoderOptions.optVertStrCausal) != 0;
 
     var sampleTraceBudget = tracing ? 32 : 0;
     void traceSample(String stage, int k, int sym, int value) {
@@ -938,8 +938,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
       final stripeHeight = (s < nstripes - 1)
-          ? StdEntropyCoderOptions.STRIPE_HEIGHT
-          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
+          ? StdEntropyCoderOptions.stripeHeight
+          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.stripeHeight;
       final stopSk = sk + cblk.w;
       for (; sk < stopSk; sk++, sj++) {
         var j = sj;
@@ -1179,11 +1179,11 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
 
     var error = false;
-    if (terminated && (_options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if (terminated && (_options & StdEntropyCoderOptions.optPredTerm) != 0) {
       error = mq.checkPredTerm();
     }
 
-    if ((_options & StdEntropyCoderOptions.OPT_RESET_MQ) != 0) {
+    if ((_options & StdEntropyCoderOptions.optResetMq) != 0) {
       mq.resetCtxts();
     }
 
@@ -1201,12 +1201,12 @@ class StdEntropyDecoder extends EntropyDecoder {
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
-    final jstep = sscanw * StdEntropyCoderOptions.STRIPE_HEIGHT ~/ 2 - cblk.w;
-    final kstep = dscanw * StdEntropyCoderOptions.STRIPE_HEIGHT - cblk.w;
+    final jstep = sscanw * StdEntropyCoderOptions.stripeHeight ~/ 2 - cblk.w;
+    final kstep = dscanw * StdEntropyCoderOptions.stripeHeight - cblk.w;
     final setmask = (1 << bitPlane) >> 1;
     final resetmask = (-1) << (bitPlane + 1);
-    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
-        StdEntropyCoderOptions.STRIPE_HEIGHT;
+    final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
+        StdEntropyCoderOptions.stripeHeight;
 
     var sampleTraceBudget = tracing ? 32 : 0;
     void traceSample(String stage, int k, int sym, int value) {
@@ -1222,8 +1222,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
       final stripeHeight = (s < nstripes - 1)
-          ? StdEntropyCoderOptions.STRIPE_HEIGHT
-          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
+          ? StdEntropyCoderOptions.stripeHeight
+          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.stripeHeight;
       final stopSk = sk + cblk.w;
       for (; sk < stopSk; sk++, sj++) {
         var j = sj;
@@ -1307,10 +1307,10 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
 
     var error = false;
-    if (terminated && (_options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if (terminated && (_options & StdEntropyCoderOptions.optPredTerm) != 0) {
       error = mqDecoder.checkPredTerm();
     }
-    if ((_options & StdEntropyCoderOptions.OPT_RESET_MQ) != 0) {
+    if ((_options & StdEntropyCoderOptions.optResetMq) != 0) {
       mqDecoder.resetCtxts();
     }
     return error;
@@ -1327,13 +1327,13 @@ class StdEntropyDecoder extends EntropyDecoder {
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
-    final jstep = sscanw * StdEntropyCoderOptions.STRIPE_HEIGHT ~/ 2 - cblk.w;
-    final kstep = dscanw * StdEntropyCoderOptions.STRIPE_HEIGHT - cblk.w;
+    final jstep = sscanw * StdEntropyCoderOptions.stripeHeight ~/ 2 - cblk.w;
+    final kstep = dscanw * StdEntropyCoderOptions.stripeHeight - cblk.w;
     final one = 1 << bitPlane;
     final setmask = one | (one >> 1);
-    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
-        StdEntropyCoderOptions.STRIPE_HEIGHT;
-    final causal = (_options & StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL) != 0;
+    final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
+        StdEntropyCoderOptions.stripeHeight;
+    final causal = (_options & StdEntropyCoderOptions.optVertStrCausal) != 0;
 
     final offUl = -sscanw - 1;
     final offUr = -sscanw + 1;
@@ -1344,8 +1344,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
       final stripeHeight = (s < nstripes - 1)
-          ? StdEntropyCoderOptions.STRIPE_HEIGHT
-          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
+          ? StdEntropyCoderOptions.stripeHeight
+          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.stripeHeight;
       final stopSk = sk + cblk.w;
       for (; sk < stopSk; sk++, sj++) {
         var j = sj;
@@ -1540,7 +1540,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
 
     var error = false;
-    if ((_options & StdEntropyCoderOptions.OPT_SEG_SYMBOLS) != 0) {
+    if ((_options & StdEntropyCoderOptions.optSegSymbols) != 0) {
       var sym = _mq!.decodeSymbol(_uniformContext) << 3;
       sym |= _mq!.decodeSymbol(_uniformContext) << 2;
       sym |= _mq!.decodeSymbol(_uniformContext) << 1;
@@ -1550,11 +1550,11 @@ class StdEntropyDecoder extends EntropyDecoder {
       error = false;
     }
 
-    if (terminated && (_options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if (terminated && (_options & StdEntropyCoderOptions.optPredTerm) != 0) {
       error = _mq!.checkPredTerm();
     }
 
-    if ((_options & StdEntropyCoderOptions.OPT_RESET_MQ) != 0) {
+    if ((_options & StdEntropyCoderOptions.optResetMq) != 0) {
       _mq!.resetCtxts();
     }
 
@@ -1769,14 +1769,14 @@ class StdEntropyDecoder extends EntropyDecoder {
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
-    final jstep = sscanw * StdEntropyCoderOptions.STRIPE_HEIGHT ~/ 2 - cblk.w;
-    final kstep = dscanw * StdEntropyCoderOptions.STRIPE_HEIGHT - cblk.w;
+    final jstep = sscanw * StdEntropyCoderOptions.stripeHeight ~/ 2 - cblk.w;
+    final kstep = dscanw * StdEntropyCoderOptions.stripeHeight - cblk.w;
     final one = 1 << bitPlane;
     final half = one >> 1;
     final setmask = one | half;
-    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
-        StdEntropyCoderOptions.STRIPE_HEIGHT;
-    final causal = (_options & StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL) != 0;
+    final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
+        StdEntropyCoderOptions.stripeHeight;
+    final causal = (_options & StdEntropyCoderOptions.optVertStrCausal) != 0;
 
     // Pre-calculate offsets in 'state' for diagonal neighbors
     final offUl = -sscanw - 1; // up-left
@@ -1789,8 +1789,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
       final stripeHeight = (s < nstripes - 1)
-          ? StdEntropyCoderOptions.STRIPE_HEIGHT
-          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
+          ? StdEntropyCoderOptions.stripeHeight
+          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.stripeHeight;
       final stopsk = sk + cblk.w;
 
       // Scan by set of 1 stripe column at a time
@@ -1804,7 +1804,7 @@ class StdEntropyDecoder extends EntropyDecoder {
         // and do not have a non-zero context, and column is full height
         if (csj == 0 &&
             state[j + sscanw] == 0 &&
-            stripeHeight == StdEntropyCoderOptions.STRIPE_HEIGHT) {
+            stripeHeight == StdEntropyCoderOptions.stripeHeight) {
           final rlcSym = mq.decodeSymbol(_rlcCtxt);
           trace('cleanuppass RLC k=$sk sym=$rlcSym');
 
@@ -2197,7 +2197,7 @@ class StdEntropyDecoder extends EntropyDecoder {
 
     // Decode segment symbol if we need to
     var error = false;
-    if ((_options & StdEntropyCoderOptions.OPT_SEG_SYMBOLS) != 0) {
+    if ((_options & StdEntropyCoderOptions.optSegSymbols) != 0) {
       var sym = mq.decodeSymbol(_unifCtxt) << 3;
       sym |= mq.decodeSymbol(_unifCtxt) << 2;
       sym |= mq.decodeSymbol(_unifCtxt) << 1;
@@ -2207,12 +2207,12 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
 
     // Check the error resilience termination
-    if (terminated && (_options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if (terminated && (_options & StdEntropyCoderOptions.optPredTerm) != 0) {
       error = mq.checkPredTerm();
     }
 
     // Reset the MQ context states if we need to
-    if ((_options & StdEntropyCoderOptions.OPT_RESET_MQ) != 0) {
+    if ((_options & StdEntropyCoderOptions.optResetMq) != 0) {
       mq.resetCtxts();
     }
 
@@ -2234,20 +2234,20 @@ class StdEntropyDecoder extends EntropyDecoder {
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
-    final jstep = sscanw * StdEntropyCoderOptions.STRIPE_HEIGHT ~/ 2 - cblk.w;
-    final kstep = dscanw * StdEntropyCoderOptions.STRIPE_HEIGHT - cblk.w;
+    final jstep = sscanw * StdEntropyCoderOptions.stripeHeight ~/ 2 - cblk.w;
+    final kstep = dscanw * StdEntropyCoderOptions.stripeHeight - cblk.w;
     final setmask = (1 << bitPlane) >> 1;
     final resetmask = (-1) << (bitPlane + 1);
-    final nstripes = (cblk.h + StdEntropyCoderOptions.STRIPE_HEIGHT - 1) ~/
-        StdEntropyCoderOptions.STRIPE_HEIGHT;
+    final nstripes = (cblk.h + StdEntropyCoderOptions.stripeHeight - 1) ~/
+        StdEntropyCoderOptions.stripeHeight;
 
     // Decode stripe by stripe (top to bottom)
     var sk = cblk.offset;
     var sj = sscanw + 1;
     for (var s = 0; s < nstripes; s++, sk += kstep, sj += jstep) {
       final stripeHeight = (s < nstripes - 1)
-          ? StdEntropyCoderOptions.STRIPE_HEIGHT
-          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.STRIPE_HEIGHT;
+          ? StdEntropyCoderOptions.stripeHeight
+          : cblk.h - (nstripes - 1) * StdEntropyCoderOptions.stripeHeight;
       final stopsk = sk + cblk.w;
 
       // Scan by set of 1 stripe column at a time
@@ -2329,7 +2329,7 @@ class StdEntropyDecoder extends EntropyDecoder {
 
     // Check the byte padding if the pass is terminated and the
     // predictable termination is signaled in COx marker.
-    if (terminated && (_options & StdEntropyCoderOptions.OPT_PRED_TERM) != 0) {
+    if (terminated && (_options & StdEntropyCoderOptions.optPredTerm) != 0) {
       error = bin.checkBytePadding();
     }
 

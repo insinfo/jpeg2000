@@ -17,15 +17,15 @@ class Progression {
   String toString() {
     final typeLabel = () {
       switch (type) {
-        case ProgressionType.LY_RES_COMP_POS_PROG:
+        case ProgressionType.lyResCompPosProg:
           return 'layer';
-        case ProgressionType.RES_LY_COMP_POS_PROG:
+        case ProgressionType.resLyCompPosProg:
           return 'res';
-        case ProgressionType.RES_POS_COMP_LY_PROG:
+        case ProgressionType.resPosCompLyProg:
           return 'res-pos';
-        case ProgressionType.POS_COMP_RES_LY_PROG:
+        case ProgressionType.posCompResLyProg:
           return 'pos-comp';
-        case ProgressionType.COMP_POS_RES_LY_PROG:
+        case ProgressionType.compPosResLyProg:
           return 'comp-pos';
         default:
           return 'unknown';

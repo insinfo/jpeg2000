@@ -11,13 +11,13 @@ class EnumeratedColorSpaceMapper extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getCompData(DataBlk out, int c) {
-    return src!.getCompData(out, c);
+  DataBlk getCompData(DataBlk out, int component) {
+    return src!.getCompData(out, component);
   }
 
   @override
-  DataBlk getInternCompData(DataBlk out, int c) {
-    return src!.getInternCompData(out, c);
+  DataBlk getInternCompData(DataBlk out, int component) {
+    return src!.getInternCompData(out, component);
   }
 
   @override

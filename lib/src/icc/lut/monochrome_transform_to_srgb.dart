@@ -70,16 +70,15 @@ class MonochromeTransformTosRGB {
   ///   @param dwInputMaxValue size of the output lut.
   ///   @param dwInputShiftValue value used to shift samples to positive
   MonochromeTransformTosRGB(
-      RestrictedICCProfile rICC, int dwInputMaxValue, int dwInputShiftValue) {
+      RestrictedICCProfile rICC, this.dwInputMaxValue, int dwInputShiftValue) {
     if (rICC.getType() != RestrictedICCProfile.kMonochromeInput) {
       throw ArgumentError(
           "MonochromeTransformTosRGB: wrong type ICCProfile supplied");
     }
 
-    this.dwInputMaxValue = dwInputMaxValue;
     lut = Int16List(dwInputMaxValue + 1);
     fLut = LookUpTableFP.createInstance(
-        rICC.trc[ICCProfile.GRAY], dwInputMaxValue + 1);
+        rICC.trc[ICCProfile.grayChannel], dwInputMaxValue + 1);
 
     // First calculate the value for the shadow region
     int i;
@@ -128,7 +127,9 @@ class MonochromeTransformTosRGB {
       j = input[i];
       if (j < 0) {
         j = 0;
-      } else if (j > dwInputMaxValue) j = dwInputMaxValue;
+      } else if (j > dwInputMaxValue) {
+        j = dwInputMaxValue;
+      }
       output[i] = lut[j];
     }
   }
@@ -161,7 +162,9 @@ class MonochromeTransformTosRGB {
       j = input[i].toInt();
       if (j < 0) {
         j = 0;
-      } else if (j > dwInputMaxValue) j = dwInputMaxValue;
+      } else if (j > dwInputMaxValue) {
+        j = dwInputMaxValue;
+      }
       output[i] = lut[j].toDouble();
     }
   }

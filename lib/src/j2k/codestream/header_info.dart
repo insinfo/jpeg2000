@@ -385,14 +385,14 @@ class HeaderInfoSIZ {
   bool isOrigSigned(int c) {
     _origSigned ??= List<bool>.filled(csiz, false);
     _origSigned![c] =
-        _origSigned![c] || ((ssiz[c] >> Markers.SSIZ_DEPTH_BITS) & 0x1) == 1;
+        _origSigned![c] || ((ssiz[c] >> Markers.ssizDepthBits) & 0x1) == 1;
     return _origSigned![c];
   }
 
   int getOrigBitDepth(int c) {
     _origBitDepth ??= List<int>.filled(csiz, 0);
     if (_origBitDepth![c] == 0) {
-      _origBitDepth![c] = (ssiz[c] & ((1 << Markers.SSIZ_DEPTH_BITS) - 1)) + 1;
+      _origBitDepth![c] = (ssiz[c] & ((1 << Markers.ssizDepthBits) - 1)) + 1;
     }
     return _origBitDepth![c];
   }
@@ -501,11 +501,11 @@ class HeaderInfoCOD {
     if (scod == 0) {
       sb.write('Default');
     } else {
-      if ((scod & Markers.SCOX_PRECINCT_PARTITION) != 0) sb.write('Precints ');
-      if ((scod & Markers.SCOX_USE_SOP) != 0) sb.write('SOP ');
-      if ((scod & Markers.SCOX_USE_EPH) != 0) sb.write('EPH ');
-      final cb0x = (scod & Markers.SCOX_HOR_CB_PART) != 0 ? 1 : 0;
-      final cb0y = (scod & Markers.SCOX_VER_CB_PART) != 0 ? 1 : 0;
+      if ((scod & Markers.scoxPrecinctPartition) != 0) sb.write('Precints ');
+      if ((scod & Markers.scoxUseSop) != 0) sb.write('SOP ');
+      if ((scod & Markers.scoxUseEph) != 0) sb.write('EPH ');
+      final cb0x = (scod & Markers.scoxHorCbPart) != 0 ? 1 : 0;
+      final cb0y = (scod & Markers.scoxVerCbPart) != 0 ? 1 : 0;
       if (cb0x != 0 || cb0y != 0) {
         sb.write('Code-blocks offset');
         sb.write('\n Cblk partition : $cb0x,$cb0y');
@@ -527,19 +527,19 @@ class HeaderInfoCOD {
     sb.writeln(' Num. of levels : $spcodNdl');
     sb.write(' Progress. type : ');
     switch (sgcodPo) {
-      case ProgressionType.LY_RES_COMP_POS_PROG:
+      case ProgressionType.lyResCompPosProg:
         sb.writeln('LY_RES_COMP_POS_PROG');
         break;
-      case ProgressionType.RES_LY_COMP_POS_PROG:
+      case ProgressionType.resLyCompPosProg:
         sb.writeln('RES_LY_COMP_POS_PROG');
         break;
-      case ProgressionType.RES_POS_COMP_LY_PROG:
+      case ProgressionType.resPosCompLyProg:
         sb.writeln('RES_POS_COMP_LY_PROG');
         break;
-      case ProgressionType.POS_COMP_RES_LY_PROG:
+      case ProgressionType.posCompResLyProg:
         sb.writeln('POS_COMP_RES_LY_PROG');
         break;
-      case ProgressionType.COMP_POS_RES_LY_PROG:
+      case ProgressionType.compPosResLyProg:
         sb.writeln('COMP_POS_RES_LY_PROG');
         break;
       default:
@@ -551,10 +551,10 @@ class HeaderInfoCOD {
     final cblkHeight = 1 << (spcodCh + 2);
     sb.writeln(' Cblk dimension : ${cblkWidth}x$cblkHeight');
     switch (spcodT[0]) {
-      case FilterTypes.W9X7:
+      case FilterTypes.w9x7:
         sb.writeln(' Filter         : 9-7 irreversible');
         break;
-      case FilterTypes.W5X3:
+      case FilterTypes.w5x3:
         sb.writeln(' Filter         : 5-3 reversible');
         break;
       default:
@@ -615,10 +615,10 @@ class HeaderInfoCOC {
     sb.writeln(' Num. of levels : $spcocNdl');
     sb.writeln(' Cblk dimension : ${1 << (spcocCw + 2)}x${1 << (spcocCh + 2)}');
     switch (spcocT[0]) {
-      case FilterTypes.W9X7:
+      case FilterTypes.w9x7:
         sb.writeln(' Filter         : 9-7 irreversible');
         break;
-      case FilterTypes.W5X3:
+      case FilterTypes.w5x3:
         sb.writeln(' Filter         : 5-3 reversible');
         break;
       default:
@@ -668,7 +668,7 @@ class HeaderInfoQCD {
   int _quantType = -1;
   int getQuantType() {
     if (_quantType == -1) {
-      _quantType = sqcd & ~(Markers.SQCX_GB_MSK << Markers.SQCX_GB_SHIFT);
+      _quantType = sqcd & ~(Markers.sqcxGbMsk << Markers.sqcxGbShift);
     }
     return _quantType;
   }
@@ -676,7 +676,7 @@ class HeaderInfoQCD {
   int _guardBits = -1;
   int getNumGuardBits() {
     if (_guardBits == -1) {
-      _guardBits = (sqcd >> Markers.SQCX_GB_SHIFT) & Markers.SQCX_GB_MSK;
+      _guardBits = (sqcd >> Markers.sqcxGbShift) & Markers.sqcxGbMsk;
     }
     return _guardBits;
   }
@@ -687,23 +687,23 @@ class HeaderInfoQCD {
     sb.writeln('\n --- QCD ($lqcd bytes) ---');
     sb.write(' Quant. type    : ');
     final qt = getQuantType();
-    if (qt == Markers.SQCX_NO_QUANTIZATION) {
+    if (qt == Markers.sqcxNoQuantization) {
       sb.writeln('No quantization');
-    } else if (qt == Markers.SQCX_SCALAR_DERIVED) {
+    } else if (qt == Markers.sqcxScalarDerived) {
       sb.writeln('Scalar derived');
-    } else if (qt == Markers.SQCX_SCALAR_EXPOUNDED) {
+    } else if (qt == Markers.sqcxScalarExpounded) {
       sb.writeln('Scalar expounded');
     } else {
       sb.writeln(qt);
     }
     sb.writeln(' Guard bits     : ${getNumGuardBits()}');
-    if (qt == Markers.SQCX_NO_QUANTIZATION) {
+    if (qt == Markers.sqcxNoQuantization) {
       sb.writeln(' Exponents   :');
       for (var r = 0; r < spqcd.length; r++) {
         for (var s = 0; s < spqcd[r].length; s++) {
           if ((r == 0 && s == 0) || (r != 0 && s > 0)) {
             final exp =
-                (spqcd[r][s] >> Markers.SQCX_EXP_SHIFT) & Markers.SQCX_EXP_MASK;
+                (spqcd[r][s] >> Markers.sqcxExpShift) & Markers.sqcxExpMask;
             sb.writeln('\tr=$r${s == 0 ? '' : ',s=$s'} : $exp');
           }
         }
@@ -735,7 +735,7 @@ class HeaderInfoQCC {
   int _quantType = -1;
   int getQuantType() {
     if (_quantType == -1) {
-      _quantType = sqcc & ~(Markers.SQCX_GB_MSK << Markers.SQCX_GB_SHIFT);
+      _quantType = sqcc & ~(Markers.sqcxGbMsk << Markers.sqcxGbShift);
     }
     return _quantType;
   }
@@ -743,7 +743,7 @@ class HeaderInfoQCC {
   int _guardBits = -1;
   int getNumGuardBits() {
     if (_guardBits == -1) {
-      _guardBits = (sqcc >> Markers.SQCX_GB_SHIFT) & Markers.SQCX_GB_MSK;
+      _guardBits = (sqcc >> Markers.sqcxGbShift) & Markers.sqcxGbMsk;
     }
     return _guardBits;
   }
@@ -755,23 +755,23 @@ class HeaderInfoQCC {
     sb.writeln(' Component      : $cqcc');
     sb.write(' Quant. type    : ');
     final qt = getQuantType();
-    if (qt == Markers.SQCX_NO_QUANTIZATION) {
+    if (qt == Markers.sqcxNoQuantization) {
       sb.writeln('No quantization');
-    } else if (qt == Markers.SQCX_SCALAR_DERIVED) {
+    } else if (qt == Markers.sqcxScalarDerived) {
       sb.writeln('Scalar derived');
-    } else if (qt == Markers.SQCX_SCALAR_EXPOUNDED) {
+    } else if (qt == Markers.sqcxScalarExpounded) {
       sb.writeln('Scalar expounded');
     } else {
       sb.writeln(qt);
     }
     sb.writeln(' Guard bits     : ${getNumGuardBits()}');
-    if (qt == Markers.SQCX_NO_QUANTIZATION) {
+    if (qt == Markers.sqcxNoQuantization) {
       sb.writeln(' Exponents   :');
       for (var r = 0; r < spqcc.length; r++) {
         for (var s = 0; s < spqcc[r].length; s++) {
           if ((r == 0 && s == 0) || (r != 0 && s > 0)) {
             final exp =
-                (spqcc[r][s] >> Markers.SQCX_EXP_SHIFT) & Markers.SQCX_EXP_MASK;
+                (spqcc[r][s] >> Markers.sqcxExpShift) & Markers.sqcxExpMask;
             sb.writeln('\tr=$r${s == 0 ? '' : ',s=$s'} : $exp');
           }
         }
@@ -813,19 +813,19 @@ class HeaderInfoPOC {
       sb.write('      ${repoc[i]}     ${cepoc[i]}');
       sb.write('  ');
       switch (ppoc[i]) {
-        case ProgressionType.LY_RES_COMP_POS_PROG:
+        case ProgressionType.lyResCompPosProg:
           sb.writeln('LY_RES_COMP_POS_PROG');
           break;
-        case ProgressionType.RES_LY_COMP_POS_PROG:
+        case ProgressionType.resLyCompPosProg:
           sb.writeln('RES_LY_COMP_POS_PROG');
           break;
-        case ProgressionType.RES_POS_COMP_LY_PROG:
+        case ProgressionType.resPosCompLyProg:
           sb.writeln('RES_POS_COMP_LY_PROG');
           break;
-        case ProgressionType.POS_COMP_RES_LY_PROG:
+        case ProgressionType.posCompResLyProg:
           sb.writeln('POS_COMP_RES_LY_PROG');
           break;
-        case ProgressionType.COMP_POS_RES_LY_PROG:
+        case ProgressionType.compPosResLyProg:
           sb.writeln('COMP_POS_RES_LY_PROG');
           break;
         default:
@@ -866,7 +866,7 @@ class HeaderInfoCOM {
     sb.writeln('\n --- COM ($lcom bytes) ---');
     if (rcom == 0) {
       sb.writeln(' Registration : General use (binary values)');
-    } else if (rcom == Markers.RCOM_GENERAL_USE) {
+    } else if (rcom == Markers.rcomGeneralUse) {
       sb.writeln(
           ' Registration : General use (IS 8859-15:1999 (Latin) values)');
       sb.writeln(' Text         : ${String.fromCharCodes(ccom)}');

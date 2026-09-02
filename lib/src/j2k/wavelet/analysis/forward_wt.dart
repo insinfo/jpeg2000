@@ -20,10 +20,10 @@ abstract class ForwardWT extends ImgDataAdapter
     implements ForwWT, CBlkWTDataSrc {
   /// ID for the dyadic wavelet tree decomposition (also called "Mallat" in
   /// JPEG 2000): 0x00.
-  static const int WT_DECOMP_DYADIC = 0;
+  static const int wtDecompDyadic = 0;
 
   /// The prefix for wavelet transform options: 'W'
-  static const String OPT_PREFIX = 'W';
+  static const String optPrefix = 'W';
 
   /// The list of parameters that is accepted for wavelet transform. Options
   /// for the wavelet transform start with 'W'.
@@ -86,7 +86,7 @@ abstract class ForwardWT extends ImgDataAdapter
   static ForwardWT createInstance(
       BlkImgDataSrc src, ParameterList pl, EncoderSpecs encSpec) {
     // Check parameters
-    pl.checkListSingle(OPT_PREFIX.codeUnitAt(0),
+    pl.checkListSingle(optPrefix.codeUnitAt(0),
         ParameterList.toNameArray(pinfo as List<List<String?>>));
 
     // Code-block partition origin

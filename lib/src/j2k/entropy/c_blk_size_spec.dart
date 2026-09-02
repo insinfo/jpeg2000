@@ -5,10 +5,10 @@ import 'std_entropy_coder_options.dart';
 
 /// Specification of code-block sizes per tile/component.
 class CBlkSizeSpec extends ModuleSpec<List<int>> {
-  static const int SPEC_DEF = ModuleSpec.SPEC_DEF;
-  static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
-  static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
-  static const int SPEC_TILE_COMP = ModuleSpec.SPEC_TILE_COMP;
+  static const int specDef = ModuleSpec.specDef;
+  static const int specCompDef = ModuleSpec.specCompDef;
+  static const int specTileDef = ModuleSpec.specTileDef;
+  static const int specTileComp = ModuleSpec.specTileComp;
   static List<bool> parseIdx(String token, int max) =>
       ModuleSpec.parseIdx(token, max);
 
@@ -17,15 +17,14 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
   int maxCBlkWidth = 0;
   int maxCBlkHeight = 0;
 
-  CBlkSizeSpec(int numTiles, int numComps, int specType)
-      : super(numTiles, numComps, specType);
+  CBlkSizeSpec(super.numTiles, super.numComps, super.specType);
 
   CBlkSizeSpec.fromParameters(
-    int numTiles,
-    int numComps,
-    int specType,
+    super.numTiles,
+    super.numComps,
+    super.specType,
     ParameterList parameters,
-  ) : super(numTiles, numComps, specType) {
+  ) {
     final param = parameters.getParameter(optionName);
     if (param == null) {
       throw ArgumentError('$optionName option not specified');
@@ -35,7 +34,7 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
         param.split(RegExp(r'\s+')).where((token) => token.isNotEmpty).toList();
     var index = 0;
     var firstValue = true;
-    var currentType = SPEC_DEF;
+    var currentType = specDef;
     List<bool>? tileSpec;
     List<bool>? compSpec;
 
@@ -65,9 +64,9 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
       }
       _validateDimension(height, isWidth: false);
 
-      if (width * height > StdEntropyCoderOptions.MAX_CB_AREA) {
+      if (width * height > StdEntropyCoderOptions.maxCbArea) {
         throw ArgumentError(
-          "'$optionName' option: the code-block area (width * height) cannot be greater than ${StdEntropyCoderOptions.MAX_CB_AREA}",
+          "'$optionName' option: the code-block area (width * height) cannot be greater than ${StdEntropyCoderOptions.maxCbArea}",
         );
       }
       return List<int>.unmodifiable(<int>[width, height]);
@@ -78,13 +77,11 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
       switch (word[0]) {
         case 't':
           tileSpec = parseIdx(word, nTiles);
-          currentType =
-              currentType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
+          currentType = currentType == specCompDef ? specTileComp : specTileDef;
           break;
         case 'c':
           compSpec = parseIdx(word, nComp);
-          currentType =
-              currentType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
+          currentType = currentType == specTileDef ? specTileComp : specCompDef;
           break;
         default:
           final dims = takeDims(word);
@@ -95,10 +92,10 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
           }
 
           switch (currentType) {
-            case SPEC_DEF:
+            case specDef:
               setDefault(dims);
               break;
-            case SPEC_TILE_DEF:
+            case specTileDef:
               final tiles = tileSpec;
               if (tiles == null) {
                 throw ArgumentError(
@@ -111,7 +108,7 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
                 }
               }
               break;
-            case SPEC_COMP_DEF:
+            case specCompDef:
               final comps = compSpec;
               if (comps == null) {
                 throw ArgumentError(
@@ -124,7 +121,7 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
                 }
               }
               break;
-            case SPEC_TILE_COMP:
+            case specTileComp:
               final tiles = tileSpec;
               final comps = compSpec;
               if (tiles == null || comps == null) {
@@ -145,7 +142,7 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
               break;
           }
 
-          currentType = SPEC_DEF;
+          currentType = specDef;
           tileSpec = null;
           compSpec = null;
           break;
@@ -193,13 +190,13 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
 
   List<int> _selectDims(int type, int tile, int component) {
     switch (type) {
-      case SPEC_DEF:
+      case specDef:
         return _requireDims(getDefault());
-      case SPEC_COMP_DEF:
+      case specCompDef:
         return _requireDims(getCompDef(component));
-      case SPEC_TILE_DEF:
+      case specTileDef:
         return _requireDims(getTileDef(tile));
-      case SPEC_TILE_COMP:
+      case specTileComp:
         return _requireDims(getTileCompVal(tile, component));
       default:
         throw ArgumentError('Unknown specification type: $type');
@@ -231,16 +228,16 @@ class CBlkSizeSpec extends ModuleSpec<List<int>> {
   }
 
   static void _validateDimension(int value, {required bool isWidth}) {
-    if (value > StdEntropyCoderOptions.MAX_CB_DIM) {
+    if (value > StdEntropyCoderOptions.maxCbDim) {
       final label = isWidth ? 'width' : 'height';
       throw ArgumentError(
-        "'$optionName' option: the code-block $label cannot be greater than ${StdEntropyCoderOptions.MAX_CB_DIM}",
+        "'$optionName' option: the code-block $label cannot be greater than ${StdEntropyCoderOptions.maxCbDim}",
       );
     }
-    if (value < StdEntropyCoderOptions.MIN_CB_DIM) {
+    if (value < StdEntropyCoderOptions.minCbDim) {
       final label = isWidth ? 'width' : 'height';
       throw ArgumentError(
-        "'$optionName' option: the code-block $label cannot be less than ${StdEntropyCoderOptions.MIN_CB_DIM}",
+        "'$optionName' option: the code-block $label cannot be less than ${StdEntropyCoderOptions.minCbDim}",
       );
     }
     if (value != (1 << MathUtil.log2(value))) {

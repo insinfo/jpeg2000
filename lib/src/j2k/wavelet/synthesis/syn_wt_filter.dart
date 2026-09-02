@@ -3,7 +3,7 @@ import '../wavelet_filter.dart';
 /// Abstract synthesis wavelet filter contract mirroring JJ2000's `SynWTFilter`.
 abstract class SynWTFilter implements WaveletFilter {
   /// Reconstructs the output signal by recombining low-pass and high-pass inputs.
-  void synthetize_lpf(
+  void synthetizeLpf(
     Object lowSig,
     int lowOff,
     int lowLen,
@@ -17,8 +17,8 @@ abstract class SynWTFilter implements WaveletFilter {
     int outStep,
   );
 
-  /// Same as [synthetize_lpf] but with the high-pass branch filtered first.
-  void synthetize_hpf(
+  /// Same as [synthetizeLpf] but with the high-pass branch filtered first.
+  void synthetizeHpf(
     Object lowSig,
     int lowOff,
     int lowLen,

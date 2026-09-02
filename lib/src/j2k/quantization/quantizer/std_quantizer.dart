@@ -46,36 +46,36 @@ import 'quantizer.dart';
 /// @see Quantizer
 class StdQuantizer extends Quantizer {
   /// The number of mantissa bits for the quantization steps
-  static const int QSTEP_MANTISSA_BITS = 11;
+  static const int qstepMantissaBits = 11;
 
   /// The number of exponent bits for the quantization steps
   // NOTE: formulas in 'convertFromExpMantissa()' and
   // 'convertToExpMantissa()' methods do not support more than 5 bits.
-  static const int QSTEP_EXPONENT_BITS = 5;
+  static const int qstepExponentBits = 5;
 
   /// The maximum value of the mantissa for the quantization steps
-  static const int QSTEP_MAX_MANTISSA = (1 << QSTEP_MANTISSA_BITS) - 1;
+  static const int qstepMaxMantissa = (1 << qstepMantissaBits) - 1;
 
   /// The maximum value of the exponent for the quantization steps
-  static const int QSTEP_MAX_EXPONENT = (1 << QSTEP_EXPONENT_BITS) - 1;
+  static const int qstepMaxExponent = (1 << qstepExponentBits) - 1;
 
   /// The ID for no quantization (i.e. reversible)
-  static const int SQCX_NO_QUANTIZATION = 0;
+  static const int sqcxNoQuantization = 0;
 
   /// The ID for scalar derived quantization
-  static const int SQCX_SCALAR_DERIVED = 1;
+  static const int sqcxScalarDerived = 1;
 
   /// The ID for scalar expounded quantization
-  static const int SQCX_SCALAR_EXPOUNDED = 2;
+  static const int sqcxScalarExpounded = 2;
 
   /// The shift for the guard bits in the Sqcd/Sqcc field
-  static const int SQCX_GB_SHIFT = 5;
+  static const int sqcxGbShift = 5;
 
   /// The shift for the exponent in the SPqcd/SPqcc field
-  // Exponent shift within the SPqcd/SPqcc byte (Markers.SQCX_EXP_SHIFT in
+  // Exponent shift within the SPqcd/SPqcc byte (Markers.sqcxExpShift in
   // JJ2000). NOT the 11-bit exponent position of the 16-bit exp-mantissa
   // format used by convertToExpMantissa().
-  static const int SQCX_EXP_SHIFT = 3;
+  static const int sqcxExpShift = 3;
 
   /// Natural log of 2, used as a convenience variable
   static final double log2 = math.log(2);
@@ -442,16 +442,16 @@ class StdQuantizer extends Quantizer {
     int exp;
 
     exp = (-math.log(step) / log2).ceil();
-    if (exp > QSTEP_MAX_EXPONENT) {
+    if (exp > qstepMaxExponent) {
       // If step size is too small for exponent representation, use the
       // minimum, which is exponent QSTEP_MAX_EXPONENT and mantissa 0.
-      return (QSTEP_MAX_EXPONENT << QSTEP_MANTISSA_BITS);
+      return (qstepMaxExponent << qstepMantissaBits);
     }
     // NOTE: this formula does not support more than 5 bits for the
     // exponent, otherwise (-1<<exp) might overflow (the - is used to be
     // able to represent 2**31)
-    return (exp << QSTEP_MANTISSA_BITS) |
-        (((-step * (-1 << exp) - 1.0) * (1 << QSTEP_MANTISSA_BITS) + 0.5)
+    return (exp << qstepMantissaBits) |
+        (((-step * (-1 << exp) - 1.0) * (1 << qstepMantissaBits) + 0.5)
             .toInt());
   }
 
@@ -468,10 +468,9 @@ class StdQuantizer extends Quantizer {
     // exponent, otherwise (-1<<exp) might overflow (the - is used to be
     // able to represent 2**31)
     return (-1.0 -
-            ((ems & QSTEP_MAX_MANTISSA).toDouble()) /
-                ((1 << QSTEP_MANTISSA_BITS).toDouble())) /
-        ((-1 << ((ems >> QSTEP_MANTISSA_BITS) & QSTEP_MAX_EXPONENT))
-            .toDouble());
+            ((ems & qstepMaxMantissa).toDouble()) /
+                ((1 << qstepMantissaBits).toDouble())) /
+        ((-1 << ((ems >> qstepMantissaBits) & qstepMaxExponent)).toDouble());
   }
 
   /// Returns the maximum number of magnitude bits in any subband of the

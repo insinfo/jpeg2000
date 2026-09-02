@@ -37,30 +37,30 @@ class MatrixBasedRestrictedProfile extends RestrictedICCProfile {
     rep
       ..write("trc[RED]:")
       ..write(RestrictedICCProfile.eol)
-      ..write(trc[RestrictedICCProfile.RED])
+      ..write(trc[RestrictedICCProfile.redChannel])
       ..write(RestrictedICCProfile.eol);
     rep
       ..write("trc[GREEN]:")
       ..write(RestrictedICCProfile.eol)
-      ..write(trc[RestrictedICCProfile.GREEN])
+      ..write(trc[RestrictedICCProfile.greenChannel])
       ..write(RestrictedICCProfile.eol);
     rep
       ..write("trc[BLUE]:")
       ..write(RestrictedICCProfile.eol)
-      ..write(trc[RestrictedICCProfile.BLUE])
+      ..write(trc[RestrictedICCProfile.blueChannel])
       ..write(RestrictedICCProfile.eol);
 
     rep
       ..write("Red colorant:  ")
-      ..write(colorant![RestrictedICCProfile.RED])
+      ..write(colorant![RestrictedICCProfile.redChannel])
       ..write(RestrictedICCProfile.eol);
     rep
       ..write("Green colorant:  ")
-      ..write(colorant![RestrictedICCProfile.GREEN])
+      ..write(colorant![RestrictedICCProfile.greenChannel])
       ..write(RestrictedICCProfile.eol);
     rep
       ..write("Blue colorant:  ")
-      ..write(colorant![RestrictedICCProfile.BLUE])
+      ..write(colorant![RestrictedICCProfile.blueChannel])
       ..write(RestrictedICCProfile.eol);
 
     return (rep..write("]")).toString();

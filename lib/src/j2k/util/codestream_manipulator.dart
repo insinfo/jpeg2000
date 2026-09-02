@@ -80,11 +80,11 @@ class CodestreamManipulator {
 
     file.readUnsignedShort(); // SOC
     var marker = file.readUnsignedShort();
-    while (marker != Markers.SOT) {
+    while (marker != Markers.sot) {
       final pos = file.getPos();
       final length = file.readUnsignedShort();
 
-      if (marker == Markers.COD) {
+      if (marker == Markers.cod) {
         final scod = file.readUnsignedByte();
         final updated =
             (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
@@ -111,11 +111,11 @@ class CodestreamManipulator {
       final tileEnd = pos + length - 2;
 
       marker = file.readUnsignedShort();
-      while (marker != Markers.SOD) {
+      while (marker != Markers.sod) {
         final innerPos = file.getPos();
         final innerLength = file.readUnsignedShort();
 
-        if (marker == Markers.COD) {
+        if (marker == Markers.cod) {
           final scod = file.readUnsignedByte();
           final updated =
               (scod & (_tempSop ? 0xfd : 0xff)) & (_tempEph ? 0xfb : 0xff);
@@ -135,12 +135,12 @@ class CodestreamManipulator {
         if (halfMarker == 0xff) {
           marker = (halfMarker << 8) | file.readUnsignedByte();
           index++;
-          if (marker == Markers.SOP) {
+          if (marker == Markers.sop) {
             markerPositions.add(file.getPos());
             _packetsPerTile[tile]++;
-            file.skipBytes(Markers.SOP_LENGTH - 2);
-            index += Markers.SOP_LENGTH - 2;
-          } else if (marker == Markers.EPH) {
+            file.skipBytes(Markers.sopLength - 2);
+            index += Markers.sopLength - 2;
+          } else if (marker == Markers.eph) {
             markerPositions.add(file.getPos());
           }
         }
@@ -190,17 +190,17 @@ class CodestreamManipulator {
             _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
 
         if (_tempSop) {
-          length -= Markers.SOP_LENGTH;
-          file.skipBytes(Markers.SOP_LENGTH);
+          length -= Markers.sopLength;
+          file.skipBytes(Markers.sopLength);
         } else {
-          length -= Markers.SOP_LENGTH;
-          final sopBytes = Uint8List(Markers.SOP_LENGTH);
+          length -= Markers.sopLength;
+          final sopBytes = Uint8List(Markers.sopLength);
           file.readFully(sopBytes, 0, sopBytes.length);
           sopSegments[packet] = sopBytes;
         }
 
         if (!_tempEph) {
-          length += Markers.EPH_LENGTH;
+          length += Markers.ephLength;
         }
 
         final headerBytes = Uint8List(length);
@@ -210,9 +210,9 @@ class CodestreamManipulator {
 
         var dataLength =
             _markerPositions[markerIndex + 1] - _markerPositions[markerIndex];
-        dataLength -= Markers.EPH_LENGTH;
+        dataLength -= Markers.ephLength;
         if (_tempEph) {
-          file.skipBytes(Markers.EPH_LENGTH);
+          file.skipBytes(Markers.ephLength);
         }
         final dataBytes = Uint8List(dataLength);
         file.readFully(dataBytes, 0, dataLength);
@@ -269,7 +269,7 @@ class CodestreamManipulator {
 
           while (remainingForMarker > 0) {
             final headerLength = _packetHeaders[tile][p].length;
-            if (pptLength + headerLength > Markers.MAX_LPPT) {
+            if (pptLength + headerLength > Markers.maxLppt) {
               _emitPptSegment(
                   builder, tile, pptLength, pptIndex++, packetIndex, p);
               pptLength = 3;
@@ -284,7 +284,7 @@ class CodestreamManipulator {
           packetIndex = p;
         }
 
-        builder.add([Markers.SOD >> 8, Markers.SOD & 0xff]);
+        builder.add([Markers.sod >> 8, Markers.sod & 0xff]);
 
         for (var packet = tilePartStart;
             packet < tilePartStart + np;
@@ -307,7 +307,7 @@ class CodestreamManipulator {
           bytes[10] = 0;
           bytes[11] = numTileParts;
         } else {
-          _writeShortToBuffer(bytes, 0, Markers.SOT);
+          _writeShortToBuffer(bytes, 0, Markers.sot);
           _writeShortToBuffer(bytes, 2, 10);
           _writeShortToBuffer(bytes, 4, tile);
           _writeIntToBuffer(bytes, 6, bytes.length);
@@ -332,7 +332,7 @@ class CodestreamManipulator {
     int start,
     int end,
   ) {
-    builder.add([Markers.PPT >> 8, Markers.PPT & 0xff]);
+    builder.add([Markers.ppt >> 8, Markers.ppt & 0xff]);
     builder.add([(length >> 8) & 0xff, length & 0xff]);
     builder.add([index & 0xff]);
     for (var i = start; i < end; i++) {
@@ -386,7 +386,7 @@ class CodestreamManipulator {
         (index) => _packetHeaders[index].length,
       );
 
-      ppmBuilder.add([Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
+      ppmBuilder.add([Markers.ppm >> 8, Markers.ppm & 0xff, 0, 0, ppmIndex++]);
 
       for (var tilePart = 0; tilePart < _maxTileParts; tilePart++) {
         for (var tile = 0; tile < _numTiles; tile++) {
@@ -404,10 +404,10 @@ class CodestreamManipulator {
           final stop = start + packetsInPart;
 
           final headerLength = packetHeaderLengths[tile][tilePart];
-          if (ppmLength + 4 > Markers.MAX_LPPM) {
+          if (ppmLength + 4 > Markers.maxLppm) {
             _flushPpm(file, ppmBuilder);
             ppmBuilder
-                .add([Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
+                .add([Markers.ppm >> 8, Markers.ppm & 0xff, 0, 0, ppmIndex++]);
             ppmLength = 3;
           }
 
@@ -421,10 +421,10 @@ class CodestreamManipulator {
 
           for (var packet = start; packet < stop; packet++) {
             final headerBytes = _packetHeaders[tile][packet];
-            if (ppmLength + headerBytes.length > Markers.MAX_LPPM) {
+            if (ppmLength + headerBytes.length > Markers.maxLppm) {
               _flushPpm(file, ppmBuilder);
               ppmBuilder.add(
-                  [Markers.PPM >> 8, Markers.PPM & 0xff, 0, 0, ppmIndex++]);
+                  [Markers.ppm >> 8, Markers.ppm & 0xff, 0, 0, ppmIndex++]);
               ppmLength = 3;
             }
             ppmBuilder.add(headerBytes);
@@ -448,7 +448,7 @@ class CodestreamManipulator {
       }
     }
 
-    file.writeShort(Markers.EOC);
+    file.writeShort(Markers.eoc);
   }
 
   void _flushPpm(BEBufferedRandomAccessFile file, BytesBuilder builder) {

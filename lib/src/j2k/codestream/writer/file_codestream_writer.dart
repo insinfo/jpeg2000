@@ -14,7 +14,7 @@ import 'header_encoder.dart';
 /// are given by getMaxAvailableBytes() for rate allocation.
 class FileCodestreamWriter extends CodestreamWriter {
   /// The upper limit for the value of the Nsop field of the SOP marker
-  static const int SOP_MARKER_LIMIT = 65535;
+  static const int sopMarkerLimit = 65535;
 
   /// Index of the current tile
   int tileIdx = 0;
@@ -26,7 +26,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   RandomAccessFile? _file;
 
   /// The default buffer length, 1024 bytes
-  static const int DEF_BUF_LEN = 1024;
+  static const int defBufLen = 1024;
 
   /// Array used to store the SOP markers values
   late Uint8List sopMarker;
@@ -54,7 +54,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   /// stream.
   FileCodestreamWriter.fromFile(File file, int mb) : super(mb) {
     _file = file.openSync(mode: FileMode.write);
-    initSOP_EPHArrays();
+    initSopEphArrays();
   }
 
   /// Opens the file named 'fname' for writing the bit stream, using the 'he'
@@ -68,7 +68,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   /// stream.
   FileCodestreamWriter.fromPath(String fname, int mb) : super(mb) {
     _file = File(fname).openSync(mode: FileMode.write);
-    initSOP_EPHArrays();
+    initSopEphArrays();
   }
 
   /// Uses the output stream 'os' for writing the bit stream, using the 'he'
@@ -82,7 +82,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   /// stream.
   FileCodestreamWriter.fromStream(IOSink output, int mb) : super(mb) {
     out = output;
-    initSOP_EPHArrays();
+    initSopEphArrays();
   }
 
   void _writeBytes(List<int> bytes) {
@@ -111,7 +111,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   @override
   int writePacketHead(Uint8List head, int hlen, bool sim, bool sop, bool eph) {
     int len =
-        hlen + (sop ? Markers.SOP_LENGTH : 0) + (eph ? Markers.EPH_LENGTH : 0);
+        hlen + (sop ? Markers.sopLength : 0) + (eph ? Markers.ephLength : 0);
 
     // If not in simulation mode write the data
     if (!sim) {
@@ -127,9 +127,9 @@ class FileCodestreamWriter extends CodestreamWriter {
           // classe's constructor.
           sopMarker[4] = (packetIdx >> 8);
           sopMarker[5] = (packetIdx);
-          _writeBytes(sopMarker.sublist(0, Markers.SOP_LENGTH));
+          _writeBytes(sopMarker.sublist(0, Markers.sopLength));
           packetIdx++;
-          if (packetIdx > SOP_MARKER_LIMIT) {
+          if (packetIdx > sopMarkerLimit) {
             // Reset SOP value as we have reached its upper limit
             packetIdx = 0;
           }
@@ -140,7 +140,7 @@ class FileCodestreamWriter extends CodestreamWriter {
 
         // Write End of Packet Header markers if necessary
         if (eph) {
-          _writeBytes(ephMarker.sublist(0, Markers.EPH_LENGTH));
+          _writeBytes(ephMarker.sublist(0, Markers.ephLength));
         }
 
         // Deal with ROI Information
@@ -182,7 +182,7 @@ class FileCodestreamWriter extends CodestreamWriter {
   @override
   void close() {
     // Write the EOC marker and close the codestream.
-    _writeBytes([Markers.EOC >> 8, Markers.EOC & 0xFF]);
+    _writeBytes([Markers.eoc >> 8, Markers.eoc & 0xFF]);
 
     ndata += 2; // Add two to length of codestream for EOC marker
 
@@ -214,19 +214,19 @@ class FileCodestreamWriter extends CodestreamWriter {
 
   /// Performs the initialisation of the arrays that are used to store the
   /// values used to write SOP and EPH markers
-  void initSOP_EPHArrays() {
+  void initSopEphArrays() {
     // Allocate and set first values of SOP marker as they will not be
     // modified
-    sopMarker = Uint8List(Markers.SOP_LENGTH);
-    sopMarker[0] = (Markers.SOP >> 8);
-    sopMarker[1] = (Markers.SOP & 0xFF);
+    sopMarker = Uint8List(Markers.sopLength);
+    sopMarker[0] = (Markers.sop >> 8);
+    sopMarker[1] = (Markers.sop & 0xFF);
     sopMarker[2] = 0x00;
     sopMarker[3] = 0x04;
 
     // Allocate and set values of EPH marker as they will not be
     // modified
-    ephMarker = Uint8List(Markers.EPH_LENGTH);
-    ephMarker[0] = (Markers.EPH >> 8);
-    ephMarker[1] = (Markers.EPH & 0xFF);
+    ephMarker = Uint8List(Markers.ephLength);
+    ephMarker[0] = (Markers.eph >> 8);
+    ephMarker[1] = (Markers.eph & 0xFF);
   }
 }

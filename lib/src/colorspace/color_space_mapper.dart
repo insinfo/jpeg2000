@@ -16,7 +16,7 @@ import 'sycc_color_space_mapper.dart';
 abstract class ColorSpaceMapper extends ImgDataAdapter
     implements BlkImgDataSrc {
   /// The prefix for ICC Profiler options
-  static const String OPT_PREFIX = 'I';
+  static const String optPrefix = 'I';
 
   /// Platform dependant end of line String.
   static const String eol = '\n';
@@ -120,24 +120,24 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
   /// @exception IOException profile access exception
   static BlkImgDataSrc? createInstance(BlkImgDataSrc src, ColorSpace csMap) {
     csMap.pl.checkListSingle(
-        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     if (csMap.isPalettized()) {
       return PalettizedColorSpaceMapper.createInstance(src, csMap);
     }
 
-    if (csMap.getMethod() == ColorSpace.ICC_PROFILED) {
+    if (csMap.getMethod() == ColorSpace.iccProfiled) {
       return ICCProfiler.createInstance(src, csMap);
     }
 
     final colorspace = csMap.getColorSpace();
-    if (colorspace == ColorSpace.sRGB || colorspace == ColorSpace.GreyScale) {
+    if (colorspace == ColorSpace.sRGB || colorspace == ColorSpace.greyScale) {
       return EnumeratedColorSpaceMapper.createInstance(src, csMap);
     }
     if (colorspace == ColorSpace.sYCC) {
       return SYccColorSpaceMapper.createInstance(src, csMap);
     }
-    if (colorspace == ColorSpace.Unknown) {
+    if (colorspace == ColorSpace.unknown) {
       return null;
     }
     throw ColorSpaceException('Bad color space specification in image');
@@ -149,9 +149,7 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
   ///   @param src -- Source of image data
   ///   @param csm -- provides colorspace info
   ///
-  ColorSpaceMapper(BlkImgDataSrc src, ColorSpace csMap) : super(src) {
-    this.src = src;
-    this.csMap = csMap;
+  ColorSpaceMapper(BlkImgDataSrc this.src, ColorSpace this.csMap) : super(src) {
     initialize();
   }
 
@@ -192,18 +190,18 @@ abstract class ColorSpaceMapper extends ImgDataAdapter
   }
 
   @override
-  int getFixedPoint(int c) {
-    return src!.getFixedPoint(c);
+  int getFixedPoint(int component) {
+    return src!.getFixedPoint(component);
   }
 
   @override
-  DataBlk getCompData(DataBlk out, int c) {
-    return src!.getCompData(out, c);
+  DataBlk getCompData(DataBlk out, int component) {
+    return src!.getCompData(out, component);
   }
 
   @override
-  DataBlk getInternCompData(DataBlk out, int c) {
-    return src!.getInternCompData(out, c);
+  DataBlk getInternCompData(DataBlk out, int component) {
+    return src!.getInternCompData(out, component);
   }
 }
 

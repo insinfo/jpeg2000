@@ -3,7 +3,7 @@ import 'syn_wt_filter.dart';
 
 /// Synthesis filter entry-point specialized for integer sample buffers.
 abstract class SynWTFilterInt extends SynWTFilter {
-  /// Integer-aware implementation of [synthetize_lpf].
+  /// Integer-aware implementation of [synthetizeLpf].
   void synthetizeLpfInt(
     List<int> lowSig,
     int lowOff,
@@ -18,7 +18,7 @@ abstract class SynWTFilterInt extends SynWTFilter {
     int outStep,
   );
 
-  /// Integer-aware implementation of [synthetize_hpf].
+  /// Integer-aware implementation of [synthetizeHpf].
   void synthetizeHpfInt(
     List<int> lowSig,
     int lowOff,
@@ -34,7 +34,7 @@ abstract class SynWTFilterInt extends SynWTFilter {
   );
 
   @override
-  void synthetize_lpf(
+  void synthetizeLpf(
     Object lowSig,
     int lowOff,
     int lowLen,
@@ -63,7 +63,7 @@ abstract class SynWTFilterInt extends SynWTFilter {
   }
 
   @override
-  void synthetize_hpf(
+  void synthetizeHpf(
     Object lowSig,
     int lowOff,
     int lowLen,

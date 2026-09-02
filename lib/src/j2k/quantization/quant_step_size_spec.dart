@@ -7,23 +7,22 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
   // sides of the codec (as the raw ModuleSpec is in JJ2000): the encoder
   // stores the normalized base step as a double (from -Qstep), while the
   // decoder stores StdDequantizerParams parsed from the QCD/QCC markers.
-  static const int SPEC_DEF = ModuleSpec.SPEC_DEF;
-  static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
-  static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
-  static const int SPEC_TILE_COMP = ModuleSpec.SPEC_TILE_COMP;
+  static const int specDef = ModuleSpec.specDef;
+  static const int specCompDef = ModuleSpec.specCompDef;
+  static const int specTileDef = ModuleSpec.specTileDef;
+  static const int specTileComp = ModuleSpec.specTileComp;
 
   static List<bool> parseIdx(String token, int max) =>
       ModuleSpec.parseIdx(token, max);
 
-  QuantStepSizeSpec(int numTiles, int numComps, int specType)
-      : super(numTiles, numComps, specType);
+  QuantStepSizeSpec(super.numTiles, super.numComps, super.specType);
 
   QuantStepSizeSpec.fromParameters(
-    int numTiles,
-    int numComps,
-    int specType,
+    super.numTiles,
+    super.numComps,
+    super.specType,
     ParameterList parameters,
-  ) : super(numTiles, numComps, specType) {
+  ) {
     final param = parameters.getParameter('Qstep');
     if (param == null) {
       throw ArgumentError('Qstep option not specified');
@@ -37,7 +36,7 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
   }
 
   void _parseSpecification(String param, ParameterList parameters) {
-    var curSpecType = SPEC_DEF;
+    var curSpecType = specDef;
     List<bool>? tileSpec;
     List<bool>? compSpec;
 
@@ -49,13 +48,11 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
       switch (word[0]) {
         case 't':
           tileSpec = parseIdx(word, nTiles);
-          curSpecType =
-              curSpecType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
+          curSpecType = curSpecType == specCompDef ? specTileComp : specTileDef;
           break;
         case 'c':
           compSpec = parseIdx(word, nComp);
-          curSpecType =
-              curSpecType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
+          curSpecType = curSpecType == specTileDef ? specTileComp : specCompDef;
           break;
         default:
           final value = double.tryParse(word);
@@ -71,10 +68,10 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
           }
 
           switch (curSpecType) {
-            case SPEC_DEF:
+            case specDef:
               setDefault(_wrapValue(value));
               break;
-            case SPEC_TILE_DEF:
+            case specTileDef:
               final tiles = tileSpec;
               if (tiles == null) {
                 throw ArgumentError(
@@ -87,7 +84,7 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
                 }
               }
               break;
-            case SPEC_COMP_DEF:
+            case specCompDef:
               final comps = compSpec;
               if (comps == null) {
                 throw ArgumentError(
@@ -100,7 +97,7 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
                 }
               }
               break;
-            case SPEC_TILE_COMP:
+            case specTileComp:
               final tiles = tileSpec;
               final comps = compSpec;
               if (tiles == null || comps == null) {
@@ -121,7 +118,7 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
               break;
           }
 
-          curSpecType = SPEC_DEF;
+          curSpecType = specDef;
           tileSpec = null;
           compSpec = null;
           break;
@@ -133,7 +130,7 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
     var unspecified = 0;
     for (var t = nTiles - 1; t >= 0; t--) {
       for (var c = nComp - 1; c >= 0; c--) {
-        if (specValType[t][c] == SPEC_DEF) {
+        if (specValType[t][c] == specDef) {
           unspecified++;
         }
       }
@@ -156,24 +153,24 @@ class QuantStepSizeSpec extends ModuleSpec<dynamic> {
       }
       setDefault(firstValue);
       switch (specValType[0][0]) {
-        case SPEC_TILE_DEF:
+        case specTileDef:
           for (var c = nComp - 1; c >= 0; c--) {
-            if (specValType[0][c] == SPEC_TILE_DEF) {
-              specValType[0][c] = SPEC_DEF;
+            if (specValType[0][c] == specTileDef) {
+              specValType[0][c] = specDef;
             }
           }
           tileDef?[0] = null;
           break;
-        case SPEC_COMP_DEF:
+        case specCompDef:
           for (var t = nTiles - 1; t >= 0; t--) {
-            if (specValType[t][0] == SPEC_COMP_DEF) {
-              specValType[t][0] = SPEC_DEF;
+            if (specValType[t][0] == specCompDef) {
+              specValType[t][0] = specDef;
             }
           }
           compDef?[0] = null;
           break;
-        case SPEC_TILE_COMP:
-          specValType[0][0] = SPEC_DEF;
+        case specTileComp:
+          specValType[0][0] = specDef;
           tileCompVal?.remove('t0c0');
           break;
       }

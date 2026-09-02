@@ -7,10 +7,6 @@ class ICCCurveType extends ICCTag {
   static const String eol = '\n'; // System.getProperty ("line.separator");
 
   /// Tag fields
-  @override
-  final int type;
-
-  /// Tag fields
   final int reserved;
 
   /// Tag fields
@@ -47,15 +43,14 @@ class ICCCurveType extends ICCTag {
 
   /// Construct this tag from its constituant parts
   ICCCurveType(int signature, Uint8List data, int offset, int length)
-      : type = ICCProfile.getInt(data, offset),
-        reserved = ICCProfile.getInt(data, offset + ICCProfile.int_size),
-        nEntries = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
-        entry = Int32List(
-            ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size)),
-        super(signature, data, offset, offset + 2 * ICCProfile.int_size) {
+      : reserved = ICCProfile.getInt(data, offset + ICCProfile.intSize),
+        nEntries = ICCProfile.getInt(data, offset + 2 * ICCProfile.intSize),
+        entry =
+            Int32List(ICCProfile.getInt(data, offset + 2 * ICCProfile.intSize)),
+        super(signature, data, offset, offset + 2 * ICCProfile.intSize) {
     for (int i = 0; i < nEntries; ++i) {
       entry[i] = ICCProfile.getShort(data,
-              offset + 3 * ICCProfile.int_size + i * ICCProfile.short_size) &
+              offset + 3 * ICCProfile.intSize + i * ICCProfile.shortSize) &
           0xFFFF;
     }
   }

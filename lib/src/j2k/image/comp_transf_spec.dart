@@ -3,8 +3,7 @@ import 'invcomptransf/inv_comp_transf.dart';
 
 /// Holds per-tile component transformation selections.
 class CompTransfSpec extends ModuleSpec<int> {
-  CompTransfSpec(int numTiles, int numComps, int specType)
-      : super(numTiles, numComps, specType);
+  CompTransfSpec(super.numTiles, super.numComps, super.specType);
 
   /// Returns `true` if any tile enables a component transform.
   bool isCompTransfUsed() {

@@ -68,11 +68,11 @@ class HeaderDecoder {
   static const String optionPrefix = 'H';
   static int _codLogCount = 0;
   static int _quantLogCount = 0;
-  static const int _allowedCodingStyleFlags = Markers.SCOX_PRECINCT_PARTITION |
-      Markers.SCOX_USE_SOP |
-      Markers.SCOX_USE_EPH |
-      Markers.SCOX_HOR_CB_PART |
-      Markers.SCOX_VER_CB_PART;
+  static const int _allowedCodingStyleFlags = Markers.scoxPrecinctPartition |
+      Markers.scoxUseSop |
+      Markers.scoxUseEph |
+      Markers.scoxHorCbPart |
+      Markers.scoxVerCbPart;
 
   static bool _isInstrumentationEnabled() => DecoderInstrumentation.isEnabled();
 
@@ -97,7 +97,7 @@ class HeaderDecoder {
     final codestreamStart = input.getPos();
     final logger = FacilityManager.getMsgLogger();
     final soc = input.readUnsignedShort();
-    if (soc != Markers.SOC) {
+    if (soc != Markers.soc) {
       throw StateError('Codestream does not start with SOC marker');
     }
 
@@ -109,7 +109,7 @@ class HeaderDecoder {
       final marker = input.readUnsignedShort();
 
       switch (marker) {
-        case Markers.SIZ:
+        case Markers.siz:
           final payload = _readMarkerPayload(input);
           final siz = _parseSizMarker(payload, headerInfo);
           final numTiles = siz.getNumTiles();
@@ -134,7 +134,7 @@ class HeaderDecoder {
             tilingOrigin: Coord(siz.xt0siz, siz.yt0siz),
           );
           break;
-        case Markers.POC:
+        case Markers.poc:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -146,7 +146,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.COD:
+        case Markers.cod:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -158,7 +158,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.COC:
+        case Markers.coc:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -170,7 +170,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.QCD:
+        case Markers.qcd:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -182,7 +182,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.QCC:
+        case Markers.qcc:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -194,7 +194,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.PPM:
+        case Markers.ppm:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -202,7 +202,7 @@ class HeaderDecoder {
           }
           target.parsePpmMarker(payload);
           break;
-        case Markers.TLM:
+        case Markers.tlm:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -210,7 +210,7 @@ class HeaderDecoder {
           }
           target.parseTlmMarker(payload);
           break;
-        case Markers.RGN:
+        case Markers.rgn:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -222,7 +222,7 @@ class HeaderDecoder {
             tileIdx: 0,
           );
           break;
-        case Markers.COM:
+        case Markers.com:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -230,7 +230,7 @@ class HeaderDecoder {
           }
           target.parseComMarker(payload);
           break;
-        case Markers.CRG:
+        case Markers.crg:
           final payload = _readMarkerPayload(input);
           final target = decoder;
           if (target == null) {
@@ -238,7 +238,7 @@ class HeaderDecoder {
           }
           target.parseCrgMarker(payload);
           break;
-        case Markers.SOT:
+        case Markers.sot:
           final target = decoder;
           if (target == null) {
             throw StateError('SOT marker encountered before SIZ');
@@ -385,7 +385,7 @@ class HeaderDecoder {
     required bool isMainHeader,
     required int tileIdx,
   }) {
-    if ((scod & (Markers.SCOX_HOR_CB_PART | Markers.SCOX_VER_CB_PART)) != 0) {
+    if ((scod & (Markers.scoxHorCbPart | Markers.scoxVerCbPart)) != 0) {
       FacilityManager.getMsgLogger().printmsg(
         MsgLogger.warning,
         'Code-block partition origin different from (0,0). This requires JPEG 2000 Part 2 support and may not be supported by all decoders.',
@@ -393,7 +393,7 @@ class HeaderDecoder {
     }
 
     final contextLabel = isMainHeader ? 'main header' : 'tile $tileIdx';
-    final newCbULX = (scod & Markers.SCOX_HOR_CB_PART) != 0 ? 1 : 0;
+    final newCbULX = (scod & Markers.scoxHorCbPart) != 0 ? 1 : 0;
     if (_cbULXDefined && cbULX != newCbULX) {
       throw StateError(
         'Code-block partition origin redefined in $contextLabel COD marker (expected $cbULX, got $newCbULX).',
@@ -402,7 +402,7 @@ class HeaderDecoder {
     cbULX = newCbULX;
     _cbULXDefined = true;
 
-    final newCbULY = (scod & Markers.SCOX_VER_CB_PART) != 0 ? 1 : 0;
+    final newCbULY = (scod & Markers.scoxVerCbPart) != 0 ? 1 : 0;
     if (_cbULYDefined && cbULY != newCbULY) {
       throw StateError(
         'Code-block partition origin redefined in $contextLabel COD marker (expected $cbULY, got $newCbULY).',
@@ -428,9 +428,9 @@ class HeaderDecoder {
       );
     }
     switch (filterId) {
-      case FilterTypes.W9X7:
+      case FilterTypes.w9x7:
         return SynWTFilterFloatLift9x7();
-      case FilterTypes.W5X3:
+      case FilterTypes.w5x3:
         return SynWTFilterIntLift5x3();
       default:
         throw StateError(
@@ -477,7 +477,7 @@ class HeaderDecoder {
     _validateEntropyOptions(spcodCs, 'COD marker');
     final spcodT = view.getUint8(offset++);
 
-    final usesPrecinctPartition = (scod & Markers.SCOX_PRECINCT_PARTITION) != 0;
+    final usesPrecinctPartition = (scod & Markers.scoxPrecinctPartition) != 0;
     List<int>? precinctSpec;
     if (usesPrecinctPartition) {
       precinctSpec = <int>[];
@@ -533,16 +533,16 @@ class HeaderDecoder {
       decSpec.dls.setDefault(spcodNdl);
       decSpec.cblks.setDefault(cblkSize);
       decSpec.ecopts.setDefault(spcodCs);
-      decSpec.sops.setDefault((scod & Markers.SCOX_USE_SOP) != 0);
-      decSpec.ephs.setDefault((scod & Markers.SCOX_USE_EPH) != 0);
+      decSpec.sops.setDefault((scod & Markers.scoxUseSop) != 0);
+      decSpec.ephs.setDefault((scod & Markers.scoxUseEph) != 0);
     } else {
       decSpec.nls.setTileDef(tileIdx, sgcodNl);
       decSpec.pos.setTileDef(tileIdx, sgcodPo);
       decSpec.dls.setTileDef(tileIdx, spcodNdl);
       decSpec.cblks.setTileDef(tileIdx, cblkSize);
       decSpec.ecopts.setTileDef(tileIdx, spcodCs);
-      decSpec.sops.setTileDef(tileIdx, (scod & Markers.SCOX_USE_SOP) != 0);
-      decSpec.ephs.setTileDef(tileIdx, (scod & Markers.SCOX_USE_EPH) != 0);
+      decSpec.sops.setTileDef(tileIdx, (scod & Markers.scoxUseSop) != 0);
+      decSpec.ephs.setTileDef(tileIdx, (scod & Markers.scoxUseEph) != 0);
     }
 
     _logCodSummary(
@@ -585,35 +585,35 @@ class HeaderDecoder {
     while (!headerDone) {
       final marker = input.readUnsignedShort();
       switch (marker) {
-        case Markers.COD:
+        case Markers.cod:
           parseCodMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
             tileIdx: sot.isot,
           );
           break;
-        case Markers.COC:
+        case Markers.coc:
           parseCocMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
             tileIdx: sot.isot,
           );
           break;
-        case Markers.QCD:
+        case Markers.qcd:
           parseQcdMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
             tileIdx: sot.isot,
           );
           break;
-        case Markers.QCC:
+        case Markers.qcc:
           parseQccMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
             tileIdx: sot.isot,
           );
           break;
-        case Markers.POC:
+        case Markers.poc:
           parsePocMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
@@ -621,7 +621,7 @@ class HeaderDecoder {
             tilePartIdx: sot.tpsot,
           );
           break;
-        case Markers.PPT:
+        case Markers.ppt:
           FacilityManager.getMsgLogger().printmsg(
             MsgLogger.info,
             'Parsed PPT marker for tile=${sot.isot} part=${sot.tpsot}',
@@ -632,21 +632,21 @@ class HeaderDecoder {
             tilePartIdx: sot.tpsot,
           );
           break;
-        case Markers.RGN:
+        case Markers.rgn:
           parseRgnMarker(
             _readMarkerPayload(input),
             isMainHeader: false,
             tileIdx: sot.isot,
           );
           break;
-        case Markers.COM:
+        case Markers.com:
           parseComMarker(_readMarkerPayload(input));
           break;
-        case Markers.SOD:
+        case Markers.sod:
           headerDone = true;
           input.seek(input.getPos() - 2);
           break;
-        case Markers.EOC:
+        case Markers.eoc:
           headerDone = true;
           input.seek(input.getPos() - 2);
           break;
@@ -668,7 +668,7 @@ class HeaderDecoder {
       }
       final marker = input.readUnsignedShort();
       switch (marker) {
-        case Markers.SOT:
+        case Markers.sot:
           final sotStart = input.getPos() - 2;
           final payload = _readMarkerPayload(input);
           final view = ByteData.view(
@@ -698,7 +698,7 @@ class HeaderDecoder {
                 'Unexpected end of codestream while expecting SOD marker');
           }
           final sodMarker = input.readUnsignedShort();
-          if (sodMarker != Markers.SOD) {
+          if (sodMarker != Markers.sod) {
             throw StateError(
               'Expected SOD marker after tile-part header, found 0x${sodMarker.toRadixString(16)}',
             );
@@ -714,7 +714,7 @@ class HeaderDecoder {
           }
 
           return sot;
-        case Markers.EOC:
+        case Markers.eoc:
           throw StateError(
               'Reached end of codestream before encountering tile-part header');
         default:
@@ -755,7 +755,7 @@ class HeaderDecoder {
 
     final scoc = view.getUint8(offset++);
     _validateCodingStyleFlags(scoc, 'COC marker');
-    final usesPrecinctPartition = (scoc & Markers.SCOX_PRECINCT_PARTITION) != 0;
+    final usesPrecinctPartition = (scoc & Markers.scoxPrecinctPartition) != 0;
     final spcocNdl = view.getUint8(offset++);
     _validateDecompositionLevels(spcocNdl);
     final spcocCw = view.getUint8(offset++);
@@ -849,8 +849,8 @@ class HeaderDecoder {
 
     var offset = 2;
     final sqcd = view.getUint8(offset++);
-    final guardBits = (sqcd >> Markers.SQCX_GB_SHIFT) & Markers.SQCX_GB_MSK;
-    final qType = sqcd & ~(Markers.SQCX_GB_MSK << Markers.SQCX_GB_SHIFT);
+    final guardBits = (sqcd >> Markers.sqcxGbShift) & Markers.sqcxGbMsk;
+    final qType = sqcd & ~(Markers.sqcxGbMsk << Markers.sqcxGbShift);
 
     final result = _parseQuantizationTables(
       view: view,
@@ -920,8 +920,8 @@ class HeaderDecoder {
     }
 
     final sqcc = view.getUint8(offset++);
-    final guardBits = (sqcc >> Markers.SQCX_GB_SHIFT) & Markers.SQCX_GB_MSK;
-    final qType = sqcc & ~(Markers.SQCX_GB_MSK << Markers.SQCX_GB_SHIFT);
+    final guardBits = (sqcc >> Markers.sqcxGbShift) & Markers.sqcxGbMsk;
+    final qType = sqcc & ~(Markers.sqcxGbMsk << Markers.sqcxGbShift);
 
     final result = _parseQuantizationTables(
       view: view,
@@ -968,7 +968,7 @@ class HeaderDecoder {
     if (sgcodMct == 0) {
       return InvCompTransf.none;
     }
-    return spcodT == FilterTypes.W5X3
+    return spcodT == FilterTypes.w5x3
         ? InvCompTransf.invRct
         : InvCompTransf.invIct;
   }
@@ -1013,29 +1013,29 @@ class HeaderDecoder {
     required int height,
     required String markerLabel,
   }) {
-    if (width < StdEntropyCoderOptions.MIN_CB_DIM ||
-        width > StdEntropyCoderOptions.MAX_CB_DIM) {
+    if (width < StdEntropyCoderOptions.minCbDim ||
+        width > StdEntropyCoderOptions.maxCbDim) {
       throw StateError(
         'Non-valid code-block width in $markerLabel: $width (expected '
-        '${StdEntropyCoderOptions.MIN_CB_DIM}..${StdEntropyCoderOptions.MAX_CB_DIM}).',
+        '${StdEntropyCoderOptions.minCbDim}..${StdEntropyCoderOptions.maxCbDim}).',
       );
     }
-    if (height < StdEntropyCoderOptions.MIN_CB_DIM ||
-        height > StdEntropyCoderOptions.MAX_CB_DIM) {
+    if (height < StdEntropyCoderOptions.minCbDim ||
+        height > StdEntropyCoderOptions.maxCbDim) {
       throw StateError(
         'Non-valid code-block height in $markerLabel: $height (expected '
-        '${StdEntropyCoderOptions.MIN_CB_DIM}..${StdEntropyCoderOptions.MAX_CB_DIM}).',
+        '${StdEntropyCoderOptions.minCbDim}..${StdEntropyCoderOptions.maxCbDim}).',
       );
     }
   }
 
   static void _validateEntropyOptions(int options, String markerLabel) {
-    const allowedOptions = StdEntropyCoderOptions.OPT_BYPASS |
-        StdEntropyCoderOptions.OPT_RESET_MQ |
-        StdEntropyCoderOptions.OPT_TERM_PASS |
-        StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL |
-        StdEntropyCoderOptions.OPT_PRED_TERM |
-        StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+    const allowedOptions = StdEntropyCoderOptions.optBypass |
+        StdEntropyCoderOptions.optResetMq |
+        StdEntropyCoderOptions.optTermPass |
+        StdEntropyCoderOptions.optVertStrCausal |
+        StdEntropyCoderOptions.optPredTerm |
+        StdEntropyCoderOptions.optSegSymbols;
     if ((options & ~allowedOptions) != 0) {
       throw StateError(
         'Unknown code-block style flags in $markerLabel: 0x'
@@ -1046,7 +1046,7 @@ class HeaderDecoder {
 
   static List<List<int>> _buildPrecinctValue(List<int>? packedPrecincts) {
     if (packedPrecincts == null || packedPrecincts.isEmpty) {
-      final defaultSize = Markers.PRECINCT_PARTITION_DEF_SIZE;
+      final defaultSize = Markers.precinctPartitionDefSize;
       return _wrapPrecinctLists(<int>[defaultSize], <int>[defaultSize]);
     }
     final widths = <int>[];
@@ -1080,7 +1080,7 @@ class HeaderDecoder {
       throw StateError('Invalid offset while parsing quantization tables');
     }
 
-    final bytesPerEntry = qType == Markers.SQCX_NO_QUANTIZATION ? 1 : 2;
+    final bytesPerEntry = qType == Markers.sqcxNoQuantization ? 1 : 2;
     final available = limit - offset;
     if (available < bytesPerEntry) {
       throw StateError('Quantization marker missing step size entries');
@@ -1093,12 +1093,12 @@ class HeaderDecoder {
     if (totalEntries == 0) {
       throw StateError('Quantization marker must contain at least one entry');
     }
-    if (qType == Markers.SQCX_SCALAR_DERIVED && totalEntries != 1) {
+    if (qType == Markers.sqcxScalarDerived && totalEntries != 1) {
       throw StateError('Derived quantization expects a single step size entry');
     }
 
     final maxrl = totalEntries == 1 ? 0 : (totalEntries - 1) ~/ 3;
-    if (qType != Markers.SQCX_SCALAR_DERIVED) {
+    if (qType != Markers.sqcxScalarDerived) {
       final expected = 1 + maxrl * 3;
       if (expected != totalEntries) {
         throw StateError(
@@ -1118,7 +1118,7 @@ class HeaderDecoder {
       growable: false,
     );
     List<List<double>>? steps;
-    if (qType != Markers.SQCX_NO_QUANTIZATION) {
+    if (qType != Markers.sqcxNoQuantization) {
       steps = List<List<double>>.generate(
         maxrl + 1,
         (_) => List<double>.filled(4, 0.0, growable: false),
@@ -1131,14 +1131,14 @@ class HeaderDecoder {
       final startBand = rl == 0 ? 0 : 1;
       final endBand = rl == 0 ? 0 : 3;
       for (var band = startBand; band <= endBand; band++) {
-        if (qType == Markers.SQCX_NO_QUANTIZATION) {
+        if (qType == Markers.sqcxNoQuantization) {
           if (current >= limit) {
             throw StateError('Unexpected end of data while parsing QCD/QCC');
           }
           final raw = view.getUint8(current++);
           segmentValues[rl][band] = raw;
           expTable[rl][band] =
-              (raw >> Markers.SQCX_EXP_SHIFT) & Markers.SQCX_EXP_MASK;
+              (raw >> Markers.sqcxExpShift) & Markers.sqcxExpMask;
         } else {
           if (current + 2 > limit) {
             throw StateError('Unexpected end of data while parsing QCD/QCC');
@@ -1168,11 +1168,11 @@ class HeaderDecoder {
 
   String _quantizationTypeLabel(int qType) {
     switch (qType) {
-      case Markers.SQCX_NO_QUANTIZATION:
+      case Markers.sqcxNoQuantization:
         return 'reversible';
-      case Markers.SQCX_SCALAR_DERIVED:
+      case Markers.sqcxScalarDerived:
         return 'derived';
-      case Markers.SQCX_SCALAR_EXPOUNDED:
+      case Markers.sqcxScalarExpounded:
         return 'expounded';
       default:
         throw StateError('Unsupported quantization type: $qType');
@@ -1379,7 +1379,7 @@ class HeaderDecoder {
     final key = isMainHeader ? 'main_c$component' : 't${tileIdx}_c$component';
     headerInfo.rgn[key] = rgn;
 
-    if (srgn == Markers.SRGN_IMPLICIT) {
+    if (srgn == Markers.srgnImplicit) {
       _applyRoiShift(
         isMainHeader: isMainHeader,
         tileIdx: tileIdx,
@@ -2214,18 +2214,18 @@ class HeaderDecoder {
     _codLogCount++;
     final cblkWidth = 1 << (cblkWidthExp + 2);
     final cblkHeight = 1 << (cblkHeightExp + 2);
-    final usesPrecincts = (scod & Markers.SCOX_PRECINCT_PARTITION) != 0;
+    final usesPrecincts = (scod & Markers.scoxPrecinctPartition) != 0;
     final flags = <String>[];
-    if ((scod & Markers.SCOX_USE_SOP) != 0) {
+    if ((scod & Markers.scoxUseSop) != 0) {
       flags.add('SOP');
     }
-    if ((scod & Markers.SCOX_USE_EPH) != 0) {
+    if ((scod & Markers.scoxUseEph) != 0) {
       flags.add('EPH');
     }
     if (usesPrecincts) {
       flags.add('precincts');
     }
-    final filterLabel = filterId == FilterTypes.W5X3 ? '5x3' : '9x7';
+    final filterLabel = filterId == FilterTypes.w5x3 ? '5x3' : '9x7';
     final precinctLabel = usesPrecincts && precincts != null
         ? 'precinctSpec=${precincts.map((v) => '0x${v.toRadixString(16)}').join(',')}'
         : 'precinctSpec=default';

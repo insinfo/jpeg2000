@@ -24,7 +24,7 @@ import '../../image/coord.dart';
 /// and in tile-part headers.
 class HeaderEncoder implements Markers, StdEntropyCoderOptions {
   /// The prefix for the header encoder options: 'H'
-  static const String OPT_PREFIX = 'H';
+  static const String optPrefix = 'H';
 
   /// The list of parameters that are accepted for the header encoder
   /// module. Options for this modules start with 'H'.
@@ -89,7 +89,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
   HeaderEncoder(this.origSrc, this.isOrigSig, this.dwt, this.tiler,
       this.encSpec, this.roiSc, this.ralloc, ParameterList pl) {
     pl.checkListSingle(
-        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
     if (origSrc.getNumComps() != isOrigSig.length) {
       throw ArgumentError();
     }
@@ -142,7 +142,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
   /// Start Of Codestream marker (SOC) signalling the beginning of a
   /// codestream.
   void writeSOC() {
-    writeShort(Markers.SOC);
+    writeShort(Markers.soc);
   }
 
   /// Writes SIZ marker segment of the codestream header.
@@ -150,7 +150,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     int tmp;
 
     // SIZ marker
-    writeShort(Markers.SIZ);
+    writeShort(Markers.siz);
 
     // Lsiz (Marker length)
     int markSegLen = 38 + 3 * nComp;
@@ -192,7 +192,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       // Ssiz bit-depth before mixing
       tmp = origSrc.getNomRangeBits(c) - 1;
 
-      tmp |= ((isOrigSig[c] ? 1 : 0) << Markers.SSIZ_DEPTH_BITS);
+      tmp |= ((isOrigSig[c] ? 1 : 0) << Markers.ssizDepthBits);
       writeByte(tmp);
 
       // XRsiz (component sub-sampling value x-wise)
@@ -226,8 +226,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       prog = (encSpec.pocs.getTileDef(tileIdx) as List<Progression>);
     }
 
-    if (ppx != Markers.PRECINCT_PARTITION_DEF_SIZE ||
-        ppy != Markers.PRECINCT_PARTITION_DEF_SIZE) {
+    if (ppx != Markers.precinctPartitionDefSize ||
+        ppy != Markers.precinctPartitionDefSize) {
       precinctPartitionUsed = true;
     } else {
       precinctPartitionUsed = false;
@@ -240,7 +240,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     }
 
     // Write COD marker
-    writeShort(Markers.COD);
+    writeShort(Markers.cod);
 
     // Lcod
     int markSegLen = 12 + a;
@@ -249,32 +249,32 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // Scod (coding style parameter)
     tmp = 0;
     if (precinctPartitionUsed) {
-      tmp = Markers.SCOX_PRECINCT_PARTITION;
+      tmp = Markers.scoxPrecinctPartition;
     }
 
     // Are SOP markers used ?
     if (mh) {
       if ((encSpec.sops.getDefault().toString()).toLowerCase() == "on") {
-        tmp |= Markers.SCOX_USE_SOP;
+        tmp |= Markers.scoxUseSop;
       }
     } else {
       if ((encSpec.sops.getTileDef(tileIdx).toString()).toLowerCase() == "on") {
-        tmp |= Markers.SCOX_USE_SOP;
+        tmp |= Markers.scoxUseSop;
       }
     }
 
     // Are EPH markers used ?
     if (mh) {
       if ((encSpec.ephs.getDefault().toString()).toLowerCase() == "on") {
-        tmp |= Markers.SCOX_USE_EPH;
+        tmp |= Markers.scoxUseEph;
       }
     } else {
       if ((encSpec.ephs.getTileDef(tileIdx).toString()).toLowerCase() == "on") {
-        tmp |= Markers.SCOX_USE_EPH;
+        tmp |= Markers.scoxUseEph;
       }
     }
-    if (dwt.getCbULX() != 0) tmp |= Markers.SCOX_HOR_CB_PART;
-    if (dwt.getCbULY() != 0) tmp |= Markers.SCOX_VER_CB_PART;
+    if (dwt.getCbULX() != 0) tmp |= Markers.scoxHorCbPart;
+    if (dwt.getCbULY() != 0) tmp |= Markers.scoxVerCbPart;
     writeByte(tmp);
 
     // SGcod
@@ -305,15 +305,15 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // Code-block width and height
     if (mh) {
       // main header, get default values
-      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_DEF, -1, -1);
+      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.specDef, -1, -1);
       writeByte(MathUtil.log2(tmp) - 2);
-      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_DEF, -1, -1);
+      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.specDef, -1, -1);
       writeByte(MathUtil.log2(tmp) - 2);
     } else {
       // tile header, get tile default values
-      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_DEF, tileIdx, -1);
+      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.specTileDef, tileIdx, -1);
       writeByte(MathUtil.log2(tmp) - 2);
-      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_DEF, tileIdx, -1);
+      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.specTileDef, tileIdx, -1);
       writeByte(MathUtil.log2(tmp) - 2);
     }
 
@@ -322,42 +322,42 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     if (mh) {
       // Main header
       if ((encSpec.bms.getDefault() as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_BYPASS;
+        tmp |= StdEntropyCoderOptions.optBypass;
       }
       if ((encSpec.mqrs.getDefault() as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_RESET_MQ;
+        tmp |= StdEntropyCoderOptions.optResetMq;
       }
       if ((encSpec.rts.getDefault() as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_TERM_PASS;
+        tmp |= StdEntropyCoderOptions.optTermPass;
       }
       if ((encSpec.css.getDefault() as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+        tmp |= StdEntropyCoderOptions.optVertStrCausal;
       }
       if ((encSpec.tts.getDefault() as String) == "predict") {
-        tmp |= StdEntropyCoderOptions.OPT_PRED_TERM;
+        tmp |= StdEntropyCoderOptions.optPredTerm;
       }
       if ((encSpec.sss.getDefault() as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+        tmp |= StdEntropyCoderOptions.optSegSymbols;
       }
     } else {
       // Tile header
       if ((encSpec.bms.getTileDef(tileIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_BYPASS;
+        tmp |= StdEntropyCoderOptions.optBypass;
       }
       if ((encSpec.mqrs.getTileDef(tileIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_RESET_MQ;
+        tmp |= StdEntropyCoderOptions.optResetMq;
       }
       if ((encSpec.rts.getTileDef(tileIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_TERM_PASS;
+        tmp |= StdEntropyCoderOptions.optTermPass;
       }
       if ((encSpec.css.getTileDef(tileIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+        tmp |= StdEntropyCoderOptions.optVertStrCausal;
       }
       if ((encSpec.tts.getTileDef(tileIdx) as String) == "predict") {
-        tmp |= StdEntropyCoderOptions.OPT_PRED_TERM;
+        tmp |= StdEntropyCoderOptions.optPredTerm;
       }
       if ((encSpec.sss.getTileDef(tileIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+        tmp |= StdEntropyCoderOptions.optSegSymbols;
       }
     }
     writeByte(tmp);
@@ -419,8 +419,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       ppy = encSpec.pss.getPPY(tileIdx, compIdx, mrl);
     }
 
-    if (ppx != Markers.PRECINCT_PARTITION_DEF_SIZE ||
-        ppy != Markers.PRECINCT_PARTITION_DEF_SIZE) {
+    if (ppx != Markers.precinctPartitionDefSize ||
+        ppy != Markers.precinctPartitionDefSize) {
       precinctPartitionUsed = true;
     } else {
       precinctPartitionUsed = false;
@@ -432,7 +432,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     }
 
     // COC marker
-    writeShort(Markers.COC);
+    writeShort(Markers.coc);
 
     // Lcoc (marker segment length (in bytes))
     // Basic: Lcoc(2 bytes)+Scoc(1)+ Ccoc(1 or 2)+SPcod(5+a)
@@ -451,7 +451,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // Scod (coding style parameter)
     tmp = 0;
     if (precinctPartitionUsed) {
-      tmp = Markers.SCOX_PRECINCT_PARTITION;
+      tmp = Markers.scoxPrecinctPartition;
     }
     writeByte(tmp);
 
@@ -463,17 +463,17 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // Code-block width and height
     if (mh) {
       // main header, get component default values
-      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_COMP_DEF, -1, compIdx);
+      tmp = encSpec.cblks.getCBlkWidth(ModuleSpec.specCompDef, -1, compIdx);
       writeByte(MathUtil.log2(tmp) - 2);
-      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_COMP_DEF, -1, compIdx);
+      tmp = encSpec.cblks.getCBlkHeight(ModuleSpec.specCompDef, -1, compIdx);
       writeByte(MathUtil.log2(tmp) - 2);
     } else {
       // tile header, get tile component values
-      tmp = encSpec.cblks
-          .getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, tileIdx, compIdx);
+      tmp =
+          encSpec.cblks.getCBlkWidth(ModuleSpec.specTileComp, tileIdx, compIdx);
       writeByte(MathUtil.log2(tmp) - 2);
       tmp = encSpec.cblks
-          .getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, tileIdx, compIdx);
+          .getCBlkHeight(ModuleSpec.specTileComp, tileIdx, compIdx);
       writeByte(MathUtil.log2(tmp) - 2);
     }
 
@@ -483,53 +483,53 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       // Main header
       // Lazy coding mode ?
       if ((encSpec.bms.getCompDef(compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_BYPASS;
+        tmp |= StdEntropyCoderOptions.optBypass;
       }
       // MQ reset after each coding pass ?
       if ((encSpec.mqrs.getCompDef(compIdx) as String).toLowerCase() == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_RESET_MQ;
+        tmp |= StdEntropyCoderOptions.optResetMq;
       }
       // MQ termination after each arithmetically coded coding pass ?
       if ((encSpec.rts.getCompDef(compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_TERM_PASS;
+        tmp |= StdEntropyCoderOptions.optTermPass;
       }
       // Vertically stripe-causal context mode ?
       if ((encSpec.css.getCompDef(compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+        tmp |= StdEntropyCoderOptions.optVertStrCausal;
       }
       // Predictable termination ?
       if ((encSpec.tts.getCompDef(compIdx) as String) == "predict") {
-        tmp |= StdEntropyCoderOptions.OPT_PRED_TERM;
+        tmp |= StdEntropyCoderOptions.optPredTerm;
       }
       // Error resilience segmentation symbol insertion ?
       if ((encSpec.sss.getCompDef(compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+        tmp |= StdEntropyCoderOptions.optSegSymbols;
       }
     } else {
       // Tile Header
       if ((encSpec.bms.getTileCompVal(tileIdx, compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_BYPASS;
+        tmp |= StdEntropyCoderOptions.optBypass;
       }
       // MQ reset after each coding pass ?
       if ((encSpec.mqrs.getTileCompVal(tileIdx, compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_RESET_MQ;
+        tmp |= StdEntropyCoderOptions.optResetMq;
       }
       // MQ termination after each arithmetically coded coding pass ?
       if ((encSpec.rts.getTileCompVal(tileIdx, compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_TERM_PASS;
+        tmp |= StdEntropyCoderOptions.optTermPass;
       }
       // Vertically stripe-causal context mode ?
       if ((encSpec.css.getTileCompVal(tileIdx, compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_VERT_STR_CAUSAL;
+        tmp |= StdEntropyCoderOptions.optVertStrCausal;
       }
       // Predictable termination ?
       if ((encSpec.tts.getTileCompVal(tileIdx, compIdx) as String) ==
           "predict") {
-        tmp |= StdEntropyCoderOptions.OPT_PRED_TERM;
+        tmp |= StdEntropyCoderOptions.optPredTerm;
       }
       // Error resilience segmentation symbol insertion ?
       if ((encSpec.sss.getTileCompVal(tileIdx, compIdx) as String) == "on") {
-        tmp |= StdEntropyCoderOptions.OPT_SEG_SYMBOLS;
+        tmp |= StdEntropyCoderOptions.optSegSymbols;
       }
     }
     writeByte(tmp);
@@ -618,21 +618,21 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Get the quantization style
     qstyle = (isReversible)
-        ? StdQuantizer.SQCX_NO_QUANTIZATION
+        ? StdQuantizer.sqcxNoQuantization
         : ((isDerived)
-            ? StdQuantizer.SQCX_SCALAR_DERIVED
-            : StdQuantizer.SQCX_SCALAR_EXPOUNDED);
+            ? StdQuantizer.sqcxScalarDerived
+            : StdQuantizer.sqcxScalarExpounded);
 
     // QCD marker
-    writeShort(Markers.QCD);
+    writeShort(Markers.qcd);
 
     // Compute the number of steps to send
     switch (qstyle) {
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         nqcd = 1; // Just the LL value
         break;
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxNoQuantization:
+      case StdQuantizer.sqcxScalarExpounded:
         // One value per subband
         nqcd = 0;
 
@@ -664,11 +664,11 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     writeShort(markSegLen);
 
     // Sqcd
-    writeByte(qstyle + (gb << StdQuantizer.SQCX_GB_SHIFT));
+    writeByte(qstyle + (gb << StdQuantizer.sqcxGbShift));
 
     // SPqcd
     switch (qstyle) {
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
+      case StdQuantizer.sqcxNoQuantization:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -677,7 +677,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           csb = sb;
           while (csb != null) {
             int tmp = (defimgn + csb.anGainExp);
-            writeByte(tmp << StdQuantizer.SQCX_EXP_SHIFT);
+            writeByte(tmp << StdQuantizer.sqcxExpShift);
 
             csb = (csb.nextSubband() as SubbandAn?);
             // Go up one resolution level
@@ -685,7 +685,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb = (sb!.getNextResLevel() as SubbandAn?);
         }
         break;
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -696,7 +696,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
         // Write exponent-mantissa, 16 bits
         writeShort(StdQuantizer.convertToExpMantissa(step));
         break;
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxScalarExpounded:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -766,23 +766,23 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Get the quantization style
     if (isReversible) {
-      qstyle = StdQuantizer.SQCX_NO_QUANTIZATION;
+      qstyle = StdQuantizer.sqcxNoQuantization;
     } else if (isDerived) {
-      qstyle = StdQuantizer.SQCX_SCALAR_DERIVED;
+      qstyle = StdQuantizer.sqcxScalarDerived;
     } else {
-      qstyle = StdQuantizer.SQCX_SCALAR_EXPOUNDED;
+      qstyle = StdQuantizer.sqcxScalarExpounded;
     }
 
     // QCC marker
-    writeShort(Markers.QCC);
+    writeShort(Markers.qcc);
 
     // Compute the number of steps to send
     switch (qstyle) {
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         nqcc = 1; // Just the LL value
         break;
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxNoQuantization:
+      case StdQuantizer.sqcxScalarExpounded:
         // One value per subband
         nqcc = 0;
 
@@ -826,11 +826,11 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     }
 
     // Sqcc (quantization style)
-    writeByte(qstyle + (gb << StdQuantizer.SQCX_GB_SHIFT));
+    writeByte(qstyle + (gb << StdQuantizer.sqcxGbShift));
 
     // SPqcc
     switch (qstyle) {
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
+      case StdQuantizer.sqcxNoQuantization:
         // Get resolution level 0 subband
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
@@ -840,7 +840,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb2 = sb;
           while (sb2 != null) {
             int tmp = (imgnr + sb2.anGainExp);
-            writeByte(tmp << StdQuantizer.SQCX_EXP_SHIFT);
+            writeByte(tmp << StdQuantizer.sqcxExpShift);
 
             sb2 = (sb2.nextSubband() as SubbandAn?);
           }
@@ -848,7 +848,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb = (sb!.getNextResLevel() as SubbandAn?);
         }
         break;
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         // Get resolution level 0 subband
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
@@ -860,7 +860,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
         // Write exponent-mantissa, 16 bits
         writeShort(StdQuantizer.convertToExpMantissa(step));
         break;
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxScalarExpounded:
         // Get resolution level 0 subband
         sb = sbRoot;
         mrl = sb.resLvl;
@@ -927,21 +927,21 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Get the quantization style
     qstyle = (isReversible)
-        ? StdQuantizer.SQCX_NO_QUANTIZATION
+        ? StdQuantizer.sqcxNoQuantization
         : ((isDerived)
-            ? StdQuantizer.SQCX_SCALAR_DERIVED
-            : StdQuantizer.SQCX_SCALAR_EXPOUNDED);
+            ? StdQuantizer.sqcxScalarDerived
+            : StdQuantizer.sqcxScalarExpounded);
 
     // QCD marker
-    writeShort(Markers.QCD);
+    writeShort(Markers.qcd);
 
     // Compute the number of steps to send
     switch (qstyle) {
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         nqcd = 1; // Just the LL value
         break;
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxNoQuantization:
+      case StdQuantizer.sqcxScalarExpounded:
         // One value per subband
         nqcd = 0;
 
@@ -973,11 +973,11 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     writeShort(markSegLen);
 
     // Sqcd
-    writeByte(qstyle + (gb << StdQuantizer.SQCX_GB_SHIFT));
+    writeByte(qstyle + (gb << StdQuantizer.sqcxGbShift));
 
     // SPqcd
     switch (qstyle) {
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
+      case StdQuantizer.sqcxNoQuantization:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -986,7 +986,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           csb = sb;
           while (csb != null) {
             int tmp = (deftilenr + csb.anGainExp);
-            writeByte(tmp << StdQuantizer.SQCX_EXP_SHIFT);
+            writeByte(tmp << StdQuantizer.sqcxExpShift);
 
             csb = (csb.nextSubband() as SubbandAn?);
             // Go up one resolution level
@@ -994,7 +994,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb = (sb!.getNextResLevel() as SubbandAn?);
         }
         break;
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -1005,7 +1005,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
         // Write exponent-mantissa, 16 bits
         writeShort(StdQuantizer.convertToExpMantissa(step));
         break;
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxScalarExpounded:
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
 
@@ -1053,23 +1053,23 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
 
     // Get the quantization style
     if (isReversible) {
-      qstyle = StdQuantizer.SQCX_NO_QUANTIZATION;
+      qstyle = StdQuantizer.sqcxNoQuantization;
     } else if (isDerived) {
-      qstyle = StdQuantizer.SQCX_SCALAR_DERIVED;
+      qstyle = StdQuantizer.sqcxScalarDerived;
     } else {
-      qstyle = StdQuantizer.SQCX_SCALAR_EXPOUNDED;
+      qstyle = StdQuantizer.sqcxScalarExpounded;
     }
 
     // QCC marker
-    writeShort(Markers.QCC);
+    writeShort(Markers.qcc);
 
     // Compute the number of steps to send
     switch (qstyle) {
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         nqcc = 1; // Just the LL value
         break;
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxNoQuantization:
+      case StdQuantizer.sqcxScalarExpounded:
         // One value per subband
         nqcc = 0;
 
@@ -1113,11 +1113,11 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     }
 
     // Sqcc (quantization style)
-    writeByte(qstyle + (gb << StdQuantizer.SQCX_GB_SHIFT));
+    writeByte(qstyle + (gb << StdQuantizer.sqcxGbShift));
 
     // SPqcc
     switch (qstyle) {
-      case StdQuantizer.SQCX_NO_QUANTIZATION:
+      case StdQuantizer.sqcxNoQuantization:
         // Get resolution level 0 subband
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
@@ -1127,7 +1127,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb2 = sb;
           while (sb2 != null) {
             int tmp = (imgnr + sb2.anGainExp);
-            writeByte(tmp << StdQuantizer.SQCX_EXP_SHIFT);
+            writeByte(tmp << StdQuantizer.sqcxExpShift);
 
             sb2 = (sb2.nextSubband() as SubbandAn?);
           }
@@ -1135,7 +1135,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
           sb = (sb!.getNextResLevel() as SubbandAn?);
         }
         break;
-      case StdQuantizer.SQCX_SCALAR_DERIVED:
+      case StdQuantizer.sqcxScalarDerived:
         // Get resolution level 0 subband
         sb = sbRoot;
         sb = (sb.getSubbandByIdx(0, 0) as SubbandAn);
@@ -1147,7 +1147,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
         // Write exponent-mantissa, 16 bits
         writeShort(StdQuantizer.convertToExpMantissa(step));
         break;
-      case StdQuantizer.SQCX_SCALAR_EXPOUNDED:
+      case StdQuantizer.sqcxScalarExpounded:
         // Get resolution level 0 subband
         sb = sbRoot;
         mrl = sb.resLvl;
@@ -1196,7 +1196,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     lenCompField = (nComp < 257 ? 1 : 2);
 
     // POC marker
-    writeShort(Markers.POC);
+    writeShort(Markers.poc);
 
     // Lpoc (marker segment length (in bytes))
     // Basic: Lpoc(2 bytes) + npoc * [ RSpoc(1) + CSpoc(1 or 2) +
@@ -1306,7 +1306,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       String str = "Created by: JJ2000 version ${JJ2KInfo.version}";
       int markSegLen;
 
-      writeShort(Markers.COM);
+      writeShort(Markers.com);
       markSegLen = 2 + 2 + str.length;
       writeShort(markSegLen);
       writeShort(1); // General use
@@ -1325,7 +1325,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // Write one RGN marker per component
     for (i = 0; i < nComp; i++) {
       // RGN marker
-      writeShort(Markers.RGN);
+      writeShort(Markers.rgn);
 
       // Calculate length (Lrgn)
       // Basic: Lrgn (2) + Srgn (1) + SPrgn + one byte
@@ -1341,7 +1341,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
       }
 
       // Write type of ROI (Srgn)
-      writeByte(Markers.SRGN_IMPLICIT);
+      writeByte(Markers.srgnImplicit);
 
       // Write ROI info (SPrgn)
       writeByte((encSpec.rois.getTileCompVal(tIdx, i) as int));
@@ -1357,8 +1357,8 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // |    SOT maker segment     |
     // +--------------------------+
     // SOT marker
-    writeByte(Markers.SOT >> 8);
-    writeByte(Markers.SOT);
+    writeByte(Markers.sot >> 8);
+    writeByte(Markers.sot);
 
     // Lsot (10 bytes)
     writeByte(0);
@@ -1497,7 +1497,7 @@ class HeaderEncoder implements Markers, StdEntropyCoderOptions {
     // +--------------------------+
     // |         SOD maker        |
     // +--------------------------+
-    writeByte(Markers.SOD >> 8);
-    writeByte(Markers.SOD);
+    writeByte(Markers.sod >> 8);
+    writeByte(Markers.sod);
   }
 }

@@ -107,7 +107,7 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
   ///
   /// @exception IllegalArgumentException If src is tiled or "canvased", or
   /// if the arguments do not satisfy the specified constraints.
-  Tiler(BlkImgDataSrc src, int ax, int ay, int px, int py, int nw, int nh)
+  Tiler(this.src, int ax, int ay, int px, int py, int nw, int nh)
       : x0siz = ax,
         y0siz = ay,
         xt0siz = px,
@@ -115,8 +115,6 @@ class Tiler extends ImgDataAdapter implements BlkImgDataSrc {
         xtsiz = nw,
         ytsiz = nh,
         super(src) {
-    this.src = src;
-
     // Verify that input is not tiled
     if (src.getNumTiles() != 1) {
       throw ArgumentError("Source is tiled");

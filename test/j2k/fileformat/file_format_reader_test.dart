@@ -32,7 +32,7 @@ void main() {
 
       final reader = FileFormatReader(io);
       expect(() => reader.readFileFormat(), returnsNormally);
-      expect(reader.JP2FFUsed, isFalse);
+      expect(reader.jp2FfUsed, isFalse);
 
       io.close();
     });
@@ -44,7 +44,7 @@ void main() {
 
       reader.readFileFormat();
 
-      expect(reader.JP2FFUsed, isTrue);
+      expect(reader.jp2FfUsed, isTrue);
       expect(reader.getFirstCodeStreamPos(), equals(48));
       expect(reader.getFirstCodeStreamLength(), equals(12));
 
@@ -76,7 +76,7 @@ void main() {
         final reader = FileFormatReader(io);
         reader.readFileFormat();
 
-        expect(reader.JP2FFUsed, isTrue);
+        expect(reader.jp2FfUsed, isTrue);
         expect(
             reader.getFirstCodeStreamLength(), equals(codestream.length + 8));
 

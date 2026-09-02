@@ -19,26 +19,26 @@ class ColorSpecificationBox extends JP2Box {
   int rawmethod = 0;
   int approxAccuracy = 0;
 
-  ColorSpecificationBox(super.in_io, super.boxStart) {
+  ColorSpecificationBox(super.input, super.boxStart) {
     readBox();
   }
 
   void readBox() {
     Uint8List boxHeader = Uint8List(256);
-    in_io.seek(dataStart);
-    in_io.readFully(boxHeader, 0, 11);
+    input.seek(dataStart);
+    input.readFully(boxHeader, 0, 11);
     rawmethod = boxHeader[0];
     approxAccuracy = boxHeader[2];
     switch (rawmethod) {
       case 1:
-        method = ColorSpace.ENUMERATED;
+        method = ColorSpace.enumerated;
         cs = ICCProfile.getInt(boxHeader, 3);
         switch (cs) {
           case 16:
             colorSpace = ColorSpace.sRGB;
             break;
           case 17:
-            colorSpace = ColorSpace.GreyScale;
+            colorSpace = ColorSpace.greyScale;
             break;
           case 18:
             colorSpace = ColorSpace.sYCC;
@@ -48,16 +48,16 @@ class ColorSpecificationBox extends JP2Box {
               MsgLogger.warning,
               "Unknown enumerated colorspace ($cs) in color specification box",
             );
-            colorSpace = ColorSpace.Unknown;
+            colorSpace = ColorSpace.unknown;
         }
         break;
       case 2:
-        method = ColorSpace.ICC_PROFILED;
+        method = ColorSpace.iccProfiled;
         cs = -1;
         int size = ICCProfile.getInt(boxHeader, 3);
         iccProfile = Uint8List(size);
-        in_io.seek(dataStart + 3);
-        in_io.readFully(iccProfile!, 0, size);
+        input.seek(dataStart + 3);
+        input.readFully(iccProfile!, 0, size);
         break;
       default:
         throw ColorSpaceException(

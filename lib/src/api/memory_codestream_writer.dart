@@ -38,7 +38,7 @@ class MemoryCodestreamWriter extends CodestreamWriter {
     bool eph,
   ) {
     var len =
-        hlen + (sop ? Markers.SOP_LENGTH : 0) + (eph ? Markers.EPH_LENGTH : 0);
+        hlen + (sop ? Markers.sopLength : 0) + (eph ? Markers.ephLength : 0);
 
     if (!sim) {
       if (getMaxAvailableBytes() < len) {
@@ -48,7 +48,7 @@ class MemoryCodestreamWriter extends CodestreamWriter {
         if (sop) {
           _sopMarker[4] = (_packetIndex >> 8) & 0xff;
           _sopMarker[5] = _packetIndex & 0xff;
-          _writeBytes(_sopMarker, Markers.SOP_LENGTH);
+          _writeBytes(_sopMarker, Markers.sopLength);
           _packetIndex++;
           if (_packetIndex > _sopMarkerLimit) {
             _packetIndex = 0;
@@ -57,7 +57,7 @@ class MemoryCodestreamWriter extends CodestreamWriter {
         _writeBytes(head, hlen);
         ndata += len;
         if (eph) {
-          _writeBytes(_ephMarker, Markers.EPH_LENGTH);
+          _writeBytes(_ephMarker, Markers.ephLength);
         }
         _lenLastNoRoi += len;
       }
@@ -97,7 +97,7 @@ class MemoryCodestreamWriter extends CodestreamWriter {
     if (_closed) {
       return;
     }
-    _bytes.add(<int>[Markers.EOC >> 8, Markers.EOC & 0xff]);
+    _bytes.add(<int>[Markers.eoc >> 8, Markers.eoc & 0xff]);
     ndata += 2;
     _closed = true;
   }
@@ -126,14 +126,14 @@ class MemoryCodestreamWriter extends CodestreamWriter {
   }
 
   void _initMarkers() {
-    _sopMarker = Uint8List(Markers.SOP_LENGTH)
-      ..[0] = Markers.SOP >> 8
-      ..[1] = Markers.SOP & 0xff
+    _sopMarker = Uint8List(Markers.sopLength)
+      ..[0] = Markers.sop >> 8
+      ..[1] = Markers.sop & 0xff
       ..[2] = 0x00
       ..[3] = 0x04;
 
-    _ephMarker = Uint8List(Markers.EPH_LENGTH)
-      ..[0] = Markers.EPH >> 8
-      ..[1] = Markers.EPH & 0xff;
+    _ephMarker = Uint8List(Markers.ephLength)
+      ..[0] = Markers.eph >> 8
+      ..[1] = Markers.eph & 0xff;
   }
 }

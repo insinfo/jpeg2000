@@ -790,8 +790,8 @@ void main() {
       decSpec.nls.setTileDef(0, 4);
       decSpec.dls.setTileCompVal(0, 0, 1);
       decSpec.pcs.setTileDef(0, <List<int>>[
-        <int>[0, 0, 1, 1, 1, ProgressionType.LY_RES_COMP_POS_PROG],
-        <int>[1, 0, 4, 2, 1, ProgressionType.RES_LY_COMP_POS_PROG],
+        <int>[0, 0, 1, 1, 1, ProgressionType.lyResCompPosProg],
+        <int>[1, 0, 4, 2, 1, ProgressionType.resLyCompPosProg],
       ]);
 
       final headerInfoOff = HeaderInfo();
@@ -833,7 +833,7 @@ void main() {
       expect(segmentsOn.length, equals(1));
       expect(segmentsOn.first['layerEnd'], equals(1));
       expect(segmentsOn.first['progression'],
-          equals(ProgressionType.LY_RES_COMP_POS_PROG));
+          equals(ProgressionType.lyResCompPosProg));
 
       inputOff.close();
       inputOn.close();
@@ -844,8 +844,8 @@ void main() {
       decSpec.nls.setTileDef(0, 4);
       decSpec.dls.setTileCompVal(0, 0, 1);
       decSpec.pcs.setTileDef(0, <List<int>>[
-        <int>[0, 0, 1, 1, 1, ProgressionType.LY_RES_COMP_POS_PROG],
-        <int>[1, 0, 4, 2, 1, ProgressionType.LY_RES_COMP_POS_PROG],
+        <int>[0, 0, 1, 1, 1, ProgressionType.lyResCompPosProg],
+        <int>[1, 0, 4, 2, 1, ProgressionType.lyResCompPosProg],
       ]);
       final defaultQuant = decSpec.qsss.getDefault();
       if (defaultQuant == null) {

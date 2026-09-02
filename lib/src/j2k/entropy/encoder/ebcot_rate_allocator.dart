@@ -42,7 +42,7 @@ import '../progression.dart';
 class EBCOTRateAllocator extends PostCompRateAllocator {
   /// Whether to collect timing information or not: false. Used as a compile
   /// time directive.
-  static const bool DO_TIMING = false;
+  static const bool doTiming = false;
 
   /// The wall time for the initialization.
   int initTime = 0;
@@ -91,26 +91,26 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   late List<EBCOTLayer> layers;
 
   /// The log of 2, natural base
-  static final double LOG2 = math.log(2);
+  static final double log2 = math.log(2);
 
   /// The normalization offset for the R-D summary table
-  static const int RD_SUMMARY_OFF = 24;
+  static const int rdSummaryOff = 24;
 
   /// The size of the summary table
-  static const int RD_SUMMARY_SIZE = 64;
+  static const int rdSummarySize = 64;
 
   /// The relative precision for float data. This is the relative tolerance
   /// up to which the layer slope thresholds are calculated.
-  static const double FLOAT_REL_PRECISION = 1e-4;
+  static const double floatRelPrecision = 1e-4;
 
   /// The precision for float data type, in an absolute sense. Two float
   /// numbers are considered "equal" if they are within this precision.
-  static const double FLOAT_ABS_PRECISION = 1e-10;
+  static const double floatAbsPrecision = 1e-10;
 
   /// Minimum average size of a packet. If layer has less bytes than the
   /// this constant multiplied by number of packets in the layer, then the
   /// layer is skipped.
-  static const int MIN_AVG_PACKET_SZ = 32;
+  static const int minAvgPacketSz = 32;
 
   /// The R-D summary information collected from the coding of all
   /// code-blocks. For each entry it contains the accumulated length of all
@@ -125,7 +125,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   /// <p>This summary is used to estimate the relation of the R-D slope to
   /// coded length, and to obtain absolute minimums on the slope given a
   /// length. </p>
-  late List<int> RDSlopesRates;
+  late List<int> rdSlopesRates;
 
   /// Packet encoder.
   late PktEncoder pktEnc;
@@ -158,7 +158,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     img.Coord? ncblks;
 
     // If we do timing create necessary structures
-    if (DO_TIMING) {
+    if (doTiming) {
       initTime = 0;
       buildTime = 0;
       writeTime = 0;
@@ -168,7 +168,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     lyrSpec = lyrs;
 
     //Initialize the size of the RD slope rates array
-    RDSlopesRates = List.filled(RD_SUMMARY_SIZE, 0);
+    rdSlopesRates = List.filled(rdSummarySize, 0);
 
     //Get number of tiles, components
     int nt = src.getNumTiles();
@@ -324,7 +324,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   /// Prints the timing information, if collected, and calls 'finalize' on
   /// the super class.
   void finalize() {
-    if (DO_TIMING) {
+    if (doTiming) {
       StringBuffer sb;
 
       sb = StringBuffer("EBCOTRateAllocator wall clock times:\n");
@@ -377,10 +377,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // an idea of the total encoded bitrate.
     getAllCodeBlocks();
 
-    if (DO_TIMING) stime = DateTime.now().millisecondsSinceEpoch;
+    if (doTiming) {
+      stime = DateTime.now().millisecondsSinceEpoch;
+    }
 
     // Now get the total encoded length
-    totenclength = RDSlopesRates[0]; // all the encoded data
+    totenclength = rdSlopesRates[0]; // all the encoded data
     // Make a rough estimation of the packet head overhead, as 2 bytes per
     // packet in average (plus EPH / SOP) , and add that to the total
     // encoded length
@@ -388,11 +390,11 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       avgPktLen = 2;
       // Add SOP length if set
       if ((encSpec.sops.getTileDef(t) as String).toLowerCase() == "on") {
-        avgPktLen += Markers.SOP_LENGTH;
+        avgPktLen += Markers.sopLength;
       }
       // Add EPH length if set
       if ((encSpec.ephs.getTileDef(t) as String).toLowerCase() == "on") {
-        avgPktLen += Markers.EPH_LENGTH;
+        avgPktLen += Markers.ephLength;
       }
 
       for (int c = 0; c < numComps; c++) {
@@ -440,12 +442,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
         if (!src.precinctPartitionUsed(c, t)) {
           // Precinct partition is not used
-          minlsz += MIN_AVG_PACKET_SZ * numLvls;
+          minlsz += minAvgPacketSz * numLvls;
         } else {
           // Precinct partition is used
           for (int rl = 0; rl < numLvls; rl++) {
             maxpkt = numPrec![t][c][rl].x * numPrec![t][c][rl].y;
-            minlsz += MIN_AVG_PACKET_SZ * maxpkt;
+            minlsz += minAvgPacketSz * maxpkt;
           }
         }
       } // End loop on components
@@ -462,7 +464,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       if (i < lyrSpec.getNOptPoints() - 1) {
         nextbytes = _javaIntCast(lyrSpec.getTargetBitrate(i + 1) * np);
         // Limit target length to 'totenclength'
-        if (nextbytes > totenclength) nextbytes = totenclength;
+        if (nextbytes > totenclength) {
+          nextbytes = totenclength;
+        }
       } else {
         nextbytes = 1;
       }
@@ -538,7 +542,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       }
     } // End loop on tiles
 
-    if (DO_TIMING) initTime += DateTime.now().millisecondsSinceEpoch - stime;
+    if (doTiming) {
+      initTime += DateTime.now().millisecondsSinceEpoch - stime;
+    }
   }
 
   /// This method gets all the coded code-blocks from the EBCOT entropy coder
@@ -602,7 +608,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
         //Get next coded code-block coordinates
         while ((ccb = src.getNextCodeBlock(c, ccb)) != null) {
-          if (DO_TIMING) stime = DateTime.now().millisecondsSinceEpoch;
+          if (doTiming) {
+            stime = DateTime.now().millisecondsSinceEpoch;
+          }
 
           if (pw != null) {
             nEncCblk++;
@@ -625,11 +633,15 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           lastSidx = -1;
           for (k = ccb.nVldTrunc - 1; k >= 0; k--) {
             fslope = ccb.truncSlopes[k];
-            if (fslope > maxSlope) maxSlope = fslope;
-            if (fslope < minSlope) minSlope = fslope;
+            if (fslope > maxSlope) {
+              maxSlope = fslope;
+            }
+            if (fslope < minSlope) {
+              minSlope = fslope;
+            }
             sidx = getLimitedSIndexFromSlope(fslope);
             for (; sidx > lastSidx; sidx--) {
-              RDSlopesRates[sidx] += ccb.truncRates[ccb.truncIdxs[k]];
+              rdSlopesRates[sidx] += ccb.truncRates[ccb.truncIdxs[k]];
             }
             lastSidx = getLimitedSIndexFromSlope(fslope);
           }
@@ -638,7 +650,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           cblks[t][c][r][s][(ccb.m * ncblks.x) + ccb.n] = ccb;
           ccb = null;
 
-          if (DO_TIMING) {
+          if (doTiming) {
             initTime += DateTime.now().millisecondsSinceEpoch - stime;
           }
         }
@@ -677,7 +689,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
     int stime = 0;
 
-    if (DO_TIMING) stime = DateTime.now().millisecondsSinceEpoch;
+    if (doTiming) {
+      stime = DateTime.now().millisecondsSinceEpoch;
+    }
 
     // Start with the maximum slope
     rdThreshold = maxSlope;
@@ -771,11 +785,15 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       layers[l].actualBytes = actualBytes;
     } // end loop on layers
 
-    if (DO_TIMING) buildTime += DateTime.now().millisecondsSinceEpoch - stime;
+    if (doTiming) {
+      buildTime += DateTime.now().millisecondsSinceEpoch - stime;
+    }
 
     // The bit-stream was not yet generated (only simulated).
 
-    if (DO_TIMING) stime = DateTime.now().millisecondsSinceEpoch;
+    if (doTiming) {
+      stime = DateTime.now().millisecondsSinceEpoch;
+    }
 
     // +--------------------------------------------------+
     // | Write tiles according to their Progression order |
@@ -809,19 +827,19 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         re = prog[prg].re;
 
         switch (prog[prg].type) {
-          case ProgressionType.RES_LY_COMP_POS_PROG:
+          case ProgressionType.resLyCompPosProg:
             writeResLyCompPos(t, rs, re, cs, ce, lys, lye);
             break;
-          case ProgressionType.LY_RES_COMP_POS_PROG:
+          case ProgressionType.lyResCompPosProg:
             writeLyResCompPos(t, rs, re, cs, ce, lys, lye);
             break;
-          case ProgressionType.POS_COMP_RES_LY_PROG:
+          case ProgressionType.posCompResLyProg:
             writePosCompResLy(t, rs, re, cs, ce, lys, lye);
             break;
-          case ProgressionType.COMP_POS_RES_LY_PROG:
+          case ProgressionType.compPosResLyProg:
             writeCompPosResLy(t, rs, re, cs, ce, lys, lye);
             break;
-          case ProgressionType.RES_POS_COMP_LY_PROG:
+          case ProgressionType.resPosCompLyProg:
             writeResPosCompLy(t, rs, re, cs, ce, lys, lye);
             break;
           default:
@@ -829,15 +847,20 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         } // switch on progression
 
         // Update next first layer index
-        for (int c = cs; c < ce; c++)
+        for (int c = cs; c < ce; c++) {
           for (int r = rs; r < re; r++) {
-            if (r > mrlc[c]) continue;
+            if (r > mrlc[c]) {
+              continue;
+            }
             lys[c][r] = lye;
           }
+        }
       } // End loop on progression
     } // End loop on tiles
 
-    if (DO_TIMING) writeTime += DateTime.now().millisecondsSinceEpoch - stime;
+    if (doTiming) {
+      writeTime += DateTime.now().millisecondsSinceEpoch - stime;
+    }
   }
 
   /// Write a piece of bit stream according to the
@@ -872,14 +895,18 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     int maxResLvl = 0;
     for (int c = 0; c < nc; c++) {
       mrl[c] = src.getAnSubbandTree(t, c).resLvl;
-      if (mrl[c] > maxResLvl) maxResLvl = mrl[c];
+      if (mrl[c] > maxResLvl) {
+        maxResLvl = mrl[c];
+      }
     }
 
     int minlys; // minimum layer start index of each component
 
     for (int r = rs; r < re; r++) {
       //loop on resolution levels
-      if (r > maxResLvl) continue;
+      if (r > maxResLvl) {
+        continue;
+      }
 
       minlys = 100000;
       for (int c = cs; c < ce; c++) {
@@ -892,11 +919,17 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         //loop on layers
         for (int c = cs; c < ce; c++) {
           //loop on components
-          if (r >= lys[c].length) continue;
-          if (l < lys[c][r]) continue;
+          if (r >= lys[c].length) {
+            continue;
+          }
+          if (l < lys[c][r]) {
+            continue;
+          }
 
           // If no more decomposition levels for this component
-          if (r > mrl[c]) continue;
+          if (r > mrl[c]) {
+            continue;
+          }
 
           nPrec = numPrec![t][c][r].x * numPrec![t][c][r].y;
           for (int p = 0; p < nPrec; p++) {
@@ -977,9 +1010,15 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         for (int c = cs; c < ce; c++) {
           // loop on components
           mrl = src.getAnSubbandTree(t, c).resLvl;
-          if (r > mrl) continue;
-          if (r >= lys[c].length) continue;
-          if (l < lys[c][r]) continue;
+          if (r > mrl) {
+            continue;
+          }
+          if (r >= lys[c].length) {
+            continue;
+          }
+          if (l < lys[c][r]) {
+            continue;
+          }
 
           nPrec = numPrec![t][c][r].x * numPrec![t][c][r].y;
           for (int p = 0; p < nPrec; p++) {
@@ -1082,7 +1121,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       nextPrec[c] = List.filled(mrl + 1, 0);
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (r < lys[c].length && lys[c][r] < minlys) {
           minlys = lys[c][r];
         }
@@ -1090,12 +1131,20 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         for (; p >= 0; p--) {
           prec = pktEnc.getPrecInfo(t, c, r, p);
           if (prec.rgulx != tx0) {
-            if (prec.rgulx < minx) minx = prec.rgulx;
-            if (prec.rgulx > maxx) maxx = prec.rgulx;
+            if (prec.rgulx < minx) {
+              minx = prec.rgulx;
+            }
+            if (prec.rgulx > maxx) {
+              maxx = prec.rgulx;
+            }
           }
           if (prec.rguly != ty0) {
-            if (prec.rguly < miny) miny = prec.rguly;
-            if (prec.rguly > maxy) maxy = prec.rguly;
+            if (prec.rguly < miny) {
+              miny = prec.rguly;
+            }
+            if (prec.rguly > maxy) {
+              maxy = prec.rguly;
+            }
           }
 
           if (nPrec == 0) {
@@ -1127,7 +1176,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           mrl = src.getAnSubbandTree(t, c).resLvl;
           for (int r = rs; r < re; r++) {
             // Resolution levels
-            if (r > mrl) continue;
+            if (r > mrl) {
+              continue;
+            }
             if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
@@ -1137,8 +1188,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
             }
             for (int l = minlys; l < lye; l++) {
               // Layers
-              if (r >= lys[c].length) continue;
-              if (l < lys[c][r]) continue;
+              if (r >= lys[c].length) {
+                continue;
+              }
+              if (l < lys[c][r]) {
+                continue;
+              }
 
               // set boolean sopUsed here (SOP markers)
               sopUsed = (encSpec.sops.getTileDef(t) as String) == "on";
@@ -1187,7 +1242,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     for (int c = cs; c < ce; c++) {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (nextPrec[c][r] < numPrec![t][c][r].x * numPrec![t][c][r].y - 1) {
           throw Error(); // "JJ2000 bug: One precinct at least has not been written..."
         }
@@ -1260,7 +1317,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       nextPrec[c] = List.filled(mrl + 1, 0);
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (r < lys[c].length && lys[c][r] < minlys) {
           minlys = lys[c][r];
         }
@@ -1268,12 +1327,20 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         for (; p >= 0; p--) {
           prec = pktEnc.getPrecInfo(t, c, r, p);
           if (prec.rgulx != tx0) {
-            if (prec.rgulx < minx) minx = prec.rgulx;
-            if (prec.rgulx > maxx) maxx = prec.rgulx;
+            if (prec.rgulx < minx) {
+              minx = prec.rgulx;
+            }
+            if (prec.rgulx > maxx) {
+              maxx = prec.rgulx;
+            }
           }
           if (prec.rguly != ty0) {
-            if (prec.rguly < miny) miny = prec.rguly;
-            if (prec.rguly > maxy) maxy = prec.rguly;
+            if (prec.rguly < miny) {
+              miny = prec.rguly;
+            }
+            if (prec.rguly > maxy) {
+              maxy = prec.rguly;
+            }
           }
 
           if (nPrec == 0) {
@@ -1305,7 +1372,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           mrl = src.getAnSubbandTree(t, c).resLvl;
           for (int r = rs; r < re; r++) {
             // Resolution levels
-            if (r > mrl) continue;
+            if (r > mrl) {
+              continue;
+            }
             if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
@@ -1315,8 +1384,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
             }
             for (int l = minlys; l < lye; l++) {
               // Layers
-              if (r >= lys[c].length) continue;
-              if (l < lys[c][r]) continue;
+              if (r >= lys[c].length) {
+                continue;
+              }
+              if (l < lys[c][r]) {
+                continue;
+              }
 
               // set boolean sopUsed here (SOP markers)
               sopUsed = (encSpec.sops.getTileDef(t) as String) == "on";
@@ -1365,7 +1438,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     for (int c = cs; c < ce; c++) {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (nextPrec[c][r] < numPrec![t][c][r].x * numPrec![t][c][r].y - 1) {
           throw Error(); // "JJ2000 bug: One precinct at least has not been written..."
         }
@@ -1422,7 +1497,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       nextPrec[c] = List.filled(mrl + 1, 0);
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (r < lys[c].length && lys[c][r] < minlys) {
           minlys = lys[c][r];
         }
@@ -1430,12 +1507,20 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         for (; p >= 0; p--) {
           prec = pktEnc.getPrecInfo(t, c, r, p);
           if (prec.rgulx != tx0) {
-            if (prec.rgulx < minx) minx = prec.rgulx;
-            if (prec.rgulx > maxx) maxx = prec.rgulx;
+            if (prec.rgulx < minx) {
+              minx = prec.rgulx;
+            }
+            if (prec.rgulx > maxx) {
+              maxx = prec.rgulx;
+            }
           }
           if (prec.rguly != ty0) {
-            if (prec.rguly < miny) miny = prec.rguly;
-            if (prec.rguly > maxy) maxy = prec.rguly;
+            if (prec.rguly < miny) {
+              miny = prec.rguly;
+            }
+            if (prec.rguly > maxy) {
+              maxy = prec.rguly;
+            }
           }
 
           if (nPrec == 0) {
@@ -1467,7 +1552,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           mrl = src.getAnSubbandTree(t, c).resLvl;
           for (int r = rs; r < re; r++) {
             // Resolution levels
-            if (r > mrl) continue;
+            if (r > mrl) {
+              continue;
+            }
             if (nextPrec[c][r] >= numPrec![t][c][r].x * numPrec![t][c][r].y) {
               continue;
             }
@@ -1477,8 +1564,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
             }
             for (int l = minlys; l < lye; l++) {
               // Layers
-              if (r >= lys[c].length) continue;
-              if (l < lys[c][r]) continue;
+              if (r >= lys[c].length) {
+                continue;
+              }
+              if (l < lys[c][r]) {
+                continue;
+              }
 
               // set boolean sopUsed here (SOP markers)
               sopUsed = (encSpec.sops.getTileDef(t) as String) == "on";
@@ -1527,7 +1618,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     for (int c = cs; c < ce; c++) {
       mrl = src.getAnSubbandTree(t, c).resLvl;
       for (int r = rs; r < re; r++) {
-        if (r > mrl) continue;
+        if (r > mrl) {
+          continue;
+        }
         if (nextPrec[c][r] < numPrec![t][c][r].x * numPrec![t][c][r].y - 1) {
           throw Error(); // "JJ2000 bug: One precinct at least has not been written..."
         }
@@ -1585,8 +1678,8 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // non-zero.
 
     // Look for the summary entry that gives 'maxBytes' or more data
-    for (sidx = RD_SUMMARY_SIZE - 1; sidx > 0; sidx--) {
-      if (RDSlopesRates[sidx] >= maxBytes) {
+    for (sidx = rdSummarySize - 1; sidx > 0; sidx--) {
+      if (rdSlopesRates[sidx] >= maxBytes) {
         break;
       }
     }
@@ -1599,7 +1692,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     }
     // If we are using the last entry of the summary, then that
     // corresponds to all the data, Thus, set the minimum slope to 0.
-    if (sidx <= 0) fmint = 0;
+    if (sidx <= 0) {
+      fmint = 0;
+    }
 
     // We look for the best threshold 'ft', which is the lowest threshold
     // that generates no more than 'maxBytes' code bytes.
@@ -1620,7 +1715,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // close that the average is 'fmint', due to rounding. Force it to
     // 'fmaxt' instead, since 'fmint' is normally an exclusive lower
     // bound.
-    if (ft <= fmint) ft = fmaxt;
+    if (ft <= fmint) {
+      ft = fmaxt;
+    }
 
     do {
       // Get the number of bytes used by this layer, if 'ft' is the
@@ -1690,7 +1787,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       // so close that the average is 'fmint', due to rounding. Force it
       // to 'fmaxt' instead, since 'fmint' is normally an exclusive
       // lower bound.
-      if (ft <= fmint) ft = fmaxt;
+      if (ft <= fmint) {
+        ft = fmaxt;
+      }
 
       // Restore previous packet encoder state
       pktEnc.restore();
@@ -1699,14 +1798,14 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       // limit of the interval, within a FLOAT_REL_PRECISION relative
       // tolerance, or a FLOAT_ABS_PRECISION absolute tolerance. This is
       // the sign that the interval is sufficiently small.
-    } while (ft < fmaxt * (1.0 - FLOAT_REL_PRECISION) &&
-        ft < (fmaxt - FLOAT_ABS_PRECISION));
+    } while (ft < fmaxt * (1.0 - floatRelPrecision) &&
+        ft < (fmaxt - floatAbsPrecision));
 
     // If we have a threshold which is close to 0, set it to 0 so that
     // everything is taken into the layer. This is to avoid not sending
     // some least significant bit-planes in the lossless case. We use the
     // FLOAT_ABS_PRECISION value as a measure of "close" to 0.
-    if (ft <= FLOAT_ABS_PRECISION) {
+    if (ft <= floatAbsPrecision) {
       ft = 0.0;
     } else {
       // Otherwise make the threshold 'fmaxt', just to be sure that we
@@ -1760,7 +1859,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
         for (int x = 0; x < xend; x++) {
           //Get the current code-block
           var cbInfo = prec.cblk[s][y][x];
-          if (cbInfo == null) continue;
+          if (cbInfo == null) {
+            continue;
+          }
           cbCoord = cbInfo.idx;
           b = cbCoord.x + cbCoord.y * sb.numCb!.x;
           curCblk = cblks[tileIdx][compIdx][lvlIdx][s][b];
@@ -1823,12 +1924,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
       return 0;
     }
 
-    idx = (math.log(slope) / LOG2).floor() + RD_SUMMARY_OFF;
+    idx = (math.log(slope) / log2).floor() + rdSummaryOff;
 
     if (idx < 0) {
       return 0;
-    } else if (idx >= RD_SUMMARY_SIZE) {
-      return RD_SUMMARY_SIZE - 1;
+    } else if (idx >= rdSummarySize) {
+      return rdSummarySize - 1;
     } else {
       return idx;
     }
@@ -1841,7 +1942,7 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
   ///
   /// @return The minimum slope value associated with a summary table index.
   static double getSlopeFromSIndex(int index) {
-    return math.pow(2, (index - RD_SUMMARY_OFF)).toDouble();
+    return math.pow(2, (index - rdSummaryOff)).toDouble();
   }
 
   /// This function attempts to estimate a rate-distortion slope threshold
@@ -1887,27 +1988,33 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // We ensure that the threshold we use for estimation actually
     // includes some data.
     lthresh = lastLayer.rdThreshold;
-    if (lthresh > maxSlope) lthresh = maxSlope;
+    if (lthresh > maxSlope) {
+      lthresh = maxSlope;
+    }
     // If the slope of the last layer is too small then we just include
     // all the rest (not possible to do better).
-    if (lthresh < FLOAT_ABS_PRECISION) return 0.0;
+    if (lthresh < floatAbsPrecision) {
+      return 0.0;
+    }
     sidx = getLimitedSIndexFromSlope(lthresh);
     // If the index is outside of the summary info array use the last two,
     // or first two, indexes, as appropriate
-    if (sidx >= RD_SUMMARY_SIZE - 1) sidx = RD_SUMMARY_SIZE - 2;
+    if (sidx >= rdSummarySize - 1) {
+      sidx = rdSummarySize - 2;
+    }
 
     // Get the logs of the lengths and the slopes
 
-    if (RDSlopesRates[sidx + 1] == 0) {
+    if (rdSlopesRates[sidx + 1] == 0) {
       // Pathological case, we can not use log of 0. Add
       // RDSlopesRates[sidx]+1 bytes to the rates (just a crude simple
       // solution to this rare case)
-      logLen1 = math.log((RDSlopesRates[sidx] << 1) + 1);
-      logLen2 = math.log(RDSlopesRates[sidx] + 1);
-      logAb = math.log(lastLayer.actualBytes + RDSlopesRates[sidx] + 1);
+      logLen1 = math.log((rdSlopesRates[sidx] << 1) + 1);
+      logLen2 = math.log(rdSlopesRates[sidx] + 1);
+      logAb = math.log(lastLayer.actualBytes + rdSlopesRates[sidx] + 1);
     } else {
-      logLen1 = math.log(RDSlopesRates[sidx]);
-      logLen2 = math.log(RDSlopesRates[sidx + 1]);
+      logLen1 = math.log(rdSlopesRates[sidx]);
+      logLen2 = math.log(rdSlopesRates[sidx + 1]);
       logAb = math.log(lastLayer.actualBytes);
     }
 
@@ -1924,7 +2031,9 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     // Do not use negative offsets (i.e. offset proportion larger than 1)
     // since that is probably a sign that our model is off. To be
     // conservative use an offset of 0 (i.e. offset proportiojn 1).
-    if (logOff < 0) logOff = 0.0;
+    if (logOff < 0) {
+      logOff = 0.0;
+    }
 
     // 2) Correct the target layer length by the offset.
 
@@ -1935,28 +2044,34 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
 
     // Look for the index in the summary info array that gives the largest
     // length smaller than the target length
-    for (sidx = RD_SUMMARY_SIZE - 1; sidx >= 0; sidx--) {
-      if (RDSlopesRates[sidx] >= tlen) break;
+    for (sidx = rdSummarySize - 1; sidx >= 0; sidx--) {
+      if (rdSlopesRates[sidx] >= tlen) {
+        break;
+      }
     }
     sidx++;
     // Correct if out of the array
-    if (sidx >= RD_SUMMARY_SIZE) sidx = RD_SUMMARY_SIZE - 1;
-    if (sidx <= 0) sidx = 1;
+    if (sidx >= rdSummarySize) {
+      sidx = rdSummarySize - 1;
+    }
+    if (sidx <= 0) {
+      sidx = 1;
+    }
 
     // Get the log of the lengths and the slopes that are just above and
     // below the target length.
 
-    if (RDSlopesRates[sidx] == 0) {
+    if (rdSlopesRates[sidx] == 0) {
       // Pathological case, we can not use log of 0. Add
       // RDSlopesRates[sidx-1]+1 bytes to the rates (just a crude simple
       // solution to this rare case)
-      logLen1 = math.log(RDSlopesRates[sidx - 1] + 1);
-      logLen2 = math.log((RDSlopesRates[sidx - 1] << 1) + 1);
-      logIlen = math.log(tlen + RDSlopesRates[sidx - 1] + 1);
+      logLen1 = math.log(rdSlopesRates[sidx - 1] + 1);
+      logLen2 = math.log((rdSlopesRates[sidx - 1] << 1) + 1);
+      logIlen = math.log(tlen + rdSlopesRates[sidx - 1] + 1);
     } else {
       // Normal case, we can safely take the logs.
-      logLen1 = math.log(RDSlopesRates[sidx]);
-      logLen2 = math.log(RDSlopesRates[sidx - 1]);
+      logLen1 = math.log(rdSlopesRates[sidx]);
+      logLen2 = math.log(rdSlopesRates[sidx - 1]);
       logIlen = math.log(tlen);
     }
 
@@ -1971,8 +2086,12 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
     eth = math.exp(logIsl);
 
     // Correct out of bounds results
-    if (eth > lthresh) eth = lthresh;
-    if (eth < FLOAT_ABS_PRECISION) eth = 0.0;
+    if (eth > lthresh) {
+      eth = lthresh;
+    }
+    if (eth < floatAbsPrecision) {
+      eth = 0.0;
+    }
 
     // Return the estimated threshold
     return eth;

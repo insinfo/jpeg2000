@@ -1,7 +1,7 @@
 import '../icc_profile.dart';
 
 class XYZNumber {
-  static const int size = 3 * ICCProfile.int_size;
+  static const int size = 3 * ICCProfile.intSize;
 
   /// x value
   int dwX; // X tristimulus value
@@ -14,12 +14,12 @@ class XYZNumber {
   XYZNumber(this.dwX, this.dwY, this.dwZ);
 
   /// Normalization utility
-  static int DoubleToXYZ(double x) {
+  static int doubleToXyz(double x) {
     return (x * 65536.0 + 0.5).floor();
   }
 
   /// Normalization utility
-  static double XYZToDouble(int x) {
+  static double xyzToDouble(int x) {
     return x / 65536.0;
   }
 

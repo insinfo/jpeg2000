@@ -21,7 +21,7 @@ class FileFormatReader implements FileFormatBoxes {
   final List<int> _codestreamLengths = <int>[];
 
   /// Whether the surrounding file follows the JP2 container syntax.
-  bool JP2FFUsed = false;
+  bool jp2FfUsed = false;
 
   /// Parses the file format wrapper and records contiguous codestream boxes.
   ///
@@ -54,18 +54,18 @@ class FileFormatReader implements FileFormatBoxes {
     }
     if (!isJp2) {
       _input.seek(0);
-      if (available < 2 || _input.readUnsignedShort() != Markers.SOC) {
+      if (available < 2 || _input.readUnsignedShort() != Markers.soc) {
         throw const Jpeg2000FormatException(
           'Input is neither a JP2 file nor a raw JPEG 2000 codestream.',
         );
       }
-      JP2FFUsed = false;
+      jp2FfUsed = false;
       _input.seek(0);
       return;
     }
 
     try {
-      JP2FFUsed = true;
+      jp2FfUsed = true;
 
       // Validate the mandatory file type box immediately following the
       // signature box.

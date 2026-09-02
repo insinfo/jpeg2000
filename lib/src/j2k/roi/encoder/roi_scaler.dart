@@ -33,7 +33,7 @@ import '../../quantization/quantizer/c_blk_quant_data_src_enc.dart';
 /// @see CBlkWTData
 class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   /// The prefix for ROI Scaler options: 'R'
-  static const String OPT_PREFIX = 'R';
+  static const String optPrefix = 'R';
 
   /// The list of parameters that are accepted for ROI coding. Options
   /// for ROI Scaler start with 'R'.
@@ -44,17 +44,17 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
           " or [<component idx>] C <centre column> <centre row> "
           "<radius> or [<component idx>] A <filename>",
       "Specifies ROIs shape and location. The shape can be either "
-              "rectangular 'R', or circular 'C' or arbitrary 'A'. "
-              "Each new occurrence of an 'R', a 'C' or an 'A' is a new ROI. "
-              "For circular and rectangular ROIs, all values are "
-              "given as their pixel values relative to the canvas origin. " +
-          "Arbitrary shapes must be included in a PGM file where non 0 " +
-          "values correspond to ROI coefficients. The PGM file must have " +
-          "the size as the image. " +
-          "The component idx specifies which components " +
-          "contain the ROI. The component index is specified as described " +
-          "by points 3 and 4 in the general comment on tile-component idx. " +
-          "If this option is used, the codestream is layer progressive by " +
+          "rectangular 'R', or circular 'C' or arbitrary 'A'. "
+          "Each new occurrence of an 'R', a 'C' or an 'A' is a new ROI. "
+          "For circular and rectangular ROIs, all values are "
+          "given as their pixel values relative to the canvas origin. "
+          "Arbitrary shapes must be included in a PGM file where non 0 "
+          "values correspond to ROI coefficients. The PGM file must have "
+          "the size as the image. "
+          "The component idx specifies which components "
+          "contain the ROI. The component index is specified as described "
+          "by points 3 and 4 in the general comment on tile-component idx. "
+          "If this option is used, the codestream is layer progressive by "
           "default unless it is overridden by the 'Aptype' option.",
       null
     ],
@@ -71,10 +71,10 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
       "Rstart_level",
       "<level>",
       "This argument forces the lowest <level> resolution levels to "
-              "belong to the ROI. By doing this, it is possible to avoid only "
-              "getting information for the ROI at an early stage of "
-              "transmission.<level> = 0 means the lowest resolution level "
-              "belongs to the ROI, 1 means the two lowest etc. (-1 deactivates" +
+          "belong to the ROI. By doing this, it is possible to avoid only "
+          "getting information for the ROI at an early stage of "
+          "transmission.<level> = 0 means the lowest resolution level "
+          "belongs to the ROI, 1 means the two lowest etc. (-1 deactivates"
           " the option)",
       "-1"
     ],
@@ -202,7 +202,7 @@ class ROIScaler extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
 
     // Check parameters
     pl.checkListSingle(
-        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     // Get parameters and check if there are and ROIs specified
     String? roiopt = pl.getParameter("Rroi");

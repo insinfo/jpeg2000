@@ -15,31 +15,31 @@ class MatrixBasedTransformTosRGB {
   // Start of contant definitions:
 
   // Convenience
-  static const int RED = ICCProfile.RED;
-  static const int GREEN = ICCProfile.GREEN;
-  static const int BLUE = ICCProfile.BLUE;
+  static const int redChannel = ICCProfile.redChannel;
+  static const int greenChannel = ICCProfile.greenChannel;
+  static const int blueChannel = ICCProfile.blueChannel;
 
   // Define the PCS to linear sRGB matrix coefficients
-  static const double SRGB00 = 3.1337;
-  static const double SRGB01 = -1.6173;
-  static const double SRGB02 = -0.4907;
-  static const double SRGB10 = -0.9785;
-  static const double SRGB11 = 1.9162;
-  static const double SRGB12 = 0.0334;
-  static const double SRGB20 = 0.0720;
-  static const double SRGB21 = -0.2290;
-  static const double SRGB22 = 1.4056;
+  static const double srgb00 = 3.1337;
+  static const double srgb01 = -1.6173;
+  static const double srgb02 = -0.4907;
+  static const double srgb10 = -0.9785;
+  static const double srgb11 = 1.9162;
+  static const double srgb12 = 0.0334;
+  static const double srgb20 = 0.0720;
+  static const double srgb21 = -0.2290;
+  static const double srgb22 = 1.4056;
 
   // Define constants representing the indices into the matrix array
-  static const int M00 = 0;
-  static const int M01 = 1;
-  static const int M02 = 2;
-  static const int M10 = 3;
-  static const int M11 = 4;
-  static const int M12 = 5;
-  static const int M20 = 6;
-  static const int M21 = 7;
-  static const int M22 = 8;
+  static const int m00 = 0;
+  static const int m01 = 1;
+  static const int m02 = 2;
+  static const int m10 = 3;
+  static const int m11 = 4;
+  static const int m12 = 5;
+  static const int m20 = 6;
+  static const int m21 = 7;
+  static const int m22 = 8;
 
   static const double ksRGBExponent = (1.0 / 2.4);
   static const double ksRGBScaleAfterExp = 1.055;
@@ -82,7 +82,8 @@ class MatrixBasedTransformTosRGB {
         "$eol dwShiftValues= ${dwShiftValue[0]}, ${dwShiftValue[1]}, ${dwShiftValue[2]}");
 
     body.write("$eol$eol fLut= ");
-    body.write("$eol${ColorSpace.indent("  ", "fLut[RED]=  ${fLut[0]}")}");
+    body.write(
+        "$eol${ColorSpace.indent("  ", "fLut[redChannel]=  ${fLut[0]}")}");
     body.write("$eol${ColorSpace.indent("  ", "fLut[GRN]=  ${fLut[1]}")}");
     body.write("$eol${ColorSpace.indent("  ", "fLut[BLU]=  ${fLut[2]}")}");
 
@@ -149,35 +150,35 @@ class MatrixBasedTransformTosRGB {
 
   Float64List createMatrix(RestrictedICCProfile rICC, Int32List maxValues) {
     // Coefficients from the input linear to PCS matrix
-    double dfPCS00 = ICCXYZType.xyzToDouble(rICC.colorant![RED]!.x);
-    double dfPCS01 = ICCXYZType.xyzToDouble(rICC.colorant![GREEN]!.x);
-    double dfPCS02 = ICCXYZType.xyzToDouble(rICC.colorant![BLUE]!.x);
-    double dfPCS10 = ICCXYZType.xyzToDouble(rICC.colorant![RED]!.y);
-    double dfPCS11 = ICCXYZType.xyzToDouble(rICC.colorant![GREEN]!.y);
-    double dfPCS12 = ICCXYZType.xyzToDouble(rICC.colorant![BLUE]!.y);
-    double dfPCS20 = ICCXYZType.xyzToDouble(rICC.colorant![RED]!.z);
-    double dfPCS21 = ICCXYZType.xyzToDouble(rICC.colorant![GREEN]!.z);
-    double dfPCS22 = ICCXYZType.xyzToDouble(rICC.colorant![BLUE]!.z);
+    double dfPCS00 = ICCXYZType.xyzToDouble(rICC.colorant![redChannel]!.x);
+    double dfPCS01 = ICCXYZType.xyzToDouble(rICC.colorant![greenChannel]!.x);
+    double dfPCS02 = ICCXYZType.xyzToDouble(rICC.colorant![blueChannel]!.x);
+    double dfPCS10 = ICCXYZType.xyzToDouble(rICC.colorant![redChannel]!.y);
+    double dfPCS11 = ICCXYZType.xyzToDouble(rICC.colorant![greenChannel]!.y);
+    double dfPCS12 = ICCXYZType.xyzToDouble(rICC.colorant![blueChannel]!.y);
+    double dfPCS20 = ICCXYZType.xyzToDouble(rICC.colorant![redChannel]!.z);
+    double dfPCS21 = ICCXYZType.xyzToDouble(rICC.colorant![greenChannel]!.z);
+    double dfPCS22 = ICCXYZType.xyzToDouble(rICC.colorant![blueChannel]!.z);
 
     Float64List matrix = Float64List(9);
-    matrix[M00] =
-        maxValues[0] * (SRGB00 * dfPCS00 + SRGB01 * dfPCS10 + SRGB02 * dfPCS20);
-    matrix[M01] =
-        maxValues[0] * (SRGB00 * dfPCS01 + SRGB01 * dfPCS11 + SRGB02 * dfPCS21);
-    matrix[M02] =
-        maxValues[0] * (SRGB00 * dfPCS02 + SRGB01 * dfPCS12 + SRGB02 * dfPCS22);
-    matrix[M10] =
-        maxValues[1] * (SRGB10 * dfPCS00 + SRGB11 * dfPCS10 + SRGB12 * dfPCS20);
-    matrix[M11] =
-        maxValues[1] * (SRGB10 * dfPCS01 + SRGB11 * dfPCS11 + SRGB12 * dfPCS21);
-    matrix[M12] =
-        maxValues[1] * (SRGB10 * dfPCS02 + SRGB11 * dfPCS12 + SRGB12 * dfPCS22);
-    matrix[M20] =
-        maxValues[2] * (SRGB20 * dfPCS00 + SRGB21 * dfPCS10 + SRGB22 * dfPCS20);
-    matrix[M21] =
-        maxValues[2] * (SRGB20 * dfPCS01 + SRGB21 * dfPCS11 + SRGB22 * dfPCS21);
-    matrix[M22] =
-        maxValues[2] * (SRGB20 * dfPCS02 + SRGB21 * dfPCS12 + SRGB22 * dfPCS22);
+    matrix[m00] =
+        maxValues[0] * (srgb00 * dfPCS00 + srgb01 * dfPCS10 + srgb02 * dfPCS20);
+    matrix[m01] =
+        maxValues[0] * (srgb00 * dfPCS01 + srgb01 * dfPCS11 + srgb02 * dfPCS21);
+    matrix[m02] =
+        maxValues[0] * (srgb00 * dfPCS02 + srgb01 * dfPCS12 + srgb02 * dfPCS22);
+    matrix[m10] =
+        maxValues[1] * (srgb10 * dfPCS00 + srgb11 * dfPCS10 + srgb12 * dfPCS20);
+    matrix[m11] =
+        maxValues[1] * (srgb10 * dfPCS01 + srgb11 * dfPCS11 + srgb12 * dfPCS21);
+    matrix[m12] =
+        maxValues[1] * (srgb10 * dfPCS02 + srgb11 * dfPCS12 + srgb12 * dfPCS22);
+    matrix[m20] =
+        maxValues[2] * (srgb20 * dfPCS00 + srgb21 * dfPCS10 + srgb22 * dfPCS20);
+    matrix[m21] =
+        maxValues[2] * (srgb20 * dfPCS01 + srgb21 * dfPCS11 + srgb22 * dfPCS21);
+    matrix[m22] =
+        maxValues[2] * (srgb20 * dfPCS02 + srgb21 * dfPCS12 + srgb22 * dfPCS22);
 
     return matrix;
   }
@@ -223,13 +224,13 @@ class MatrixBasedTransformTosRGB {
     }
 
     // For each row and column
-    Float32List ra = fBuf![RED];
-    Float32List ga = fBuf![GREEN];
-    Float32List ba = fBuf![BLUE];
+    Float32List ra = fBuf![redChannel];
+    Float32List ga = fBuf![greenChannel];
+    Float32List ba = fBuf![blueChannel];
 
-    Int32List ro = output[RED]!;
-    Int32List go = output[GREEN]!;
-    Int32List bo = output[BLUE]!;
+    Int32List ro = output[redChannel]!;
+    Int32List go = output[greenChannel]!;
+    Int32List bo = output[blueChannel]!;
     Int32List lut32 = lut.lut;
 
     double r, g, b;
@@ -245,34 +246,37 @@ class MatrixBasedTransformTosRGB {
         // Apply the matrix to the intermediate floating point data in order to index the
         // final LUT.
         val =
-            (matrix[M00] * r + matrix[M01] * g + matrix[M02] * b + 0.5).toInt();
+            (matrix[m00] * r + matrix[m01] * g + matrix[m02] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           ro[index] = lut32[0];
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           ro[index] = lut32[lut32.length - 1];
-        else
+        } else {
           ro[index] = lut32[val];
+        }
 
         val =
-            (matrix[M10] * r + matrix[M11] * g + matrix[M12] * b + 0.5).toInt();
+            (matrix[m10] * r + matrix[m11] * g + matrix[m12] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           go[index] = lut32[0];
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           go[index] = lut32[lut32.length - 1];
-        else
+        } else {
           go[index] = lut32[val];
+        }
 
         val =
-            (matrix[M20] * r + matrix[M21] * g + matrix[M22] * b + 0.5).toInt();
+            (matrix[m20] * r + matrix[m21] * g + matrix[m22] * b + 0.5).toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           bo[index] = lut32[0];
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           bo[index] = lut32[lut32.length - 1];
-        else
+        } else {
           bo[index] = lut32[val];
+        }
 
         index++;
       }
@@ -330,44 +334,47 @@ class MatrixBasedTransformTosRGB {
 
         // Apply the matrix to the intermediate floating point data inorder to index the
         // final LUT.
-        val = (matrix[M00] * fBuf![RED][index] +
-                matrix[M01] * fBuf![GREEN][index] +
-                matrix[M02] * fBuf![BLUE][index] +
+        val = (matrix[m00] * fBuf![redChannel][index] +
+                matrix[m01] * fBuf![greenChannel][index] +
+                matrix[m02] * fBuf![blueChannel][index] +
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           output[0]![index] = lut32[0].toDouble();
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           output[0]![index] = lut32[lut32.length - 1].toDouble();
-        else
+        } else {
           output[0]![index] = lut32[val].toDouble();
+        }
 
-        val = (matrix[M10] * fBuf![RED][index] +
-                matrix[M11] * fBuf![GREEN][index] +
-                matrix[M12] * fBuf![BLUE][index] +
+        val = (matrix[m10] * fBuf![redChannel][index] +
+                matrix[m11] * fBuf![greenChannel][index] +
+                matrix[m12] * fBuf![blueChannel][index] +
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           output[1]![index] = lut32[0].toDouble();
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           output[1]![index] = lut32[lut32.length - 1].toDouble();
-        else
+        } else {
           output[1]![index] = lut32[val].toDouble();
+        }
 
-        val = (matrix[M20] * fBuf![RED][index] +
-                matrix[M21] * fBuf![GREEN][index] +
-                matrix[M22] * fBuf![BLUE][index] +
+        val = (matrix[m20] * fBuf![redChannel][index] +
+                matrix[m21] * fBuf![greenChannel][index] +
+                matrix[m22] * fBuf![blueChannel][index] +
                 0.5)
             .toInt();
         // Clip the calculated value if necessary..
         if (val < 0) {
           output[2]![index] = lut32[0].toDouble();
-        } else if (val >= lut32.length)
+        } else if (val >= lut32.length) {
           output[2]![index] = lut32[lut32.length - 1].toDouble();
-        else
+        } else {
           output[2]![index] = lut32[val].toDouble();
+        }
 
         index++;
       }
@@ -390,10 +397,11 @@ class MatrixBasedTransformTosRGB {
             (x - inb.ulx); // pixel index.
         if (input[i] > dwInputMaxValue) {
           wTemp = dwInputMaxValue;
-        } else if (input[i] < 0)
+        } else if (input[i] < 0) {
           wTemp = 0;
-        else
+        } else {
           wTemp = input[i];
+        }
         out[j++] = lutFP[wTemp];
       }
     }
@@ -417,10 +425,11 @@ class MatrixBasedTransformTosRGB {
             (x - inb.ulx); // pixel index.
         if (input[i] > dwInputMaxValue) {
           wTemp = dwInputMaxValue;
-        } else if (input[i] < 0)
+        } else if (input[i] < 0) {
           wTemp = 0;
-        else
+        } else {
           wTemp = input[i];
+        }
         out[j++] = lutFP[wTemp.toInt()];
       }
     }

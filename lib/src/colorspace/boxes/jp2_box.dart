@@ -15,7 +15,7 @@ abstract class JP2Box {
   late final int length;
 
   /// input file
-  final RandomAccessIO in_io;
+  final RandomAccessIO input;
 
   /// offset to start of box
   final int boxStart;
@@ -26,10 +26,10 @@ abstract class JP2Box {
   /// offset to start of data in box
   late final int dataStart;
 
-  JP2Box(this.in_io, this.boxStart) {
+  JP2Box(this.input, this.boxStart) {
     final boxHeader = Uint8List(16);
-    in_io.seek(boxStart);
-    in_io.readFully(boxHeader, 0, 8);
+    input.seek(boxStart);
+    input.readFully(boxHeader, 0, 8);
     dataStart = boxStart + 8;
     length = ICCProfile.getInt(boxHeader, 0);
     boxEnd = boxStart + length;

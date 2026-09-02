@@ -2,12 +2,13 @@ import '../icc_profile.dart';
 
 class ICCProfileVersion {
   /// Field size
-  static const int size = 4 * ICCProfile.byte_size;
+  static const int size = 4 * ICCProfile.byteSize;
 
   /// Major revision number in binary coded decimal
   int uMajor;
-  /** Minor revision in high nibble, bug fix revision           
-        in low nibble, both in binary coded decimal   */
+
+  /// Minor revision in high nibble, bug fix revision in low nibble, both in
+  /// binary coded decimal.
   int uMinor;
 
   int reserved1;

@@ -11,7 +11,7 @@ class BitToByteOutput {
   bool _isPredTerm = false;
 
   /// The alternating sequence of 0's and 1's used for byte padding
-  static const int PAD_SEQ = 0x2A;
+  static const int padSeq = 0x2A;
 
   /// Flag that indicates if an FF has been delayed
   bool _delFF = false;
@@ -118,7 +118,7 @@ class BitToByteOutput {
         _delFF = false;
         // Pad to byte boundary with an alternating sequence of 0's
         // and 1's.
-        _bbuf |= (PAD_SEQ >>> (6 - _bpos));
+        _bbuf |= (padSeq >>> (6 - _bpos));
         // Output the bit buffer
         out.write(_bbuf);
         _nb++;
@@ -139,7 +139,7 @@ class BitToByteOutput {
         // Bit buffer is not empty
         // Pad to byte boundary with an alternating sequence of 0's and
         // 1's.
-        _bbuf |= (PAD_SEQ >>> (6 - _bpos));
+        _bbuf |= (padSeq >>> (6 - _bpos));
         // Output the bit buffer (bbuf can not be 0xFF)
         out.write(_bbuf);
         _nb++;

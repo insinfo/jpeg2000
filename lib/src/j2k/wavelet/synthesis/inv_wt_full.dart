@@ -243,7 +243,7 @@ class InvWTFull extends InverseWT {
       }
 
       if (sb.ulcx.isEven) {
-        hFilter.synthetize_lpf(
+        hFilter.synthetizeLpf(
           tmp,
           0,
           (width + 1) >> 1,
@@ -257,7 +257,7 @@ class InvWTFull extends InverseWT {
           1,
         );
       } else {
-        hFilter.synthetize_hpf(
+        hFilter.synthetizeHpf(
           tmp,
           0,
           width >> 1,
@@ -283,7 +283,7 @@ class InvWTFull extends InverseWT {
           tmp[row] = data[k];
         }
         if (sb.ulcy.isEven) {
-          vFilter.synthetize_lpf(
+          vFilter.synthetizeLpf(
             tmp,
             0,
             (height + 1) >> 1,
@@ -297,7 +297,7 @@ class InvWTFull extends InverseWT {
             rowStride,
           );
         } else {
-          vFilter.synthetize_hpf(
+          vFilter.synthetizeHpf(
             tmp,
             0,
             height >> 1,
@@ -320,7 +320,7 @@ class InvWTFull extends InverseWT {
           tmp[row] = data[k];
         }
         if (sb.ulcy.isEven) {
-          vFilter.synthetize_lpf(
+          vFilter.synthetizeLpf(
             tmp,
             0,
             (height + 1) >> 1,
@@ -334,7 +334,7 @@ class InvWTFull extends InverseWT {
             rowStride,
           );
         } else {
-          vFilter.synthetize_hpf(
+          vFilter.synthetizeHpf(
             tmp,
             0,
             height >> 1,
@@ -357,7 +357,7 @@ class InvWTFull extends InverseWT {
           (tmp as List)[row] = (data as List)[k];
         }
         if (sb.ulcy.isEven) {
-          vFilter.synthetize_lpf(
+          vFilter.synthetizeLpf(
             tmp,
             0,
             (height + 1) >> 1,
@@ -371,7 +371,7 @@ class InvWTFull extends InverseWT {
             rowStride,
           );
         } else {
-          vFilter.synthetize_hpf(
+          vFilter.synthetizeHpf(
             tmp,
             0,
             height >> 1,

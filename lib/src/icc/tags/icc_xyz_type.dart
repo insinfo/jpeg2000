@@ -24,9 +24,9 @@ class ICCXYZType extends ICCTag {
 
   /// Construct this tag from its constituant parts
   ICCXYZType(super.signature, super.data, super.offset, super.length)
-      : x = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size),
-        y = ICCProfile.getInt(data, offset + 3 * ICCProfile.int_size),
-        z = ICCProfile.getInt(data, offset + 4 * ICCProfile.int_size);
+      : x = ICCProfile.getInt(data, offset + 2 * ICCProfile.intSize),
+        y = ICCProfile.getInt(data, offset + 3 * ICCProfile.intSize),
+        z = ICCProfile.getInt(data, offset + 4 * ICCProfile.intSize);
 
   /// Constructor for subclasses that need to specify values manually
   ICCXYZType.fromValues(super.signature, super.data, super.offset, super.length,

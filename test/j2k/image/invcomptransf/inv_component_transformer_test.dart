@@ -15,7 +15,7 @@ import 'package:jpeg2000/src/j2k/module_spec.dart';
 void main() {
   group('InvCompTransfImgDataSrc', () {
     test('applies reversible component transform', () {
-      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+      final spec = CompTransfSpec(1, 3, ModuleSpec.specTypeTile)
         ..setDefault(InvCompTransf.invRct);
       final source = _RctStub();
       final transformer = InvCompTransfImgDataSrc(source, spec);
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('reports original component bit depths after inverse RCT', () {
-      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+      final spec = CompTransfSpec(1, 3, ModuleSpec.specTypeTile)
         ..setDefault(InvCompTransf.invRct);
       final source = _RctStub(bitDepths: const <int>[8, 9, 9]);
       final transformer = InvCompTransfImgDataSrc(
@@ -67,7 +67,7 @@ void main() {
     });
 
     test('applies irreversible component transform', () {
-      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+      final spec = CompTransfSpec(1, 3, ModuleSpec.specTypeTile)
         ..setDefault(InvCompTransf.invIct);
       final source = _IctStub();
       final transformer = InvCompTransfImgDataSrc(source, spec);
@@ -105,7 +105,7 @@ void main() {
     });
 
     test('ICT blue channel ignores Cr term like JJ2000', () {
-      final spec = CompTransfSpec(1, 3, ModuleSpec.SPEC_TYPE_TILE)
+      final spec = CompTransfSpec(1, 3, ModuleSpec.specTypeTile)
         ..setDefault(InvCompTransf.invIct);
       final source = _IctStub(
         yValues: const <double>[100],

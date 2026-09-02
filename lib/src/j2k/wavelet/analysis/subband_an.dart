@@ -71,17 +71,17 @@ class SubbandAn extends Subband {
   }
 
   @override
-  Subband split(WaveletFilter hfilter, WaveletFilter vfilter) {
+  Subband split(WaveletFilter hFilter, WaveletFilter vFilter) {
     if (isNode) {
       throw ArgumentError('Subband already split');
     }
-    if (hfilter is! AnWTFilter || vfilter is! AnWTFilter) {
+    if (hFilter is! AnWTFilter || vFilter is! AnWTFilter) {
       throw ArgumentError('Analysis filters must be AnWTFilter instances');
     }
 
     isNode = true;
-    hFilter = hfilter;
-    vFilter = vfilter;
+    this.hFilter = hFilter;
+    this.vFilter = vFilter;
 
     subbLL = SubbandAn();
     subbHL = SubbandAn();

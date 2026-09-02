@@ -5,9 +5,8 @@ import 'dequantizer_params.dart';
 class StdDequantizerParams extends DequantizerParams {
   StdDequantizerParams({
     List<List<int>>? exp,
-    List<List<double>>? nStep,
-  })  : exp = exp ?? <List<int>>[],
-        nStep = nStep;
+    this.nStep,
+  }) : exp = exp ?? <List<int>>[];
 
   /// Quantization exponent table per resolution/subband.
   final List<List<int>> exp;

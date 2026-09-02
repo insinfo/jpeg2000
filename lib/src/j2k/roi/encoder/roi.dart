@@ -39,7 +39,7 @@ class ROI {
     required this.component,
     required int x,
     required int y,
-    required int radius,
+    required this.radius,
   })  : shape = ROIShapeType.circle,
         upperLeftX = null,
         upperLeftY = null,
@@ -47,7 +47,6 @@ class ROI {
         height = null,
         centerX = x,
         centerY = y,
-        radius = radius,
         mask = null;
 
   /// Component index that owns this ROI.

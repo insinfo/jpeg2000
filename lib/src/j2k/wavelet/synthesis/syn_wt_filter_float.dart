@@ -5,7 +5,7 @@ import 'syn_wt_filter.dart';
 
 /// Synthesis filter entry-point specialized for floating-point sample buffers.
 abstract class SynWTFilterFloat extends SynWTFilter {
-  /// Float-aware implementation of [synthetize_lpf].
+  /// Float-aware implementation of [synthetizeLpf].
   void synthetizeLpfFloat(
     Float32List lowSig,
     int lowOff,
@@ -20,7 +20,7 @@ abstract class SynWTFilterFloat extends SynWTFilter {
     int outStep,
   );
 
-  /// Float-aware implementation of [synthetize_hpf].
+  /// Float-aware implementation of [synthetizeHpf].
   void synthetizeHpfFloat(
     Float32List lowSig,
     int lowOff,
@@ -36,7 +36,7 @@ abstract class SynWTFilterFloat extends SynWTFilter {
   );
 
   @override
-  void synthetize_lpf(
+  void synthetizeLpf(
     Object lowSig,
     int lowOff,
     int lowLen,
@@ -65,7 +65,7 @@ abstract class SynWTFilterFloat extends SynWTFilter {
   }
 
   @override
-  void synthetize_hpf(
+  void synthetizeHpf(
     Object lowSig,
     int lowOff,
     int lowLen,

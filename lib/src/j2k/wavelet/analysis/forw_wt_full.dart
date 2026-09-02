@@ -148,7 +148,7 @@ class ForwWTFull extends ForwardWT {
   /// @return The wavelet decomposition.
   @override
   int getDecomp(int t, int c) {
-    return ForwardWT.WT_DECOMP_DYADIC;
+    return ForwardWT.wtDecompDyadic;
   }
 
   /// Returns the horizontal analysis wavelet filters used in each level, for
@@ -916,8 +916,8 @@ class ForwWTFull extends ForwardWT {
   ///
   /// @param sb The subband tree to be initialised.
   void initSubbandsFields(int t, int c, Subband sb) {
-    int cbw = cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, t, c);
-    int cbh = cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, t, c);
+    int cbw = cblks.getCBlkWidth(ModuleSpec.specTileComp, t, c);
+    int cbh = cblks.getCBlkHeight(ModuleSpec.specTileComp, t, c);
 
     if (!sb.isNode) {
       // Code-blocks dimension
@@ -926,8 +926,8 @@ class ForwWTFull extends ForwardWT {
       ppx = pss.getPPX(t, c, sb.resLvl);
       ppy = pss.getPPY(t, c, sb.resLvl);
 
-      if (ppx != Markers.PRECINCT_PARTITION_DEF_SIZE ||
-          ppy != Markers.PRECINCT_PARTITION_DEF_SIZE) {
+      if (ppx != Markers.precinctPartitionDefSize ||
+          ppy != Markers.precinctPartitionDefSize) {
         ppxExp = MathUtil.log2(ppx);
         ppyExp = MathUtil.log2(ppy);
         cbwExp = MathUtil.log2(cbw);

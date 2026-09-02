@@ -1,7 +1,7 @@
 import '../icc_profile.dart';
 
 class ICCDateTime {
-  static const int size = 6 * ICCProfile.short_size;
+  static const int size = 6 * ICCProfile.shortSize;
 
   /// Year datum.
   int wYear; // Number of the actual year (i.e. 1994)

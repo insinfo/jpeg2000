@@ -24,10 +24,10 @@
 /// methods.
 class LayersInfo {
   /// The initial size for the arrays: 10
-  static const int SZ_INIT = 10;
+  static const int szInit = 10;
 
   /// The size increment for the arrays
-  static const int SZ_INCR = 5;
+  static const int szIncr = 5;
 
   /// The total number of layers
   // Starts at 1: overall target bitrate is always an extra optimized layer
@@ -41,14 +41,14 @@ class LayersInfo {
   int nopt = 0;
 
   /// The target bitrate to which specified layers should be optimized.
-  List<double> optbrate = List<double>.filled(SZ_INIT, 0.0);
+  List<double> optbrate = List<double>.filled(szInit, 0.0);
 
   /// The number of extra layers to be added after an optimized layer. After
   /// the layer that is optimized to optbrate[i], extralyrs[i] extra layers
   /// should be added. These layers are allocated between the bitrate
   /// optbrate[i] and the next optimized bitrate optbrate[i+1] or, if it does
   /// not exist, the overall target bitrate.
-  List<int> extralyrs = List<int>.filled(SZ_INIT, 0);
+  List<int> extralyrs = List<int>.filled(szInit, 0);
 
   /// Creates a new LayersInfo object. The overall target bitrate 'brate' is
   /// always an extra optimization point, with no extra layers are after
@@ -139,8 +139,8 @@ class LayersInfo {
       List<double> tbr = optbrate;
       List<int> tel = extralyrs;
       // both arrays always have same size
-      optbrate = List<double>.filled(optbrate.length + SZ_INCR, 0.0);
-      extralyrs = List<int>.filled(extralyrs.length + SZ_INCR, 0);
+      optbrate = List<double>.filled(optbrate.length + szIncr, 0.0);
+      extralyrs = List<int>.filled(extralyrs.length + szIncr, 0);
       optbrate.setRange(0, nopt, tbr);
       extralyrs.setRange(0, nopt, tel);
     }

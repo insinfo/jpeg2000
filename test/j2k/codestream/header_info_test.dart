@@ -45,14 +45,14 @@ void main() {
       final defaultRgn = headerInfo.getNewRGN()
         ..lrgn = 5
         ..crgn = 0
-        ..srgn = Markers.SRGN_IMPLICIT
+        ..srgn = Markers.srgnImplicit
         ..sprgn = 5;
       headerInfo.rgn['main_c0'] = defaultRgn;
 
       final tileRgn = headerInfo.getNewRGN()
         ..lrgn = 5
         ..crgn = 1
-        ..srgn = Markers.SRGN_IMPLICIT
+        ..srgn = Markers.srgnImplicit
         ..sprgn = 2;
       headerInfo.rgn['t1_c1'] = tileRgn;
 

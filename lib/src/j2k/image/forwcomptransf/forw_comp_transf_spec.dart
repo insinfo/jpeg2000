@@ -66,7 +66,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           setDefault(InvCompTransf.none);
         } else {
           anfilt = wfs.getCompDef(0) as List<List<AnWTFilter>>;
-          if (anfilt[0][0].getFilterType() == FilterTypes.W9X7) {
+          if (anfilt[0][0].getFilterType() == FilterTypes.w9x7) {
             setDefault(InvCompTransf.invIct);
           } else {
             setDefault(InvCompTransf.invRct);
@@ -95,7 +95,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           setTileDef(t, InvCompTransf.none);
         } else {
           anfilt = wfs.getTileCompVal(t, 0) as List<List<AnWTFilter>>;
-          if (anfilt[0][0].getFilterType() == FilterTypes.W9X7) {
+          if (anfilt[0][0].getFilterType() == FilterTypes.w9x7) {
             setTileDef(t, InvCompTransf.invIct);
           } else {
             setTileDef(t, InvCompTransf.invRct);
@@ -109,7 +109,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
     List<String> tokens =
         param.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
     String word; // current word
-    int curSpecType = ModuleSpec.SPEC_DEF; // Specification type of the
+    int curSpecType = ModuleSpec.specDef; // Specification type of the
     // current parameter
     List<bool>? tileSpec; // Tiles concerned by the
     // specification
@@ -121,10 +121,10 @@ class ForwCompTransfSpec extends CompTransfSpec {
       switch (word[0]) {
         case 't': // Tiles specification
           tileSpec = ModuleSpec.parseIdx(word, nTiles);
-          if (curSpecType == ModuleSpec.SPEC_COMP_DEF) {
-            curSpecType = ModuleSpec.SPEC_TILE_COMP;
+          if (curSpecType == ModuleSpec.specCompDef) {
+            curSpecType = ModuleSpec.specTileComp;
           } else {
-            curSpecType = ModuleSpec.SPEC_TILE_DEF;
+            curSpecType = ModuleSpec.specTileDef;
           }
           break;
         case 'c': // Components specification
@@ -132,9 +132,9 @@ class ForwCompTransfSpec extends CompTransfSpec {
               "Component specific parameters not allowed with '-Mct' option");
         default:
           if (word == "off") {
-            if (curSpecType == ModuleSpec.SPEC_DEF) {
+            if (curSpecType == ModuleSpec.specDef) {
               setDefault(InvCompTransf.none);
-            } else if (curSpecType == ModuleSpec.SPEC_TILE_DEF) {
+            } else if (curSpecType == ModuleSpec.specTileDef) {
               for (int i = tileSpec!.length - 1; i >= 0; i--) {
                 if (tileSpec[i]) {
                   setTileDef(i, InvCompTransf.none);
@@ -147,15 +147,15 @@ class ForwCompTransfSpec extends CompTransfSpec {
                   "Cannot use component transformation on a image with less than three components");
             }
 
-            if (curSpecType == ModuleSpec.SPEC_DEF) {
+            if (curSpecType == ModuleSpec.specDef) {
               // Set arbitrarily the default
               // value to RCT (later will be found the suitable
               // component transform for each tile)
               setDefault(InvCompTransf.invRct);
-            } else if (curSpecType == ModuleSpec.SPEC_TILE_DEF) {
+            } else if (curSpecType == ModuleSpec.specTileDef) {
               for (int i = tileSpec!.length - 1; i >= 0; i--) {
                 if (tileSpec[i]) {
-                  if (getFilterType(i, wfs) == FilterTypes.W5X3) {
+                  if (getFilterType(i, wfs) == FilterTypes.w5x3) {
                     setTileDef(i, InvCompTransf.invRct);
                   } else {
                     setTileDef(i, InvCompTransf.invIct);
@@ -169,7 +169,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           }
 
           // Re-initialize
-          curSpecType = ModuleSpec.SPEC_DEF;
+          curSpecType = ModuleSpec.specDef;
           tileSpec = null;
           break;
       }
@@ -204,7 +204,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
           setTileDef(t, InvCompTransf.none);
         } else {
           anfilt = wfs.getTileCompVal(t, 0) as List<List<AnWTFilter>>;
-          if (anfilt[0][0].getFilterType() == FilterTypes.W9X7) {
+          if (anfilt[0][0].getFilterType() == FilterTypes.w9x7) {
             setTileDef(t, InvCompTransf.invIct);
           } else {
             setTileDef(t, InvCompTransf.invRct);
@@ -223,9 +223,9 @@ class ForwCompTransfSpec extends CompTransfSpec {
         // Tile is using Reversible component transform
         int filterType = getFilterType(t, wfs);
         switch (filterType) {
-          case FilterTypes.W5X3: // OK
+          case FilterTypes.w5x3: // OK
             break;
-          case FilterTypes.W9X7: // Must use ICT
+          case FilterTypes.w9x7: // Must use ICT
             if (isTileSpecified(t)) {
               // User has requested RCT -> Error
               throw ArgumentError("Cannot use RCT with 9x7 filter in tile $t");
@@ -242,7 +242,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
         // ICT
         int filterType = getFilterType(t, wfs);
         switch (filterType) {
-          case FilterTypes.W5X3: // Must use RCT
+          case FilterTypes.w5x3: // Must use RCT
             if (isTileSpecified(t)) {
               // User has requested ICT -> Error
               throw ArgumentError("Cannot use ICT with filter 5x3 in tile $t");
@@ -250,7 +250,7 @@ class ForwCompTransfSpec extends CompTransfSpec {
               setTileDef(t, InvCompTransf.invRct);
             }
             break;
-          case FilterTypes.W9X7: // OK
+          case FilterTypes.w9x7: // OK
             break;
           default:
             throw ArgumentError(

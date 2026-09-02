@@ -31,7 +31,7 @@ import 'std_entropy_coder.dart';
 abstract class EntropyCoder extends ImgDataAdapter
     implements CodedCBlkDataSrcEnc, StdEntropyCoderOptions {
   /// The prefix for entropy coder options: 'C'
-  static const String OPT_PREFIX = 'C';
+  static const String optPrefix = 'C';
 
   /// The list of parameters that is accepted for entropy coding. Options
   /// for entropy coding start with 'C'.
@@ -50,11 +50,11 @@ abstract class EntropyCoder extends ImgDataAdapter
       "Cbypass",
       "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
       "Uses the lazy coding mode with the entropy coder. This will bypass "
-              "the MQ coder for some of the coding passes, where the distribution "
-              "is often close to uniform. Since the MQ codeword will be "
-              "terminated "
-              "at least once per lazy pass, it is important to use an efficient " +
-          "termination algorithm, see the 'Cterm_type' option." +
+          "the MQ coder for some of the coding passes, where the distribution "
+          "is often close to uniform. Since the MQ codeword will be "
+          "terminated "
+          "at least once per lazy pass, it is important to use an efficient "
+          "termination algorithm, see the 'Cterm_type' option."
           "'on' enables, 'off' disables it.",
       "off"
     ],
@@ -89,10 +89,10 @@ abstract class EntropyCoder extends ImgDataAdapter
       "Cseg_symbol",
       "[<tile-component idx>] on|off" "[ [<tile-component idx>] on|off ...]",
       "Inserts an error resilience segmentation symbol in the MQ "
-              "codeword at the end of "
-              "each bit-plane (cleanup pass). Decoders can use this "
-              "information to detect and "
-              "conceal errors.'on' enables, 'off' disables " +
+          "codeword at the end of "
+          "each bit-plane (cleanup pass). Decoders can use this "
+          "information to detect and "
+          "conceal errors.'on' enables, 'off' disables "
           "it.",
       "off"
     ],
@@ -101,21 +101,21 @@ abstract class EntropyCoder extends ImgDataAdapter
       "[<tile-component idx>] near_opt|easy|predict|full"
           "[ [<tile-component idx>] near_opt|easy|predict|full ...]",
       "Specifies the algorithm used to terminate the MQ codeword. "
-              "The most efficient one is 'near_opt', which delivers a codeword "
-              "which in almost all cases is the shortest possible. The 'easy' is "
-              "a simpler algorithm that delivers a codeword length that is close "
-              "to the previous one (in average 1 bit longer). The 'predict' is" +
-          " almost " +
-          "the same as the 'easy' but it leaves error resilient information " +
-          "on " +
-          "the spare least significant bits (in average 3.5 bits), which can " +
-          "be used by a decoder to detect errors. The 'full' algorithm " +
-          "performs a full flush of the MQ coder and is highly inefficient.\n" +
-          "It is important to use a good termination policy since the MQ " +
-          "codeword can be terminated quite often, specially if the 'Cbypass'" +
-          " or " +
-          "'Cterminate' options are enabled (in the normal case it would be " +
-          "terminated once per code-block, while if 'Cterminate' is specified " +
+          "The most efficient one is 'near_opt', which delivers a codeword "
+          "which in almost all cases is the shortest possible. The 'easy' is "
+          "a simpler algorithm that delivers a codeword length that is close "
+          "to the previous one (in average 1 bit longer). The 'predict' is"
+          " almost "
+          "the same as the 'easy' but it leaves error resilient information "
+          "on "
+          "the spare least significant bits (in average 3.5 bits), which can "
+          "be used by a decoder to detect errors. The 'full' algorithm "
+          "performs a full flush of the MQ coder and is highly inefficient.\n"
+          "It is important to use a good termination policy since the MQ "
+          "codeword can be terminated quite often, specially if the 'Cbypass'"
+          " or "
+          "'Cterminate' options are enabled (in the normal case it would be "
+          "terminated once per code-block, while if 'Cterminate' is specified "
           "it will be done almost 3 times per bit-plane in each code-block).",
       "near_opt"
     ],
@@ -124,13 +124,13 @@ abstract class EntropyCoder extends ImgDataAdapter
       "[<tile-component idx>] near_opt|lazy_good|lazy"
           "[ [<tile-component idx>] ...]",
       "Specifies the algorithm to use in calculating the necessary MQ "
-              "length for each decoding pass. The best one is 'near_opt', which "
-              "performs a rather sophisticated calculation and provides the best "
-              "results. The 'lazy_good' and 'lazy' are very simple algorithms "
-              "that " +
-          "provide rather conservative results, 'lazy_good' one being " +
-          "slightly " +
-          "better. Do not change this option unless you want to experiment " +
+          "length for each decoding pass. The best one is 'near_opt', which "
+          "performs a rather sophisticated calculation and provides the best "
+          "results. The 'lazy_good' and 'lazy' are very simple algorithms "
+          "that "
+          "provide rather conservative results, 'lazy_good' one being "
+          "slightly "
+          "better. Do not change this option unless you want to experiment "
           "the effect of different length calculation algorithms.",
       "near_opt"
     ],
@@ -139,13 +139,13 @@ abstract class EntropyCoder extends ImgDataAdapter
       "[<tile-component idx>] <dim> <dim> [<dim> <dim>] "
           "[ [<tile-component idx>] ...]",
       "Specifies precinct partition dimensions for tile-component. The "
-              "first "
-              "two values apply to the highest resolution and the following ones "
-              "(if "
-              "any) apply to the remaining resolutions in decreasing order. If " +
-          "less " +
-          "values than the number of decomposition levels are specified, " +
-          "then the " +
+          "first "
+          "two values apply to the highest resolution and the following ones "
+          "(if "
+          "any) apply to the remaining resolutions in decreasing order. If "
+          "less "
+          "values than the number of decomposition levels are specified, "
+          "then the "
           "last two values are used for the remaining resolutions.",
       null
     ]
@@ -285,7 +285,7 @@ abstract class EntropyCoder extends ImgDataAdapter
       StringSpec tts) {
     // Check parameters
     pl.checkListSingle(
-        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
     return StdEntropyCoder(src, cblks, pss, bms, mqrs, rts, css, sss, lcs, tts);
   }
 }

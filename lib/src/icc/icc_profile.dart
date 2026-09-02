@@ -19,55 +19,55 @@ abstract class ICCProfile {
 
   // Renamed for convenience:
   /// Gray index.
-  static const int GRAY = 0;
+  static const int grayChannel = 0;
 
   /// RGB index.
-  static const int RED = 0;
+  static const int redChannel = 0;
 
   /// RGB index.
-  static const int GREEN = 1;
+  static const int greenChannel = 1;
 
   /// RGB index.
-  static const int BLUE = 2;
+  static const int blueChannel = 2;
 
   /// Size of native type
-  static const int boolean_size = 1;
+  static const int booleanSize = 1;
 
   /// Size of native type
-  static const int byte_size = 1;
+  static const int byteSize = 1;
 
   /// Size of native type
-  static const int char_size = 2;
+  static const int charSize = 2;
 
   /// Size of native type
-  static const int short_size = 2;
+  static const int shortSize = 2;
 
   /// Size of native type
-  static const int int_size = 4;
+  static const int intSize = 4;
 
   /// Size of native type
-  static const int float_size = 4;
+  static const int floatSize = 4;
 
   /// Size of native type
-  static const int long_size = 8;
+  static const int longSize = 8;
 
   /// Size of native type
-  static const int double_size = 8;
+  static const int doubleSize = 8;
 
   /* Bit twiddling constant for integral types. */
-  static const int BITS_PER_BYTE = 8;
+  static const int bitsPerByte = 8;
   /* Bit twiddling constant for integral types. */
-  static const int BITS_PER_SHORT = 16;
+  static const int bitsPerShort = 16;
   /* Bit twiddling constant for integral types. */
-  static const int BITS_PER_INT = 32;
+  static const int bitsPerInt = 32;
   /* Bit twiddling constant for integral types. */
-  static const int BITS_PER_LONG = 64;
+  static const int bitsPerLong = 64;
   /* Bit twiddling constant for integral types. */
-  static const int BYTES_PER_SHORT = 2;
+  static const int bytesPerShort = 2;
   /* Bit twiddling constant for integral types. */
-  static const int BYTES_PER_INT = 4;
+  static const int bytesPerInt = 4;
   /* Bit twiddling constant for integral types. */
-  static const int BYTES_PER_LONG = 8;
+  static const int bytesPerLong = 8;
 
   /* JP2 Box structure analysis help */
   static final Map<int, String> _boxTypeMap = {
@@ -123,8 +123,8 @@ abstract class ICCProfile {
   static XYZNumber getXYZNumber(Uint8List data, int offset) {
     int x, y, z;
     x = getInt(data, offset);
-    y = getInt(data, offset + int_size);
-    z = getInt(data, offset + 2 * int_size);
+    y = getInt(data, offset + intSize);
+    z = getInt(data, offset + 2 * intSize);
     return XYZNumber(x, y, z);
   }
 
@@ -134,9 +134,9 @@ abstract class ICCProfile {
   /// @return  the created ICCProfileVersion
   static ICCProfileVersion getICCProfileVersion(Uint8List data, int offset) {
     int major = data[offset];
-    int minor = data[offset + byte_size];
-    int resv1 = data[offset + 2 * byte_size];
-    int resv2 = data[offset + 3 * byte_size];
+    int minor = data[offset + byteSize];
+    int resv1 = data[offset + 2 * byteSize];
+    int resv2 = data[offset + 3 * byteSize];
     return ICCProfileVersion(major, minor, resv1, resv2);
   }
 
@@ -147,15 +147,15 @@ abstract class ICCProfile {
   static ICCDateTime getICCDateTime(Uint8List data, int offset) {
     int wYear = getShort(data, offset); // Number of the actual year (i.e. 1994)
     int wMonth = getShort(
-        data, offset + ICCProfile.short_size); // Number of the month (1-12)
+        data, offset + ICCProfile.shortSize); // Number of the month (1-12)
     int wDay =
-        getShort(data, offset + 2 * ICCProfile.short_size); // Number of the day
+        getShort(data, offset + 2 * ICCProfile.shortSize); // Number of the day
     int wHours = getShort(
-        data, offset + 3 * ICCProfile.short_size); // Number of hours (0-23)
+        data, offset + 3 * ICCProfile.shortSize); // Number of hours (0-23)
     int wMinutes = getShort(
-        data, offset + 4 * ICCProfile.short_size); // Number of minutes (0-59)
+        data, offset + 4 * ICCProfile.shortSize); // Number of minutes (0-59)
     int wSeconds = getShort(
-        data, offset + 5 * ICCProfile.short_size); // Number of seconds (0-59)
+        data, offset + 5 * ICCProfile.shortSize); // Number of seconds (0-59)
     return ICCDateTime(wYear, wMonth, wDay, wHours, wMinutes, wSeconds);
   }
 
@@ -187,19 +187,17 @@ abstract class ICCProfile {
     int tmp0 = bfr[off] & 0xff; // Clear the sign extended bits in the int.
     int tmp1 = bfr[off + 1] & 0xff;
 
-    return (swap
-        ? (tmp1 << BITS_PER_BYTE | tmp0)
-        : (tmp0 << BITS_PER_BYTE | tmp1));
+    return (swap ? (tmp1 << bitsPerByte | tmp0) : (tmp0 << bitsPerByte | tmp1));
   }
 
   /// Separate bytes in an int into a byte array lsb to msb order.
   ///   @param d integer to separate
   /// @return byte [] containing separated int.
   static Uint8List setInt(int d, [Uint8List? b]) {
-    b ??= Uint8List(BYTES_PER_INT);
-    for (int i = 0; i < BYTES_PER_INT; ++i) {
+    b ??= Uint8List(bytesPerInt);
+    for (int i = 0; i < bytesPerInt; ++i) {
       b[i] = (d & 0x0ff);
-      d = d >> BITS_PER_BYTE;
+      d = d >> bitsPerByte;
     }
     return b;
   }
@@ -208,10 +206,10 @@ abstract class ICCProfile {
   ///   @param d long to separate
   /// @return byte [] containing separated int.
   static Uint8List setLong(int d, [Uint8List? b]) {
-    b ??= Uint8List(BYTES_PER_LONG);
-    for (int i = 0; i < BYTES_PER_LONG; ++i) {
+    b ??= Uint8List(bytesPerLong);
+    for (int i = 0; i < bytesPerLong; ++i) {
       b[i] = (d & 0x0ff);
-      d = d >> BITS_PER_BYTE;
+      d = d >> bitsPerByte;
     }
     return b;
   }
@@ -227,8 +225,8 @@ abstract class ICCProfile {
     int tmp1 = getShort(bfr, off + 2, swap) & 0xffff;
 
     return (swap
-        ? (tmp1 << BITS_PER_SHORT | tmp0)
-        : (tmp0 << BITS_PER_SHORT | tmp1));
+        ? (tmp1 << bitsPerShort | tmp0)
+        : (tmp0 << bitsPerShort | tmp1));
   }
 
   /// Create an long from a byte [8].
@@ -240,7 +238,7 @@ abstract class ICCProfile {
         0xffffffff; // Clear the sign extended bits in the int.
     int tmp1 = getInt(bfr, off + 4) & 0xffffffff;
 
-    return (tmp0 << BITS_PER_INT | tmp1);
+    return (tmp0 << bitsPerInt | tmp1);
   }
 
   // Define the set of standard signature and type values
@@ -310,7 +308,9 @@ abstract class ICCProfile {
   /// @return representation
   static String toHexStringByte(int i) {
     String rep = (i >= 0 && i < 16 ? "0" : "") + i.toRadixString(16);
-    if (rep.length > 2) rep = rep.substring(rep.length - 2);
+    if (rep.length > 2) {
+      rep = rep.substring(rep.length - 2);
+    }
     return rep;
   }
 
@@ -322,14 +322,17 @@ abstract class ICCProfile {
 
     if (i >= 0 && i < 0x10) {
       rep = "000${i.toRadixString(16)}";
-    } else if (i >= 0 && i < 0x100)
+    } else if (i >= 0 && i < 0x100) {
       rep = "00${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x1000)
+    } else if (i >= 0 && i < 0x1000) {
       rep = "0${i.toRadixString(16)}";
-    else
+    } else {
       rep = i.toRadixString(16);
+    }
 
-    if (rep.length > 4) rep = rep.substring(rep.length - 4);
+    if (rep.length > 4) {
+      rep = rep.substring(rep.length - 4);
+    }
     return rep;
   }
 
@@ -341,22 +344,25 @@ abstract class ICCProfile {
 
     if (i >= 0 && i < 0x10) {
       rep = "0000000${i.toRadixString(16)}";
-    } else if (i >= 0 && i < 0x100)
+    } else if (i >= 0 && i < 0x100) {
       rep = "000000${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x1000)
+    } else if (i >= 0 && i < 0x1000) {
       rep = "00000${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x10000)
+    } else if (i >= 0 && i < 0x10000) {
       rep = "0000${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x100000)
+    } else if (i >= 0 && i < 0x100000) {
       rep = "000${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x1000000)
+    } else if (i >= 0 && i < 0x1000000) {
       rep = "00${i.toRadixString(16)}";
-    else if (i >= 0 && i < 0x10000000)
+    } else if (i >= 0 && i < 0x10000000) {
       rep = "0${i.toRadixString(16)}";
-    else
+    } else {
       rep = i.toRadixString(16);
+    }
 
-    if (rep.length > 8) rep = rep.substring(rep.length - 8);
+    if (rep.length > 8) {
+      rep = rep.substring(rep.length - 8);
+    }
     return rep;
   }
 
@@ -434,7 +440,9 @@ abstract class ICCProfile {
   ICCProfile(ColorSpace csm) {
     pl = csm.pl;
     List<int>? p = csm.getICCProfile();
-    if (p == null) throw ArgumentError("ICC Profile not found in ColorSpace");
+    if (p == null) {
+      throw ArgumentError("ICC Profile not found in ColorSpace");
+    }
     profile = Uint8List.fromList(p);
     initProfile(profile);
   }

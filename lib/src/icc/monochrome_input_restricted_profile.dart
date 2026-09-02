@@ -25,7 +25,7 @@ class MonochromeInputRestrictedProfile extends RestrictedICCProfile {
 
     rep
       ..write("trc[GRAY]:${RestrictedICCProfile.eol}")
-      ..write(trc[RestrictedICCProfile.GRAY])
+      ..write(trc[RestrictedICCProfile.grayChannel])
       ..write(RestrictedICCProfile.eol);
 
     return rep.toString();

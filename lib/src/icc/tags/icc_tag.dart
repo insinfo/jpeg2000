@@ -103,50 +103,52 @@ abstract class ICCTag {
   static String typeString(int type) {
     if (type == kdwTextDescType) {
       return sdwTextDescType;
-    } else if (type == kdwTextType)
+    } else if (type == kdwTextType) {
       return sdwTextDescType;
-    else if (type == kdwCurveType)
+    } else if (type == kdwCurveType) {
       return sdwCurveType;
-    else if (type == kdwCurveTypeReverse)
+    } else if (type == kdwCurveTypeReverse) {
       return sdwCurveTypeReverse;
-    else if (type == kdwXYZType)
+    } else if (type == kdwXYZType) {
       return sdwXYZType;
-    else if (type == kdwXYZTypeReverse)
+    } else if (type == kdwXYZTypeReverse) {
       return sdwXYZTypeReverse;
-    else
+    } else {
       return "bad tag type";
+    }
   }
 
   /// Create a string representation of the signature
   static String signatureString(int signature) {
     if (signature == kdwCprtSignature) {
       return sdwCprtSignature;
-    } else if (signature == kdwDescSignature)
+    } else if (signature == kdwDescSignature) {
       return sdwDescSignature;
-    else if (signature == kdwWtPtSignature)
+    } else if (signature == kdwWtPtSignature) {
       return sdwWtPtSignature;
-    else if (signature == kdwBkPtSignature)
+    } else if (signature == kdwBkPtSignature) {
       return sdwBkPtSignature;
-    else if (signature == kdwRXYZSignature)
+    } else if (signature == kdwRXYZSignature) {
       return sdwRXYZSignature;
-    else if (signature == kdwGXYZSignature)
+    } else if (signature == kdwGXYZSignature) {
       return sdwGXYZSignature;
-    else if (signature == kdwBXYZSignature)
+    } else if (signature == kdwBXYZSignature) {
       return sdwBXYZSignature;
-    else if (signature == kdwRTRCSignature)
+    } else if (signature == kdwRTRCSignature) {
       return sdwRTRCSignature;
-    else if (signature == kdwGTRCSignature)
+    } else if (signature == kdwGTRCSignature) {
       return sdwGTRCSignature;
-    else if (signature == kdwBTRCSignature)
+    } else if (signature == kdwBTRCSignature) {
       return sdwBTRCSignature;
-    else if (signature == kdwKTRCSignature)
+    } else if (signature == kdwKTRCSignature) {
       return sdwKTRCSignature;
-    else if (signature == kdwDmndSignature)
+    } else if (signature == kdwDmndSignature) {
       return sdwDmndSignature;
-    else if (signature == kdwDmddSignature)
+    } else if (signature == kdwDmddSignature) {
       return sdwDmddSignature;
-    else
+    } else {
       return "bad tag signature";
+    }
   }
 
   /// Factory method for creating a tag of a specific type.
@@ -156,18 +158,19 @@ abstract class ICCTag {
 
     if (type == kdwTextDescType) {
       return ICCTextDescriptionType(signature, data, offset, count);
-    } else if (type == kdwTextType)
+    } else if (type == kdwTextType) {
       return ICCTextType(signature, data, offset, count);
-    else if (type == kdwXYZType)
+    } else if (type == kdwXYZType) {
       return ICCXYZType(signature, data, offset, count);
-    else if (type == kdwXYZTypeReverse)
+    } else if (type == kdwXYZTypeReverse) {
       return ICCXYZTypeReverse(signature, data, offset, count);
-    else if (type == kdwCurveType)
+    } else if (type == kdwCurveType) {
       return ICCCurveType(signature, data, offset, count);
-    else if (type == kdwCurveTypeReverse)
+    } else if (type == kdwCurveTypeReverse) {
       return ICCCurveTypeReverse(signature, data, offset, count);
-    else
+    } else {
       throw ArgumentError("bad tag type");
+    }
   }
 
   /// Used by subclass initialization to store the state common to all tags

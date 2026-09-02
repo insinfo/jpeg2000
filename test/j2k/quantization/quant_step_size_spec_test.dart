@@ -11,7 +11,7 @@ void main() {
       final spec = QuantStepSizeSpec.fromParameters(
         1,
         1,
-        ModuleSpec.SPEC_TYPE_TILE_COMP,
+        ModuleSpec.specTypeTileComp,
         params,
       );
       expect(spec.getDefault(), closeTo(0.5, 1e-6));
@@ -23,7 +23,7 @@ void main() {
       final spec = QuantStepSizeSpec.fromParameters(
         2,
         2,
-        ModuleSpec.SPEC_TYPE_TILE_COMP,
+        ModuleSpec.specTypeTileComp,
         params,
       );
       expect(spec.getTileDef(0), closeTo(0.5, 1e-6));

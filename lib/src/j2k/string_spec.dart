@@ -3,24 +3,23 @@ import 'util/parameter_list.dart';
 
 /// Holds string specifications for JJ2000 options on a tile/component grid.
 class StringSpec extends ModuleSpec<String> {
-  static const int SPEC_DEF = ModuleSpec.SPEC_DEF;
-  static const int SPEC_COMP_DEF = ModuleSpec.SPEC_COMP_DEF;
-  static const int SPEC_TILE_DEF = ModuleSpec.SPEC_TILE_DEF;
-  static const int SPEC_TILE_COMP = ModuleSpec.SPEC_TILE_COMP;
+  static const int specDef = ModuleSpec.specDef;
+  static const int specCompDef = ModuleSpec.specCompDef;
+  static const int specTileDef = ModuleSpec.specTileDef;
+  static const int specTileComp = ModuleSpec.specTileComp;
   static List<bool> parseIdx(String token, int max) =>
       ModuleSpec.parseIdx(token, max);
 
-  StringSpec(int numTiles, int numComps, int specType)
-      : super(numTiles, numComps, specType);
+  StringSpec(super.numTiles, super.numComps, super.specType);
 
   StringSpec.fromParameters(
-    int numTiles,
-    int numComps,
-    int specType,
+    super.numTiles,
+    super.numComps,
+    super.specType,
     String optionName,
     List<String> recognizedValues,
     ParameterList parameters,
-  ) : super(numTiles, numComps, specType) {
+  ) {
     var param = parameters.getParameter(optionName);
     if (param == null) {
       final defaults = parameters.getDefaultParameterList();
@@ -58,7 +57,7 @@ class StringSpec extends ModuleSpec<String> {
     String optionName,
     List<String> recognizedValues,
   ) {
-    var curSpecType = SPEC_DEF;
+    var curSpecType = specDef;
     List<bool>? tileSpec;
     List<bool>? compSpec;
 
@@ -70,13 +69,11 @@ class StringSpec extends ModuleSpec<String> {
       switch (word[0]) {
         case 't':
           tileSpec = parseIdx(word, nTiles);
-          curSpecType =
-              curSpecType == SPEC_COMP_DEF ? SPEC_TILE_COMP : SPEC_TILE_DEF;
+          curSpecType = curSpecType == specCompDef ? specTileComp : specTileDef;
           break;
         case 'c':
           compSpec = parseIdx(word, nComp);
-          curSpecType =
-              curSpecType == SPEC_TILE_DEF ? SPEC_TILE_COMP : SPEC_COMP_DEF;
+          curSpecType = curSpecType == specTileDef ? specTileComp : specCompDef;
           break;
         default:
           if (!_isRecognized(word, recognizedValues)) {
@@ -85,10 +82,10 @@ class StringSpec extends ModuleSpec<String> {
             );
           }
           switch (curSpecType) {
-            case SPEC_DEF:
+            case specDef:
               setDefault(word);
               break;
-            case SPEC_TILE_DEF:
+            case specTileDef:
               final tiles = tileSpec;
               if (tiles == null) {
                 throw ArgumentError(
@@ -101,7 +98,7 @@ class StringSpec extends ModuleSpec<String> {
                 }
               }
               break;
-            case SPEC_COMP_DEF:
+            case specCompDef:
               final comps = compSpec;
               if (comps == null) {
                 throw ArgumentError(
@@ -114,7 +111,7 @@ class StringSpec extends ModuleSpec<String> {
                 }
               }
               break;
-            case SPEC_TILE_COMP:
+            case specTileComp:
               final tiles = tileSpec;
               final comps = compSpec;
               if (tiles == null || comps == null) {
@@ -135,7 +132,7 @@ class StringSpec extends ModuleSpec<String> {
               break;
           }
 
-          curSpecType = SPEC_DEF;
+          curSpecType = specDef;
           tileSpec = null;
           compSpec = null;
           break;
@@ -151,7 +148,7 @@ class StringSpec extends ModuleSpec<String> {
     var unspecified = 0;
     for (var t = nTiles - 1; t >= 0; t--) {
       for (var c = nComp - 1; c >= 0; c--) {
-        if (specValType[t][c] == SPEC_DEF) {
+        if (specValType[t][c] == specDef) {
           unspecified++;
         }
       }
@@ -176,24 +173,24 @@ class StringSpec extends ModuleSpec<String> {
       }
       setDefault(firstValue);
       switch (specValType[0][0]) {
-        case SPEC_TILE_DEF:
+        case specTileDef:
           for (var c = nComp - 1; c >= 0; c--) {
-            if (specValType[0][c] == SPEC_TILE_DEF) {
-              specValType[0][c] = SPEC_DEF;
+            if (specValType[0][c] == specTileDef) {
+              specValType[0][c] = specDef;
             }
           }
           tileDef?[0] = null;
           break;
-        case SPEC_COMP_DEF:
+        case specCompDef:
           for (var t = nTiles - 1; t >= 0; t--) {
-            if (specValType[t][0] == SPEC_COMP_DEF) {
-              specValType[t][0] = SPEC_DEF;
+            if (specValType[t][0] == specCompDef) {
+              specValType[t][0] = specDef;
             }
           }
           compDef?[0] = null;
           break;
-        case SPEC_TILE_COMP:
-          specValType[0][0] = SPEC_DEF;
+        case specTileComp:
+          specValType[0][0] = specDef;
           tileCompVal?.remove('t0c0');
           break;
       }

@@ -28,22 +28,22 @@ void main() {
     final blueY = ICCXYZType.xyzToDouble(profile.colorant![2]!.y);
     final greenY = ICCXYZType.xyzToDouble(profile.colorant![1]!.y);
     final expected = 255 *
-        (MatrixBasedTransformTosRGB.SRGB10 *
+        (MatrixBasedTransformTosRGB.srgb10 *
                 ICCXYZType.xyzToDouble(profile.colorant![2]!.x) +
-            MatrixBasedTransformTosRGB.SRGB11 * blueY +
-            MatrixBasedTransformTosRGB.SRGB12 *
+            MatrixBasedTransformTosRGB.srgb11 * blueY +
+            MatrixBasedTransformTosRGB.srgb12 *
                 ICCXYZType.xyzToDouble(profile.colorant![2]!.z));
     final oldTypoValue = 255 *
-        (MatrixBasedTransformTosRGB.SRGB10 *
+        (MatrixBasedTransformTosRGB.srgb10 *
                 ICCXYZType.xyzToDouble(profile.colorant![2]!.x) +
-            MatrixBasedTransformTosRGB.SRGB11 * greenY +
-            MatrixBasedTransformTosRGB.SRGB12 *
+            MatrixBasedTransformTosRGB.srgb11 * greenY +
+            MatrixBasedTransformTosRGB.srgb12 *
                 ICCXYZType.xyzToDouble(profile.colorant![2]!.z));
 
-    expect(transform.matrix[MatrixBasedTransformTosRGB.M12],
+    expect(transform.matrix[MatrixBasedTransformTosRGB.m12],
         closeTo(expected, 1e-9));
     expect(
-      transform.matrix[MatrixBasedTransformTosRGB.M12],
+      transform.matrix[MatrixBasedTransformTosRGB.m12],
       isNot(closeTo(oldTypoValue, 1e-6)),
     );
   });

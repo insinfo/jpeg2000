@@ -19,14 +19,14 @@ class ByteOutputBuffer {
   int _count = 0;
 
   /// The buffer increase size
-  static const int BUF_INC = 512;
+  static const int bufInc = 512;
 
   /// The default initial buffer size
-  static const int BUF_DEF_LEN = 256;
+  static const int bufDefLen = 256;
 
   /// Creates a new byte array output stream. The buffer capacity is
   /// initially BUF_DEF_LEN bytes, though its size increases if necessary.
-  ByteOutputBuffer([int size = BUF_DEF_LEN]) {
+  ByteOutputBuffer([int size = bufDefLen]) {
     _buf = Uint8List(size);
   }
 
@@ -40,7 +40,7 @@ class ByteOutputBuffer {
     if (_count == _buf.length) {
       // Resize buffer
       final tmpbuf = _buf;
-      _buf = Uint8List(_buf.length + BUF_INC);
+      _buf = Uint8List(_buf.length + bufInc);
       _buf.setRange(0, _count, tmpbuf);
     }
     _buf[_count++] = b;

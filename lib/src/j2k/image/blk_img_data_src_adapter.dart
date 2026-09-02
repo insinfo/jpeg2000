@@ -4,10 +4,12 @@ import 'img_data_adapter.dart';
 
 /// Convenience base class that forwards [BlkImgDataSrc] methods to a delegate.
 class BlkImgDataSrcAdapter extends ImgDataAdapter implements BlkImgDataSrc {
-  BlkImgDataSrcAdapter(this.source) : super(source);
+  BlkImgDataSrcAdapter(BlkImgDataSrc super.source) : _source = source;
+
+  final BlkImgDataSrc _source;
 
   @override
-  final BlkImgDataSrc source;
+  BlkImgDataSrc get source => _source;
 
   @override
   int getFixedPoint(int component) => source.getFixedPoint(component);

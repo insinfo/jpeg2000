@@ -11,35 +11,35 @@ import 'byte_output_buffer.dart';
 class MQCoder {
   /// Identifier for the lazy length calculation. The lazy length
   /// calculation is not optimal but is extremely simple.
-  static const int LENGTH_LAZY = 0;
+  static const int lengthLazy = 0;
 
   /// Identifier for a very simple length calculation. This provides better
   /// results than the 'LENGTH_LAZY' computation. This is the old length
   /// calculation that was implemented in this class.
-  static const int LENGTH_LAZY_GOOD = 1;
+  static const int lengthLazyGood = 1;
 
   /// Identifier for the near optimal length calculation. This calculation
   /// is more complex than the lazy one but provides an almost optimal length
   /// calculation.
-  static const int LENGTH_NEAR_OPT = 2;
+  static const int lengthNearOpt = 2;
 
   /// The identifier fort the termination that uses a full flush. This is
   /// the less efficient termination.
-  static const int TERM_FULL = 0;
+  static const int termFull = 0;
 
   /// The identifier for the termination that uses the near optimal length
   /// calculation to terminate the arithmetic codewrod
-  static const int TERM_NEAR_OPT = 1;
+  static const int termNearOpt = 1;
 
   /// The identifier for the easy termination that is simpler than the
   /// 'TERM_NEAR_OPT' one but slightly less efficient.
-  static const int TERM_EASY = 2;
+  static const int termEasy = 2;
 
   /// The identifier for the predictable termination policy for error
   /// resilience. This is the same as the 'TERM_EASY' one but an special
   /// sequence of bits is embodied in the spare bits for error resilience
   /// purposes.
-  static const int TERM_PRED_ER = 3;
+  static const int termPredEr = 3;
 
   /// The data structures containing the probabilities for the LPS
   static const List<int> qe = [
@@ -311,10 +311,10 @@ class MQCoder {
   int nSaved = 0;
 
   /// The initial length of the arrays to save sates
-  static const int SAVED_LEN = 32 * StdEntropyCoderOptions.NUM_PASSES;
+  static const int savedLen = 32 * StdEntropyCoderOptions.numPasses;
 
   /// The increase in length for the arrays to save states
-  static const int SAVED_INC = 4 * StdEntropyCoderOptions.NUM_PASSES;
+  static const int savedInc = 4 * StdEntropyCoderOptions.numPasses;
 
   /// Instantiates a new MQ-coder, with the specified number of contexts and
   /// initial states. The compressed bytestream is written to the 'oStream'
@@ -355,18 +355,18 @@ class MQCoder {
   /// 'LENGTH_LAZY', 'LENGTH_LAZY_GOOD' or 'LENGTH_NEAR_OPT'.
   void setLenCalcType(int ltype) {
     // Verify the ttype and ltype
-    if (ltype != LENGTH_LAZY &&
-        ltype != LENGTH_LAZY_GOOD &&
-        ltype != LENGTH_NEAR_OPT) {
+    if (ltype != lengthLazy &&
+        ltype != lengthLazyGood &&
+        ltype != lengthNearOpt) {
       throw ArgumentError("Unrecognized length calculation type code: $ltype");
     }
 
-    if (ltype == LENGTH_NEAR_OPT) {
-      savedC ??= List<int>.filled(SAVED_LEN, 0);
-      savedCT ??= List<int>.filled(SAVED_LEN, 0);
-      savedA ??= List<int>.filled(SAVED_LEN, 0);
-      savedB ??= List<int>.filled(SAVED_LEN, 0);
-      savedDelFF ??= List<bool>.filled(SAVED_LEN, false);
+    if (ltype == lengthNearOpt) {
+      savedC ??= List<int>.filled(savedLen, 0);
+      savedCT ??= List<int>.filled(savedLen, 0);
+      savedA ??= List<int>.filled(savedLen, 0);
+      savedB ??= List<int>.filled(savedLen, 0);
+      savedDelFF ??= List<bool>.filled(savedLen, false);
     }
     this.ltype = ltype;
   }
@@ -376,10 +376,10 @@ class MQCoder {
   /// [ttype] The type of termination to use. One of 'TERM_FULL',
   /// 'TERM_NEAR_OPT', 'TERM_EASY' or 'TERM_PRED_ER'.
   void setTermType(int ttype) {
-    if (ttype != TERM_FULL &&
-        ttype != TERM_NEAR_OPT &&
-        ttype != TERM_EASY &&
-        ttype != TERM_PRED_ER) {
+    if (ttype != termFull &&
+        ttype != termNearOpt &&
+        ttype != termEasy &&
+        ttype != termPredEr) {
       throw ArgumentError("Unrecognized termination type code: $ttype");
     }
     this.ttype = ttype;
@@ -833,7 +833,7 @@ class MQCoder {
   /// bytes.
   int terminate() {
     switch (ttype) {
-      case TERM_FULL:
+      case termFull:
         //sets the remaining bits of the last byte of the coded bits.
         int tempc = c + a;
         c = c | 0xFFFF;
@@ -869,8 +869,8 @@ class MQCoder {
           nrOfWrittenBytes++;
         }
         break;
-      case TERM_PRED_ER:
-      case TERM_EASY:
+      case termPredEr:
+      case termEasy:
         // The predictable error resilient and easy termination are the
         // same, except for the fact that the easy one can modify the
         // spare bits in the last byte to maximize the likelihood of
@@ -892,7 +892,7 @@ class MQCoder {
         }
 
         // Make any spare bits 1s if in easy termination
-        if (k < 0 && ttype == TERM_EASY) {
+        if (k < 0 && ttype == termEasy) {
           // At this stage there is never a carry bit in C, so we can
           // freely modify the (-k) least significant bits.
           b |= (1 << (-k)) - 1;
@@ -900,7 +900,7 @@ class MQCoder {
 
         byteOut(); // Push contents of byte buffer
         break;
-      case TERM_NEAR_OPT:
+      case termNearOpt:
 
         // This algorithm terminates in the shortest possible way, besides
         // the fact any previous 0xFF 0x7F sequences are not
@@ -1106,7 +1106,7 @@ class MQCoder {
     // the same as for the previous ones.
 
     switch (ltype) {
-      case LENGTH_LAZY_GOOD:
+      case lengthLazyGood:
         // This one is a bit better than LENGTH_LAZY.
         int bitsInN3Bytes; // The minimum amount of bits that can be
         // stored in the 3 bytes following the current byte buffer 'b'.
@@ -1125,14 +1125,14 @@ class MQCoder {
         } else {
           return nrOfWrittenBytes + (delFF ? 1 : 0) + 1 + 4;
         }
-      case LENGTH_LAZY:
+      case lengthLazy:
         // This is the very basic one that appears in the VM text
         if ((27 - cT) <= 22) {
           return nrOfWrittenBytes + (delFF ? 1 : 0) + 1 + 3;
         } else {
           return nrOfWrittenBytes + (delFF ? 1 : 0) + 1 + 4;
         }
-      case LENGTH_NEAR_OPT:
+      case lengthNearOpt:
         // This is the best length calculation implemented in this class.
         // It is almost always optimal. In order to calculate the length
         // it is necessary to know which bytes will follow in the MQ
@@ -1180,19 +1180,19 @@ class MQCoder {
     if (nSaved == savedC!.length) {
       List<int> tmp;
       tmp = savedC!;
-      savedC = List<int>.filled(nSaved + SAVED_INC, 0);
+      savedC = List<int>.filled(nSaved + savedInc, 0);
       savedC!.setRange(0, nSaved, tmp);
       tmp = savedCT!;
-      savedCT = List<int>.filled(nSaved + SAVED_INC, 0);
+      savedCT = List<int>.filled(nSaved + savedInc, 0);
       savedCT!.setRange(0, nSaved, tmp);
       tmp = savedA!;
-      savedA = List<int>.filled(nSaved + SAVED_INC, 0);
+      savedA = List<int>.filled(nSaved + savedInc, 0);
       savedA!.setRange(0, nSaved, tmp);
       tmp = savedB!;
-      savedB = List<int>.filled(nSaved + SAVED_INC, 0);
+      savedB = List<int>.filled(nSaved + savedInc, 0);
       savedB!.setRange(0, nSaved, tmp);
       List<bool> tmpBool = savedDelFF!;
-      savedDelFF = List<bool>.filled(nSaved + SAVED_INC, false);
+      savedDelFF = List<bool>.filled(nSaved + savedInc, false);
       savedDelFF!.setRange(0, nSaved, tmpBool);
     }
     // Save the current sate
@@ -1217,7 +1217,7 @@ class MQCoder {
   ///
   /// [n] The index in the 'rates' array of the last terminated length.
   void finishLengthCalculation(List<int> rates, int n) {
-    if (ltype != LENGTH_NEAR_OPT) {
+    if (ltype != lengthNearOpt) {
       // For the simple calculations the only thing we need to do is to
       // ensure that the calculated lengths are no greater than the
       // terminated one

@@ -12,17 +12,16 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
     required this.numLayers,
     required IntegerSpec decompositionLevels,
   })  : dls = decompositionLevels,
-        super(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE);
+        super(numTiles, numComps, ModuleSpec.specTypeTile);
 
   ProgressionSpec.fromParameters(
     int numTiles,
     int numComps,
-    int numLayers,
+    this.numLayers,
     IntegerSpec decompositionLevels,
     ParameterList parameters,
-  )   : numLayers = numLayers,
-        dls = decompositionLevels,
-        super(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE) {
+  )   : dls = decompositionLevels,
+        super(numTiles, numComps, ModuleSpec.specTypeTile) {
     final value = parameters.getParameter('Aptype') ??
         parameters.getDefaultParameterList()?.getParameter('Aptype');
     if (value == null) {
@@ -39,7 +38,7 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
   final IntegerSpec dls;
 
   void _parseProgressions(String param) {
-    var curSpecType = ModuleSpec.SPEC_DEF;
+    var curSpecType = ModuleSpec.specDef;
     List<bool>? currentTiles;
     final tokens = param.split(RegExp(r'\s+'));
 
@@ -53,10 +52,10 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
         return;
       }
       switch (curSpecType) {
-        case ModuleSpec.SPEC_DEF:
+        case ModuleSpec.specDef:
           setDefault(_cloneProgressions(progression));
           break;
-        case ModuleSpec.SPEC_TILE_DEF:
+        case ModuleSpec.specTileDef:
           final tiles = currentTiles;
           if (tiles == null) {
             throw ArgumentError('Missing tile specification for progression.');
@@ -90,7 +89,7 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
         }
         flushProgressions();
         currentTiles = ModuleSpec.parseIdx(word, nTiles);
-        curSpecType = ModuleSpec.SPEC_TILE_DEF;
+        curSpecType = ModuleSpec.specTileDef;
         continue;
       }
 
@@ -180,7 +179,7 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
   void _applyDefaultProgression() {
     final defaultProg = <Progression>[
       Progression(
-        ProgressionType.LY_RES_COMP_POS_PROG,
+        ProgressionType.lyResCompPosProg,
         0,
         nComp,
         0,
@@ -197,24 +196,24 @@ class ProgressionSpec extends ModuleSpec<List<Progression>> {
       case 'lyrescomp':
       case 'layer-resolution-component-position':
       case 'ly-res-comp-pos':
-        return ProgressionType.LY_RES_COMP_POS_PROG;
+        return ProgressionType.lyResCompPosProg;
       case 'res':
       case 'reslayercomp':
       case 'resolution-layer-component-position':
       case 'res-ly-comp-pos':
-        return ProgressionType.RES_LY_COMP_POS_PROG;
+        return ProgressionType.resLyCompPosProg;
       case 'res-pos':
       case 'resposcomp':
       case 'resolution-position-component-layer':
-        return ProgressionType.RES_POS_COMP_LY_PROG;
+        return ProgressionType.resPosCompLyProg;
       case 'pos-comp':
       case 'poscompres':
       case 'position-component-resolution-layer':
-        return ProgressionType.POS_COMP_RES_LY_PROG;
+        return ProgressionType.posCompResLyProg;
       case 'comp-pos':
       case 'compposres':
       case 'component-position-resolution-layer':
-        return ProgressionType.COMP_POS_RES_LY_PROG;
+        return ProgressionType.compPosResLyProg;
       default:
         return -1;
     }

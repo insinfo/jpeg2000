@@ -594,7 +594,7 @@ class _SizSummary {
   ISRandomAccessIO input,
 ) {
   final fileFormat = FileFormatReader(input)..readFileFormat();
-  final isJp2 = fileFormat.JP2FFUsed;
+  final isJp2 = fileFormat.jp2FfUsed;
   final codestreamStart = isJp2 ? fileFormat.getFirstCodeStreamPos() : 0;
   final siz = _readSizSummary(input, codestreamStart);
   input.seek(codestreamStart);
@@ -603,12 +603,12 @@ class _SizSummary {
 
 _SizSummary _readSizSummary(ISRandomAccessIO input, int codestreamStart) {
   input.seek(codestreamStart);
-  if (input.readUnsignedShort() != Markers.SOC) {
+  if (input.readUnsignedShort() != Markers.soc) {
     throw const Jpeg2000CorruptedException(
       'Codestream does not start with the SOC marker.',
     );
   }
-  if (input.readUnsignedShort() != Markers.SIZ) {
+  if (input.readUnsignedShort() != Markers.siz) {
     throw const Jpeg2000CorruptedException(
       'The SIZ marker must follow SOC.',
     );
@@ -929,13 +929,13 @@ bool _isKnownColourSpace(ColorSpace colorSpace) {
     return true;
   }
   try {
-    if (colorSpace.getMethod() == ColorSpace.ICC_PROFILED) {
+    if (colorSpace.getMethod() == ColorSpace.iccProfiled) {
       // Restricted ICC profiles are monochrome or three-component RGB.
       return true;
     }
     final space = colorSpace.getColorSpace();
     return space == ColorSpace.sRGB ||
-        space == ColorSpace.GreyScale ||
+        space == ColorSpace.greyScale ||
         space == ColorSpace.sYCC;
   } on Exception {
     return false;

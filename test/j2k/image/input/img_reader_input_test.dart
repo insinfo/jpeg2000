@@ -34,10 +34,10 @@ void main() {
 
         expect(cachedGreen.offset, 4);
         expect(cachedGreen.scanw, 4);
-        expect(data[cachedGreen.offset], 60 - ImgReaderPPM.DC_OFFSET);
+        expect(data[cachedGreen.offset], 60 - ImgReaderPPM.dcOffset);
         expect(
           data[cachedGreen.offset + cachedGreen.scanw + 1],
-          71 - ImgReaderPPM.DC_OFFSET,
+          71 - ImgReaderPPM.dcOffset,
         );
       } finally {
         reader.close();
@@ -64,10 +64,10 @@ void main() {
         expect(blk.offset, 0);
         expect(blk.scanw, 2);
         expect(data, <int>[
-          2 - ImgReaderPGM.DC_OFFSET,
-          3 - ImgReaderPGM.DC_OFFSET,
-          5 - ImgReaderPGM.DC_OFFSET,
-          6 - ImgReaderPGM.DC_OFFSET,
+          2 - ImgReaderPGM.dcOffset,
+          3 - ImgReaderPGM.dcOffset,
+          5 - ImgReaderPGM.dcOffset,
+          6 - ImgReaderPGM.dcOffset,
         ]);
       } finally {
         reader.close();

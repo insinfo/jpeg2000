@@ -38,30 +38,29 @@ class ICCProfileHeader {
   /* Offsets into ICCProfile header byte array. */
 
   static const int offProfileSize = 0;
-  static const int offCMMTypeSignature = offProfileSize + ICCProfile.int_size;
-  static const int offProfileVersion =
-      offCMMTypeSignature + ICCProfile.int_size;
+  static const int offCMMTypeSignature = offProfileSize + ICCProfile.intSize;
+  static const int offProfileVersion = offCMMTypeSignature + ICCProfile.intSize;
   static const int offProfileClass = offProfileVersion + ICCProfileVersion.size;
-  static const int offColorSpaceType = offProfileClass + ICCProfile.int_size;
-  static const int offPCSType = offColorSpaceType + ICCProfile.int_size;
-  static const int offDateTime = offPCSType + ICCProfile.int_size;
+  static const int offColorSpaceType = offProfileClass + ICCProfile.intSize;
+  static const int offPCSType = offColorSpaceType + ICCProfile.intSize;
+  static const int offDateTime = offPCSType + ICCProfile.intSize;
   static const int offProfileSignature = offDateTime + ICCDateTime.size;
   static const int offPlatformSignature =
-      offProfileSignature + ICCProfile.int_size;
-  static const int offCMMFlags = offPlatformSignature + ICCProfile.int_size;
-  static const int offDeviceManufacturer = offCMMFlags + ICCProfile.int_size;
-  static const int offDeviceModel = offDeviceManufacturer + ICCProfile.int_size;
-  static const int offDeviceAttributes1 = offDeviceModel + ICCProfile.int_size;
+      offProfileSignature + ICCProfile.intSize;
+  static const int offCMMFlags = offPlatformSignature + ICCProfile.intSize;
+  static const int offDeviceManufacturer = offCMMFlags + ICCProfile.intSize;
+  static const int offDeviceModel = offDeviceManufacturer + ICCProfile.intSize;
+  static const int offDeviceAttributes1 = offDeviceModel + ICCProfile.intSize;
   static const int offDeviceAttributesReserved =
-      offDeviceAttributes1 + ICCProfile.int_size;
+      offDeviceAttributes1 + ICCProfile.intSize;
   static const int offRenderingIntent =
-      offDeviceAttributesReserved + ICCProfile.int_size;
-  static const int offPCSIlluminant = offRenderingIntent + ICCProfile.int_size;
+      offDeviceAttributesReserved + ICCProfile.intSize;
+  static const int offPCSIlluminant = offRenderingIntent + ICCProfile.intSize;
   static const int offCreatorSig = offPCSIlluminant + XYZNumber.size;
-  static const int offReserved = offCreatorSig + ICCProfile.int_size;
+  static const int offReserved = offCreatorSig + ICCProfile.intSize;
 
   /// Size of the header
-  static const int size = offReserved + 44 * ICCProfile.byte_size;
+  static const int size = offReserved + 44 * ICCProfile.byteSize;
 
   /* Header fields mapped to primitive types. */
   /// Size of the entire profile in bytes
@@ -115,7 +114,7 @@ class ICCProfileHeader {
   late ICCDateTime dateTime;
 
   /// Illuminant used for this profile
-  late XYZNumber PCSIlluminant;
+  late XYZNumber pcsIlluminant;
 
   /// Construct and empty header
   ICCProfileHeader();
@@ -139,7 +138,7 @@ class ICCProfileHeader {
     dwCreatorSig = ICCProfile.getInt(data, offCreatorSig);
     profileVersion = ICCProfile.getICCProfileVersion(data, offProfileVersion);
     dateTime = ICCProfile.getICCDateTime(data, offDateTime);
-    PCSIlluminant = ICCProfile.getXYZNumber(data, offPCSIlluminant);
+    pcsIlluminant = ICCProfile.getXYZNumber(data, offPCSIlluminant);
 
     for (int i = 0; i < reserved.length; ++i) {
       reserved[i] = data[offReserved + i];
@@ -179,7 +178,7 @@ class ICCProfileHeader {
         "$eol        dwCreatorSig: ${ICCProfile.toHexStringInt(dwCreatorSig)}");
     rep.write("$eol      profileVersion: $profileVersion");
     rep.write("$eol            dateTime: $dateTime");
-    rep.write("$eol       PCSIlluminant: $PCSIlluminant");
+    rep.write("$eol       PCSIlluminant: $pcsIlluminant");
     return (rep..write("]")).toString();
   }
 }

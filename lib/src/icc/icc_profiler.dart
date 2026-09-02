@@ -21,20 +21,20 @@ import '../j2k/util/msg_logger.dart';
 /// and getInternCompData methods.
 class ICCProfiler extends ColorSpaceMapper {
   /// The prefix for ICC Profiler options
-  static const String OPT_PREFIX = 'I';
+  static const String optPrefix = 'I';
 
   /// Platform dependant end of line String.
   static const String eol = '\n'; // System.getProperty("line.separator");
 
   // Renamed for convenience:
-  static const int GRAY = RestrictedICCProfile.GRAY;
-  static const int RED = RestrictedICCProfile.RED;
-  static const int GREEN = RestrictedICCProfile.GREEN;
-  static const int BLUE = RestrictedICCProfile.BLUE;
+  static const int grayChannel = RestrictedICCProfile.grayChannel;
+  static const int redChannel = RestrictedICCProfile.redChannel;
+  static const int greenChannel = RestrictedICCProfile.greenChannel;
+  static const int blueChannel = RestrictedICCProfile.blueChannel;
 
   // ICCProfiles.
   RestrictedICCProfile? rICC;
-  ICCProfile? ICC;
+  ICCProfile? icc;
 
   // Temporary variables needed during profiling.
   late final List<DataBlkInt> tempInt; // Holds the results of the transform.
@@ -44,7 +44,7 @@ class ICCProfiler extends ColorSpaceMapper {
   Object? xform;
 
   /// The image's ICC profile.
-  RestrictedICCProfile? ICCp;
+  RestrictedICCProfile? iccProfile;
 
   /// Factory method for creating instances of this class.
   ///   @param src -- source of image data
@@ -86,9 +86,9 @@ class ICCProfiler extends ColorSpaceMapper {
     if (colorant == null || colorant.length < 3) {
       return false;
     }
-    final red = colorant[RED];
-    final green = colorant[GREEN];
-    final blue = colorant[BLUE];
+    final red = colorant[redChannel];
+    final green = colorant[greenChannel];
+    final blue = colorant[blueChannel];
     if (red == null || green == null || blue == null) {
       return false;
     }
@@ -121,13 +121,13 @@ class ICCProfiler extends ColorSpaceMapper {
   ICCProfiler(BlkImgDataSrc src, ColorSpace csMap) : super(src, csMap) {
     // initialize(); // Called by super
 
-    ICCp = getICCProfile(csMap);
+    iccProfile = getICCProfile(csMap);
     if (ncomps == 1) {
       xform = MonochromeTransformTosRGB(
-          ICCp!, maxValueArray![0], shiftValueArray![0]);
+          iccProfile!, maxValueArray![0], shiftValueArray![0]);
     } else {
-      xform =
-          MatrixBasedTransformTosRGB(ICCp!, maxValueArray!, shiftValueArray!);
+      xform = MatrixBasedTransformTosRGB(
+          iccProfile!, maxValueArray!, shiftValueArray!);
     }
   }
 
@@ -150,15 +150,15 @@ class ICCProfiler extends ColorSpaceMapper {
   RestrictedICCProfile getICCProfile(ColorSpace csm) {
     switch (ncomps) {
       case 1:
-        ICC = ICCMonochromeInputProfile.createInstance(csm);
-        rICC = ICC!.parse();
+        icc = ICCMonochromeInputProfile.createInstance(csm);
+        rICC = icc!.parse();
         if (rICC!.getType() != RestrictedICCProfile.kMonochromeInput) {
           throw ArgumentError("wrong ICCProfile type for image");
         }
         break;
       case 3:
-        ICC = ICCMatrixBasedInputProfile.createInstance(csm);
-        rICC = ICC!.parse();
+        icc = ICCMatrixBasedInputProfile.createInstance(csm);
+        rICC = icc!.parse();
         if (rICC!.getType() != RestrictedICCProfile.kThreeCompInput) {
           throw ArgumentError("wrong ICCProfile type for image");
         }
@@ -174,18 +174,18 @@ class ICCProfiler extends ColorSpaceMapper {
   /// returned, as a copy of the internal data, therefore the returned data
   /// can be modified "in place".
   ///
-  /// <P>The rectangular area to return is specified by the 'ulx', 'uly', 'w'
+  /// The rectangular area to return is specified by the 'ulx', 'uly', 'w'
   /// and 'h' members of the 'blk' argument, relative to the current
   /// tile. These members are not modified by this method. The 'offset' of
   /// the returned data is 0, and the 'scanw' is the same as the block's
   /// width. See the 'DataBlk' class.
   ///
-  /// <P>If the data array in 'blk' is 'null', then a new one is created. If
+  /// If the data array in 'blk' is 'null', then a new one is created. If
   /// the data array is not 'null' then it is reused, and it must be large
   /// enough to contain the block's data. Otherwise an 'ArrayStoreException'
   /// or an 'IndexOutOfBoundsException' is thrown by the Java system.
   ///
-  /// <P>The returned data has its 'progressive' attribute set to that of the
+  /// The returned data has its 'progressive' attribute set to that of the
   /// input data.
   ///
   /// @param out Its coordinates and dimensions specify the area to
@@ -383,31 +383,31 @@ class ICCProfiler extends ColorSpaceMapper {
   /// returned, as a reference to the internal data, if any, instead of as a
   /// copy, therefore the returned data should not be modified.
   ///
-  /// <P>The rectangular area to return is specified by the 'ulx', 'uly', 'w'
+  /// The rectangular area to return is specified by the 'ulx', 'uly', 'w'
   /// and 'h' members of the 'blk' argument, relative to the current
   /// tile. These members are not modified by this method. The 'offset' and
   /// 'scanw' of the returned data can be arbitrary. See the 'DataBlk' class.
   ///
-  /// <P>This method, in general, is more efficient than the 'getCompData()'
+  /// This method, in general, is more efficient than the 'getCompData()'
   /// method since it may not copy the data. However if the array of returned
   /// data is to be modified by the caller then the other method is probably
   /// preferable.
   ///
-  /// <P>If possible, the data in the returned 'DataBlk' should be the
+  /// If possible, the data in the returned 'DataBlk' should be the
   /// internal data itself, instead of a copy, in order to increase the data
   /// transfer efficiency. However, this depends on the particular
   /// implementation (it may be more convenient to just return a copy of the
   /// data). This is the reason why the returned data should not be modified.
   ///
-  /// <P>If the data array in <tt>blk</tt> is <tt>null</tt>, then a new one
+  /// If the data array in `blk` is `null`, then a new one
   /// is created if necessary. The implementation of this interface may
   /// choose to return the same array or a new one, depending on what is more
-  /// efficient. Therefore, the data array in <tt>blk</tt> prior to the
+  /// efficient. Therefore, the data array in `blk` prior to the
   /// method call should not be considered to contain the returned data, a
   /// new array may have been created. Instead, get the array from
-  /// <tt>blk</tt> after the method has returned.
+  /// `blk` after the method has returned.
   ///
-  /// <P>The returned data may have its 'progressive' attribute set. In this
+  /// The returned data may have its 'progressive' attribute set. In this
   /// case the returned data is only an approximation of the "final" data.
   ///
   /// @param blk Its coordinates and dimensions specify the area to return,
@@ -429,8 +429,8 @@ class ICCProfiler extends ColorSpaceMapper {
   String toString() {
     StringBuffer rep = StringBuffer("[ICCProfiler:");
     StringBuffer body = StringBuffer();
-    if (ICC != null) {
-      body.write("$eol${ColorSpace.indent("  ", ICC.toString())}");
+    if (icc != null) {
+      body.write("$eol${ColorSpace.indent("  ", icc.toString())}");
     }
     if (xform != null) {
       body.write("$eol${ColorSpace.indent("  ", xform.toString())}");

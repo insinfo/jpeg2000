@@ -273,7 +273,7 @@ class Decoder implements Runnable {
     Dequantizer.optionPrefix.codeUnitAt(0),
     InvCompTransf.optionPrefix.codeUnitAt(0),
     HeaderDecoder.optionPrefix.codeUnitAt(0),
-    ColorSpaceMapper.OPT_PREFIX.codeUnitAt(0),
+    ColorSpaceMapper.optPrefix.codeUnitAt(0),
   ];
 
   MsgLogger get _logger => FacilityManager.getMsgLogger();
@@ -354,14 +354,14 @@ class Decoder implements Runnable {
     try {
       final ff = FileFormatReader(file);
       ff.readFileFormat();
-      _jp2WrapperUsed = ff.JP2FFUsed;
-      final codestreamOffset = ff.JP2FFUsed ? ff.getFirstCodeStreamPos() : 0;
+      _jp2WrapperUsed = ff.jp2FfUsed;
+      final codestreamOffset = ff.jp2FfUsed ? ff.getFirstCodeStreamPos() : 0;
       if (codestreamOffset > 0) {
         file.seek(codestreamOffset);
       }
 
       _logger.printmsg(MsgLogger.info,
-          'JP2 wrapper: ${ff.JP2FFUsed ? 'present' : 'absent'}');
+          'JP2 wrapper: ${ff.jp2FfUsed ? 'present' : 'absent'}');
 
       headerDecoder = HeaderDecoder.readMainHeader(
         input: file,

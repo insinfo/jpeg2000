@@ -124,18 +124,18 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getNumComps() => nc;
 
   @override
-  int getCompSubsX(int comp) => hd.getCompSubsX(comp);
+  int getCompSubsX(int component) => hd.getCompSubsX(component);
 
   @override
-  int getCompSubsY(int comp) => hd.getCompSubsY(comp);
+  int getCompSubsY(int component) => hd.getCompSubsY(component);
 
   @override
-  int getTileWidth(int rl) {
+  int getTileWidth(int resLevel) {
     final mindl = decSpec.dls.getMinInTile(getTileIdx());
-    if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable in tile $ctX,$ctY');
+    if (resLevel > mindl) {
+      throw ArgumentError('Resolution $resLevel unavailable in tile $ctX,$ctY');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     final ctulx = ctX == 0 ? ax : px + ctX * ntW;
     final ntulx = ctX < ntX - 1 ? px + (ctX + 1) * ntW : ax + imgW;
     final div = 1 << dl;
@@ -143,12 +143,12 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   }
 
   @override
-  int getTileHeight(int rl) {
+  int getTileHeight(int resLevel) {
     final mindl = decSpec.dls.getMinInTile(getTileIdx());
-    if (rl > mindl) {
-      throw ArgumentError('Resolution $rl unavailable in tile $ctX,$ctY');
+    if (resLevel > mindl) {
+      throw ArgumentError('Resolution $resLevel unavailable in tile $ctX,$ctY');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     final ctuly = ctY == 0 ? ay : py + ctY * ntH;
     final ntuly = ctY < ntY - 1 ? py + (ctY + 1) * ntH : ay + imgH;
     final div = 1 << dl;
@@ -156,91 +156,91 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   }
 
   @override
-  int getImgWidth(int rl) {
+  int getImgWidth(int resLevel) {
     final mindl = decSpec.dls.getMin();
-    if (rl > mindl) {
+    if (resLevel > mindl) {
       throw ArgumentError(
-          'Resolution $rl unavailable for at least one tile-component');
+          'Resolution $resLevel unavailable for at least one tile-component');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     final div = 1 << dl;
     return _ceilDiv(ax + imgW, div) - _ceilDiv(ax, div);
   }
 
   @override
-  int getImgHeight(int rl) {
+  int getImgHeight(int resLevel) {
     final mindl = decSpec.dls.getMin();
-    if (rl > mindl) {
+    if (resLevel > mindl) {
       throw ArgumentError(
-          'Resolution $rl unavailable for at least one tile-component');
+          'Resolution $resLevel unavailable for at least one tile-component');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     final div = 1 << dl;
     return _ceilDiv(ay + imgH, div) - _ceilDiv(ay, div);
   }
 
   @override
-  int getImgULX(int rl) {
+  int getImgULX(int resLevel) {
     final mindl = decSpec.dls.getMin();
-    if (rl > mindl) {
+    if (resLevel > mindl) {
       throw ArgumentError(
-          'Resolution $rl unavailable for at least one tile-component');
+          'Resolution $resLevel unavailable for at least one tile-component');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     return _ceilDiv(ax, 1 << dl);
   }
 
   @override
-  int getImgULY(int rl) {
+  int getImgULY(int resLevel) {
     final mindl = decSpec.dls.getMin();
-    if (rl > mindl) {
+    if (resLevel > mindl) {
       throw ArgumentError(
-          'Resolution $rl unavailable for at least one tile-component');
+          'Resolution $resLevel unavailable for at least one tile-component');
     }
-    final dl = mindl - rl;
+    final dl = mindl - resLevel;
     return _ceilDiv(ay, 1 << dl);
   }
 
   @override
-  int getTileCompWidth(int t, int c, int rl) {
+  int getTileCompWidth(int tile, int component, int resLevel) {
     final tileIdx = getTileIdx();
-    if (t != tileIdx) {
+    if (tile != tileIdx) {
       throw StateError('Tile-component query references non-current tile');
     }
-    final dl = mdl[c] - rl;
+    final dl = mdl[component] - resLevel;
     final ntulx = ctX < ntX - 1 ? px + (ctX + 1) * ntW : ax + imgW;
-    final compNtulx = _ceilDiv(ntulx, hd.getCompSubsX(c));
+    final compNtulx = _ceilDiv(ntulx, hd.getCompSubsX(component));
     final div = 1 << dl;
-    return _ceilDiv(compNtulx, div) - _ceilDiv(culx[c], div);
+    return _ceilDiv(compNtulx, div) - _ceilDiv(culx[component], div);
   }
 
   @override
-  int getTileCompHeight(int t, int c, int rl) {
+  int getTileCompHeight(int tile, int component, int resLevel) {
     final tileIdx = getTileIdx();
-    if (t != tileIdx) {
+    if (tile != tileIdx) {
       throw StateError('Tile-component query references non-current tile');
     }
-    final dl = mdl[c] - rl;
+    final dl = mdl[component] - resLevel;
     final ntuly = ctY < ntY - 1 ? py + (ctY + 1) * ntH : ay + imgH;
-    final compNtuly = _ceilDiv(ntuly, hd.getCompSubsY(c));
+    final compNtuly = _ceilDiv(ntuly, hd.getCompSubsY(component));
     final div = 1 << dl;
-    return _ceilDiv(compNtuly, div) - _ceilDiv(culy[c], div);
+    return _ceilDiv(compNtuly, div) - _ceilDiv(culy[component], div);
   }
 
   @override
-  int getCompImgWidth(int c, int rl) {
-    final dl = decSpec.dls.getMinInComp(c) - rl;
-    final start = _ceilDiv(ax, hd.getCompSubsX(c));
-    final end = _ceilDiv(ax + imgW, hd.getCompSubsX(c));
+  int getCompImgWidth(int component, int resLevel) {
+    final dl = decSpec.dls.getMinInComp(component) - resLevel;
+    final start = _ceilDiv(ax, hd.getCompSubsX(component));
+    final end = _ceilDiv(ax + imgW, hd.getCompSubsX(component));
     final div = 1 << dl;
     return _ceilDiv(end, div) - _ceilDiv(start, div);
   }
 
   @override
-  int getCompImgHeight(int c, int rl) {
-    final dl = decSpec.dls.getMinInComp(c) - rl;
-    final start = _ceilDiv(ay, hd.getCompSubsY(c));
-    final end = _ceilDiv(ay + imgH, hd.getCompSubsY(c));
+  int getCompImgHeight(int component, int resLevel) {
+    final dl = decSpec.dls.getMinInComp(component) - resLevel;
+    final start = _ceilDiv(ay, hd.getCompSubsY(component));
+    final end = _ceilDiv(ay + imgH, hd.getCompSubsY(component));
     final div = 1 << dl;
     return _ceilDiv(end, div) - _ceilDiv(start, div);
   }
@@ -256,26 +256,26 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getTileIdx() => ctY * ntX + ctX;
 
   @override
-  int getResULX(int c, int rl) {
-    final dl = mdl[c] - rl;
+  int getResULX(int component, int resLevel) {
+    final dl = mdl[component] - resLevel;
     if (dl < 0) {
       throw ArgumentError(
-          'Resolution $rl unavailable for component $c in tile $ctX,$ctY');
+          'Resolution $resLevel unavailable for component $component in tile $ctX,$ctY');
     }
     final tx0 = math.max(px + ctX * ntW, ax);
-    final tcx0 = _ceilDiv(tx0, getCompSubsX(c));
+    final tcx0 = _ceilDiv(tx0, getCompSubsX(component));
     return _ceilDiv(tcx0, 1 << dl);
   }
 
   @override
-  int getResULY(int c, int rl) {
-    final dl = mdl[c] - rl;
+  int getResULY(int component, int resLevel) {
+    final dl = mdl[component] - resLevel;
     if (dl < 0) {
       throw ArgumentError(
-          'Resolution $rl unavailable for component $c in tile $ctX,$ctY');
+          'Resolution $resLevel unavailable for component $component in tile $ctX,$ctY');
     }
     final ty0 = math.max(py + ctY * ntH, ay);
-    final tcy0 = _ceilDiv(ty0, getCompSubsY(c));
+    final tcy0 = _ceilDiv(ty0, getCompSubsY(component));
     return _ceilDiv(tcy0, 1 << dl);
   }
 
@@ -290,17 +290,17 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
   int getNumTilesTotal() => nt;
 
   @override
-  SubbandSyn getSynSubbandTree(int t, int c) {
-    if (t != getTileIdx()) {
+  SubbandSyn getSynSubbandTree(int tile, int component) {
+    if (tile != getTileIdx()) {
       throw ArgumentError(
-          'Cannot access subband tree of tile $t while current tile is ${getTileIdx()}');
+          'Cannot access subband tree of tile $tile while current tile is ${getTileIdx()}');
     }
-    if (c < 0 || c >= nc) {
-      throw ArgumentError('Component index out of range: $c');
+    if (component < 0 || component >= nc) {
+      throw ArgumentError('Component index out of range: $component');
     }
-    final sb = subbTrees[c];
+    final sb = subbTrees[component];
     if (sb == null) {
-      throw StateError('Subband tree not initialised for component $c');
+      throw StateError('Subband tree not initialised for component $component');
     }
     return sb;
   }
@@ -337,9 +337,9 @@ abstract class BitstreamReaderAgent extends CodedCBlkDataSrcDec {
     final tileIdx = getTileIdx();
     final rl = sb.resLvl;
     final cbw =
-        decSpec.cblks.getCBlkWidth(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
+        decSpec.cblks.getCBlkWidth(ModuleSpec.specTileComp, tileIdx, comp);
     final cbh =
-        decSpec.cblks.getCBlkHeight(ModuleSpec.SPEC_TILE_COMP, tileIdx, comp);
+        decSpec.cblks.getCBlkHeight(ModuleSpec.specTileComp, tileIdx, comp);
 
     if (!sb.isNode) {
       if (hd.precinctPartitionUsed()) {

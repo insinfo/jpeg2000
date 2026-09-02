@@ -45,7 +45,7 @@ import '../../encoder/encoder_specs.dart';
 /// @see Subband
 abstract class Quantizer extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
   /// The prefix for quantizer options: 'Q'
-  static const String OPT_PREFIX = 'Q';
+  static const String optPrefix = 'Q';
 
   /// The list of parameters that is accepted for quantization. Options
   /// for quantization start with 'Q'.
@@ -54,15 +54,15 @@ abstract class Quantizer extends ImgDataAdapter implements CBlkQuantDataSrcEnc {
       "Qtype",
       "[<tile-component idx>] <id> " "[ [<tile-component idx>] <id> ...]",
       "Specifies which quantization type to use for specified "
-              "tile-component. The default type is either 'reversible' or "
-              "'expounded' depending on whether or not the '-lossless' option "
-              " is specified.\n"
-              "<tile-component idx> : see general note.\n" +
-          "<id>: Supported quantization types specification are : " +
-          "'reversible' " +
-          "(no quantization), 'derived' (derived quantization step size) and " +
-          "'expounded'.\n" +
-          "Example: -Qtype reversible or -Qtype t2,4-8 c2 reversible t9 " +
+          "tile-component. The default type is either 'reversible' or "
+          "'expounded' depending on whether or not the '-lossless' option "
+          " is specified.\n"
+          "<tile-component idx> : see general note.\n"
+          "<id>: Supported quantization types specification are : "
+          "'reversible' "
+          "(no quantization), 'derived' (derived quantization step size) and "
+          "'expounded'.\n"
+          "Example: -Qtype reversible or -Qtype t2,4-8 c2 reversible t9 "
           "derived.",
       null
     ],

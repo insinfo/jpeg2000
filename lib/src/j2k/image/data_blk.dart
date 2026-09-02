@@ -31,7 +31,7 @@ abstract class DataBlk {
 
   Object? getData();
 
-  void setData(Object? data);
+  void setData(Object? value);
 
   @override
   String toString() {

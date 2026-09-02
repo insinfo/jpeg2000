@@ -27,9 +27,9 @@ class Resampler extends ColorSpaceMapper {
     var minY = src!.getCompSubsY(0);
     var maxX = minX;
     var maxY = minY;
-    for (var c = 1; c < ncomps; ++c) {
-      final compSubsX = src!.getCompSubsX(c);
-      final compSubsY = src!.getCompSubsY(c);
+    for (var component = 1; component < ncomps; ++component) {
+      final compSubsX = src!.getCompSubsX(component);
+      final compSubsY = src!.getCompSubsY(component);
       if (compSubsX < minX) minX = compSubsX;
       if (compSubsY < minY) minY = compSubsY;
       if (compSubsX > maxX) maxX = compSubsX;
@@ -45,20 +45,21 @@ class Resampler extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getInternCompData(DataBlk outblk, int c) {
-    if (src!.getCompSubsX(c) == 1 && src!.getCompSubsY(c) == 1) {
-      return src!.getInternCompData(outblk, c);
+  DataBlk getInternCompData(DataBlk out, int component) {
+    if (src!.getCompSubsX(component) == 1 &&
+        src!.getCompSubsY(component) == 1) {
+      return src!.getInternCompData(out, component);
     }
-    final wfactor = src!.getCompSubsX(c);
-    final hfactor = src!.getCompSubsY(c);
+    final wfactor = src!.getCompSubsX(component);
+    final hfactor = src!.getCompSubsY(component);
     if ((wfactor != 1 && wfactor != 2) || (hfactor != 1 && hfactor != 2)) {
       throw ArgumentError('Upsampling by other than 2:1 not supported');
     }
 
-    final y0Out = outblk.uly;
-    final y1Out = y0Out + outblk.h - 1;
-    final x0Out = outblk.ulx;
-    final x1Out = x0Out + outblk.w - 1;
+    final y0Out = out.uly;
+    final y1Out = y0Out + out.h - 1;
+    final x0Out = out.ulx;
+    final x1Out = x0Out + out.w - 1;
 
     final y0In = y0Out ~/ hfactor;
     final y1In = y1Out ~/ hfactor;
@@ -67,42 +68,44 @@ class Resampler extends ColorSpaceMapper {
     final reqW = x1In - x0In + 1;
     final reqH = y1In - y0In + 1;
 
-    switch (outblk.getDataType()) {
+    switch (out.getDataType()) {
       case DataBlk.typeInt:
         final inblk = DataBlkInt.withGeometry(x0In, y0In, reqW, reqH);
-        final sourceBlock = src!.getInternCompData(inblk, c) as DataBlkInt;
-        dataInt[c] = sourceBlock.getDataInt();
-        _upsampleInt(outblk as DataBlkInt, sourceBlock, x0Out, x1Out, y0Out,
-            y0In, hfactor, wfactor);
-        outblk.progressive = sourceBlock.progressive;
+        final sourceBlock =
+            src!.getInternCompData(inblk, component) as DataBlkInt;
+        dataInt[component] = sourceBlock.getDataInt();
+        _upsampleInt(out as DataBlkInt, sourceBlock, x0Out, x1Out, y0Out, y0In,
+            hfactor, wfactor);
+        out.progressive = sourceBlock.progressive;
         break;
       case DataBlk.typeFloat:
         final inblk = DataBlkFloat.withGeometry(x0In, y0In, reqW, reqH);
-        final sourceBlock = src!.getInternCompData(inblk, c) as DataBlkFloat;
-        dataFloat[c] = sourceBlock.getDataFloat();
-        _upsampleFloat(outblk as DataBlkFloat, sourceBlock, x0Out, x1Out, y0Out,
+        final sourceBlock =
+            src!.getInternCompData(inblk, component) as DataBlkFloat;
+        dataFloat[component] = sourceBlock.getDataFloat();
+        _upsampleFloat(out as DataBlkFloat, sourceBlock, x0Out, x1Out, y0Out,
             y0In, hfactor, wfactor);
-        outblk.progressive = sourceBlock.progressive;
+        out.progressive = sourceBlock.progressive;
         break;
       default:
         throw ArgumentError('invalid source datablock type');
     }
-    return outblk;
+    return out;
   }
 
-  void _upsampleInt(DataBlkInt outblk, DataBlkInt inblk, int x0Out, int x1Out,
+  void _upsampleInt(DataBlkInt out, DataBlkInt inblk, int x0Out, int x1Out,
       int y0Out, int y0In, int hfactor, int wfactor) {
-    final outData = outblk.getDataInt();
-    if (outData == null || outData.length != outblk.w * outblk.h) {
-      outblk.setData(Int32List(outblk.w * outblk.h));
+    final outData = out.getDataInt();
+    if (outData == null || outData.length != out.w * out.h) {
+      out.setData(Int32List(out.w * out.h));
     }
-    final dst = outblk.getDataInt()!;
+    final dst = out.getDataInt()!;
     final srcData = inblk.getDataInt()!;
-    for (var yOut = y0Out; yOut <= y0Out + outblk.h - 1; ++yOut) {
+    for (var yOut = y0Out; yOut <= y0Out + out.h - 1; ++yOut) {
       final yIn = yOut ~/ hfactor;
       var leftIn = inblk.offset + (yIn - y0In) * inblk.scanw;
-      var leftOut = outblk.offset + (yOut - y0Out) * outblk.scanw;
-      var rightOut = leftOut + outblk.w;
+      var leftOut = out.offset + (yOut - y0Out) * out.scanw;
+      var rightOut = leftOut + out.w;
       if ((x0Out & 1) == 1) {
         dst[leftOut++] = srcData[leftIn++];
       }
@@ -119,19 +122,19 @@ class Resampler extends ColorSpaceMapper {
     }
   }
 
-  void _upsampleFloat(DataBlkFloat outblk, DataBlkFloat inblk, int x0Out,
+  void _upsampleFloat(DataBlkFloat out, DataBlkFloat inblk, int x0Out,
       int x1Out, int y0Out, int y0In, int hfactor, int wfactor) {
-    final outData = outblk.getDataFloat();
-    if (outData == null || outData.length != outblk.w * outblk.h) {
-      outblk.setData(Float32List(outblk.w * outblk.h));
+    final outData = out.getDataFloat();
+    if (outData == null || outData.length != out.w * out.h) {
+      out.setData(Float32List(out.w * out.h));
     }
-    final dst = outblk.getDataFloat()!;
+    final dst = out.getDataFloat()!;
     final srcData = inblk.getDataFloat()!;
-    for (var yOut = y0Out; yOut <= y0Out + outblk.h - 1; ++yOut) {
+    for (var yOut = y0Out; yOut <= y0Out + out.h - 1; ++yOut) {
       final yIn = yOut ~/ hfactor;
       var leftIn = inblk.offset + (yIn - y0In) * inblk.scanw;
-      var leftOut = outblk.offset + (yOut - y0Out) * outblk.scanw;
-      var rightOut = leftOut + outblk.w;
+      var leftOut = out.offset + (yOut - y0Out) * out.scanw;
+      var rightOut = leftOut + out.w;
       if ((x0Out & 1) == 1) {
         dst[leftOut++] = srcData[leftIn++];
       }
@@ -149,34 +152,36 @@ class Resampler extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getCompData(DataBlk outblk, int c) {
-    return getInternCompData(outblk, c);
+  DataBlk getCompData(DataBlk out, int component) {
+    return getInternCompData(out, component);
   }
 
   @override
-  int getCompImgHeight(int c) {
-    return src!.getCompImgHeight(c) * src!.getCompSubsY(c);
+  int getCompImgHeight(int component) {
+    return src!.getCompImgHeight(component) * src!.getCompSubsY(component);
   }
 
   @override
-  int getCompImgWidth(int c) {
-    return src!.getCompImgWidth(c) * src!.getCompSubsX(c);
+  int getCompImgWidth(int component) {
+    return src!.getCompImgWidth(component) * src!.getCompSubsX(component);
   }
 
   @override
-  int getCompSubsX(int c) => 1;
+  int getCompSubsX(int component) => 1;
 
   @override
-  int getCompSubsY(int c) => 1;
+  int getCompSubsY(int component) => 1;
 
   @override
-  int getTileCompHeight(int t, int c) {
-    return src!.getTileCompHeight(t, c) * src!.getCompSubsY(c);
+  int getTileCompHeight(int tile, int component) {
+    return src!.getTileCompHeight(tile, component) *
+        src!.getCompSubsY(component);
   }
 
   @override
-  int getTileCompWidth(int t, int c) {
-    return src!.getTileCompWidth(t, c) * src!.getCompSubsX(c);
+  int getTileCompWidth(int tile, int component) {
+    return src!.getTileCompWidth(tile, component) *
+        src!.getCompSubsX(component);
   }
 
   @override

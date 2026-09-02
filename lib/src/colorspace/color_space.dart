@@ -16,10 +16,10 @@ class ColorSpace {
   static const String eol = '\n';
 
   // Renamed for convenience:
-  static const int GRAY = 0;
-  static const int RED = 1;
-  static const int GREEN = 2;
-  static const int BLUE = 3;
+  static const int grayChannel = 0;
+  static const int redChannel = 1;
+  static const int greenChannel = 2;
+  static const int blueChannel = 3;
 
   /// Parameter Specs
   final ParameterList pl;
@@ -223,7 +223,7 @@ class ColorSpace {
     final rep = StringBuffer("[ColorSpace is ");
     rep.write(spec.getMethodString());
     rep.write(isPalettized() ? "  and palettized " : " ");
-    rep.write(getMethod() == ENUMERATED ? spec.getColorSpaceString() : "");
+    rep.write(getMethod() == enumerated ? spec.getColorSpaceString() : "");
     if (ihbox != null) {
       rep.write(eol);
       rep.write(indent("    ", ihbox.toString()));
@@ -257,25 +257,25 @@ class ColorSpace {
 
   /* Enumeration Class */
   /// method enumeration
-  static final MethodEnum ICC_PROFILED = MethodEnum("profiled");
+  static final MethodEnum iccProfiled = MethodEnum("profiled");
 
   /// method enumeration
-  static final MethodEnum ENUMERATED = MethodEnum("enumerated");
+  static final MethodEnum enumerated = MethodEnum("enumerated");
 
   /// colorspace enumeration
   static final CSEnum sRGB = CSEnum("sRGB");
 
   /// colorspace enumeration
-  static final CSEnum GreyScale = CSEnum("GreyScale");
+  static final CSEnum greyScale = CSEnum("GreyScale");
 
   /// colorspace enumeration
   static final CSEnum sYCC = CSEnum("sYCC");
 
   /// colorspace enumeration
-  static final CSEnum Illegal = CSEnum("Illegal");
+  static final CSEnum illegal = CSEnum("Illegal");
 
   /// colorspace enumeration
-  static final CSEnum Unknown = CSEnum("Unknown");
+  static final CSEnum unknown = CSEnum("Unknown");
 }
 
 class Enumeration {

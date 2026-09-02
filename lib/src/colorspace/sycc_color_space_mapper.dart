@@ -39,34 +39,34 @@ class SYccColorSpaceMapper extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getCompData(DataBlk outblk, int c) {
-    switch (outblk.getDataType()) {
+  DataBlk getCompData(DataBlk out, int component) {
+    switch (out.getDataType()) {
       case DataBlk.typeInt:
-        _prepareIntBlocks(outblk);
+        _prepareIntBlocks(out);
         if (ncomps == 1) {
-          workInt[c] = inInt[c];
+          workInt[component] = inInt[component];
         } else {
           workInt = _multiplyInt();
         }
-        outblk.setData(workInt[c]!.getData());
-        outblk.progressive = inInt[c]!.progressive;
+        out.setData(workInt[component]!.getData());
+        out.progressive = inInt[component]!.progressive;
         break;
       case DataBlk.typeFloat:
-        _prepareFloatBlocks(outblk);
+        _prepareFloatBlocks(out);
         if (ncomps == 1) {
-          workFloat[c] = inFloat[c];
+          workFloat[component] = inFloat[component];
         } else {
           workFloat = _multiplyFloat();
         }
-        outblk.setData(workFloat[c]!.getData());
-        outblk.progressive = inFloat[c]!.progressive;
+        out.setData(workFloat[component]!.getData());
+        out.progressive = inFloat[component]!.progressive;
         break;
       default:
         throw ArgumentError('Unsupported datablock type for SYcc mapper');
     }
-    outblk.offset = 0;
-    outblk.scanw = outblk.w;
-    return outblk;
+    out.offset = 0;
+    out.scanw = out.w;
+    return out;
   }
 
   void _prepareIntBlocks(DataBlk template) {
@@ -156,8 +156,8 @@ class SYccColorSpaceMapper extends ColorSpaceMapper {
   }
 
   @override
-  DataBlk getInternCompData(DataBlk out, int c) {
-    return getCompData(out, c);
+  DataBlk getInternCompData(DataBlk out, int component) {
+    return getCompData(out, component);
   }
 
   @override

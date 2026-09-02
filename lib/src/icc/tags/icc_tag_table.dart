@@ -9,7 +9,7 @@ import '../../colorspace/color_space.dart';
 class ICCTagTable {
   static const String eol = '\n'; // System.getProperty("line.separator");
   static const int offTagCount = ICCProfileHeader.size;
-  static const int offTags = offTagCount + ICCProfile.int_size;
+  static const int offTags = offTagCount + ICCProfile.intSize;
 
   final List<_Triplet> _trios = [];
   final Map<int, ICCTag> _tags = {};
@@ -41,10 +41,10 @@ class ICCTagTable {
     int offset = offTags;
     for (int i = 0; i < tagCount; ++i) {
       int signature = ICCProfile.getInt(data, offset);
-      int tagOffset = ICCProfile.getInt(data, offset + ICCProfile.int_size);
-      int length = ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size);
+      int tagOffset = ICCProfile.getInt(data, offset + ICCProfile.intSize);
+      int length = ICCProfile.getInt(data, offset + 2 * ICCProfile.intSize);
       _trios.add(_Triplet(signature, tagOffset, length));
-      offset += 3 * ICCProfile.int_size;
+      offset += 3 * ICCProfile.intSize;
     }
 
     for (var trio in _trios) {
@@ -70,7 +70,7 @@ class _Triplet {
   final int count;
 
   /// size of an entry
-  // static const int size = 3 * ICCProfile.int_size; // Unused
+  // static const int size = 3 * ICCProfile.intSize; // Unused
 
   _Triplet(this.signature, this.offset, this.count);
 }

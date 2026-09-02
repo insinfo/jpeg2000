@@ -3,8 +3,7 @@ import 'syn_wt_filter.dart';
 
 /// Specification container for synthesis wavelet filters per tile/component.
 class SynWTFilterSpec extends ModuleSpec<List<List<SynWTFilter>>> {
-  SynWTFilterSpec(int numTiles, int numComps, int specType)
-      : super(numTiles, numComps, specType);
+  SynWTFilterSpec(super.numTiles, super.numComps, super.specType);
 
   /// Returns the data type advertised by the filters for the given tile/component.
   int getWTDataType(int tile, int component) {

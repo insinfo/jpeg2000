@@ -101,54 +101,53 @@ class EncoderSpecs {
     rois = MaxShiftSpec(nTiles, nComp);
 
     // Quantization
-    pl.checkListSingle(Quantizer.OPT_PREFIX.codeUnitAt(0),
+    pl.checkListSingle(Quantizer.optPrefix.codeUnitAt(0),
         ParameterList.toNameArray(Quantizer.getParameterInfo()));
     qts = QuantTypeSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, pl);
     qsss = QuantStepSizeSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, pl);
     gbs = GuardBitsSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, pl);
 
     // Wavelet transform
-    wfs =
-        AnWTFilterSpec(nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, qts, pl);
+    wfs = AnWTFilterSpec(nTiles, nComp, ModuleSpec.specTypeTileComp, qts, pl);
     dls = IntegerSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, pl, "Wlev");
+        nTiles, nComp, ModuleSpec.specTypeTileComp, pl, "Wlev");
 
     // Component transformation
-    cts = ForwCompTransfSpec(nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE, wfs, pl);
+    cts = ForwCompTransfSpec(nTiles, nComp, ModuleSpec.specTypeTile, wfs, pl);
 
     // Entropy coder
     List<String> strLcs = ["near_opt", "lazy_good", "lazy"];
     lcs = StringSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, "Clen_calc", strLcs, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, "Clen_calc", strLcs, pl);
     List<String> strTerm = ["near_opt", "easy", "predict", "full"];
-    tts = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "Cterm_type", strTerm, pl);
+    tts = StringSpec.fromParameters(
+        nTiles, nComp, ModuleSpec.specTypeTileComp, "Cterm_type", strTerm, pl);
     List<String> strBoolean = ["on", "off"];
-    sss = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "Cseg_symbol", strBoolean, pl);
-    css = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "Ccausal", strBoolean, pl);
-    rts = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "Cterminate", strBoolean, pl);
-    mqrs = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "CresetMQ", strBoolean, pl);
-    bms = StringSpec.fromParameters(nTiles, nComp,
-        ModuleSpec.SPEC_TYPE_TILE_COMP, "Cbypass", strBoolean, pl);
+    sss = StringSpec.fromParameters(nTiles, nComp, ModuleSpec.specTypeTileComp,
+        "Cseg_symbol", strBoolean, pl);
+    css = StringSpec.fromParameters(
+        nTiles, nComp, ModuleSpec.specTypeTileComp, "Ccausal", strBoolean, pl);
+    rts = StringSpec.fromParameters(nTiles, nComp, ModuleSpec.specTypeTileComp,
+        "Cterminate", strBoolean, pl);
+    mqrs = StringSpec.fromParameters(
+        nTiles, nComp, ModuleSpec.specTypeTileComp, "CresetMQ", strBoolean, pl);
+    bms = StringSpec.fromParameters(
+        nTiles, nComp, ModuleSpec.specTypeTileComp, "Cbypass", strBoolean, pl);
     cblks = CBlkSizeSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, pl);
 
     // Precinct partition
     pss = PrecinctSizeSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE_COMP, imgsrc, dls, pl);
+        nTiles, nComp, ModuleSpec.specTypeTileComp, imgsrc, dls, pl);
 
     // Codestream
     sops = StringSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE, "Psop", strBoolean, pl);
+        nTiles, nComp, ModuleSpec.specTypeTile, "Psop", strBoolean, pl);
     ephs = StringSpec.fromParameters(
-        nTiles, nComp, ModuleSpec.SPEC_TYPE_TILE, "Peph", strBoolean, pl);
+        nTiles, nComp, ModuleSpec.specTypeTile, "Peph", strBoolean, pl);
 
     // Progression order
     String? rate = pl.getParameter("rate");

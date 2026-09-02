@@ -23,7 +23,7 @@ import 'layers_info.dart';
 /// @see ucar.jpeg.jj2000.j2k.codestream.writer.CodestreamWriter
 abstract class PostCompRateAllocator extends ImgDataAdapter {
   /// The prefix for rate allocation options: 'A'
-  static const String OPT_PREFIX = 'A';
+  static const String optPrefix = 'A';
 
   /// The list of parameters that is accepted for entropy coding. Options
   /// for entropy coding start with 'R'.
@@ -36,24 +36,24 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
           "prog] [[res_start comp_start ly_end res_end comp_end prog] ...] ["
           "[<tile-component idx>] ...]",
       "Specifies which type of progression should be used when "
-              "generating "
-              "the codestream. The 'res' value generates a resolution "
-              "progressive codestream with the number of layers specified by "
-              "'Alayers' option. The 'layer' value generates a layer progressive " +
-          "codestream with multiple layers. In any case the rate-allocation " +
-          "algorithm optimizes for best quality in each layer. The quality " +
-          "measure is mean squared error (MSE) or a weighted version of it " +
-          "(WMSE). If no progression type is specified or imposed by other " +
-          "modules, the default value is 'layer'.\n" +
-          "It is also possible to describe progression order changes. In " +
-          "this case, 'res_start' is the index (from 0) of the first " +
-          "resolution " +
-          "level, 'comp_start' is the index (from 0) of the first component, " +
-          "'ly_end' is the index (from 0) of the first layer not included, " +
-          "'res_end' is the index (from 0) of the first resolution level not " +
-          "included, 'comp_end' is index (from 0) of the first component not " +
-          "included and 'prog' is the progression type to be used " +
-          "for the rest of the tile/image. Several progression order changes " +
+          "generating "
+          "the codestream. The 'res' value generates a resolution "
+          "progressive codestream with the number of layers specified by "
+          "'Alayers' option. The 'layer' value generates a layer progressive "
+          "codestream with multiple layers. In any case the rate-allocation "
+          "algorithm optimizes for best quality in each layer. The quality "
+          "measure is mean squared error (MSE) or a weighted version of it "
+          "(WMSE). If no progression type is specified or imposed by other "
+          "modules, the default value is 'layer'.\n"
+          "It is also possible to describe progression order changes. In "
+          "this case, 'res_start' is the index (from 0) of the first "
+          "resolution "
+          "level, 'comp_start' is the index (from 0) of the first component, "
+          "'ly_end' is the index (from 0) of the first layer not included, "
+          "'res_end' is the index (from 0) of the first resolution level not "
+          "included, 'comp_end' is index (from 0) of the first component not "
+          "included and 'prog' is the progression type to be used "
+          "for the rest of the tile/image. Several progression order changes "
           "can be specified, one after the other.",
       null
     ],
@@ -61,26 +61,26 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
       "Alayers",
       "[<rate> [+<layers>] [<rate [+<layers>] [...]] | sl]",
       "Explicitly specifies the codestream layer formation parameters. "
-              "The <rate> parameter specifies the bitrate to which the first "
-              "layer should be optimized. The <layers> parameter, if present, "
-              "specifies the number of extra layers that should be added for "
-              "scalability. These extra layers are not optimized. " +
-          "Any extra <rate> and <layers> parameters add more layers, in the " +
-          "same way. An additional layer is always added at the end, which" +
-          " is " +
-          "optimized to the overall target bitrate of the bit stream. Any " +
-          "layers (optimized or not) whose target bitrate is higher that the " +
-          "overall target bitrate are silently ignored. The bitrates of the " +
-          "extra layers that are added through the <layers> parameter are " +
-          "approximately log-spaced between the other target bitrates. If " +
-          "several <rate> [+<layers>] constructs appear the <rate>" +
-          " parameters " +
-          "must appear in increasing order. The rate allocation algorithm " +
-          "ensures that all coded layers have a minimal reasonable size, if " +
-          "not these layers are silently ignored.\n" +
-          "If the 'sl' (i.e. 'single layer') argument is specified, the " +
-          "generated codestream will" +
-          " only contain one layer (with a bit rate specified thanks to the" +
+          "The <rate> parameter specifies the bitrate to which the first "
+          "layer should be optimized. The <layers> parameter, if present, "
+          "specifies the number of extra layers that should be added for "
+          "scalability. These extra layers are not optimized. "
+          "Any extra <rate> and <layers> parameters add more layers, in the "
+          "same way. An additional layer is always added at the end, which"
+          " is "
+          "optimized to the overall target bitrate of the bit stream. Any "
+          "layers (optimized or not) whose target bitrate is higher that the "
+          "overall target bitrate are silently ignored. The bitrates of the "
+          "extra layers that are added through the <layers> parameter are "
+          "approximately log-spaced between the other target bitrates. If "
+          "several <rate> [+<layers>] constructs appear the <rate>"
+          " parameters "
+          "must appear in increasing order. The rate allocation algorithm "
+          "ensures that all coded layers have a minimal reasonable size, if "
+          "not these layers are silently ignored.\n"
+          "If the 'sl' (i.e. 'single layer') argument is specified, the "
+          "generated codestream will"
+          " only contain one layer (with a bit rate specified thanks to the"
           " '-rate' or 'nbytes' options).",
       "0.015 +20 2.0 +10"
     ]
@@ -179,7 +179,7 @@ abstract class PostCompRateAllocator extends ImgDataAdapter {
       EncoderSpecs encSpec) {
     // Check parameters
     pl.checkListSingle(
-        OPT_PREFIX.codeUnitAt(0), ParameterList.toNameArray(pinfo));
+        optPrefix.codeUnitAt(0), ParameterList.toNameArray(pinfo));
 
     // Construct the layer specification from the 'Alayers' option
     final lyrs =

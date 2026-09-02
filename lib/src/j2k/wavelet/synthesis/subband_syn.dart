@@ -65,17 +65,17 @@ class SubbandSyn extends Subband {
   }
 
   @override
-  Subband split(WaveletFilter hfilter, WaveletFilter vfilter) {
+  Subband split(WaveletFilter hFilter, WaveletFilter vFilter) {
     if (isNode) {
       throw ArgumentError('Subband already split');
     }
-    if (hfilter is! SynWTFilter || vfilter is! SynWTFilter) {
+    if (hFilter is! SynWTFilter || vFilter is! SynWTFilter) {
       throw ArgumentError('Synthesis filters must be SynWTFilter instances');
     }
 
     isNode = true;
-    hFilter = hfilter;
-    vFilter = vfilter;
+    this.hFilter = hFilter;
+    this.vFilter = vFilter;
 
     subbLL = SubbandSyn();
     subbHL = SubbandSyn();

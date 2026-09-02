@@ -21,17 +21,17 @@ import 'forw_comp_transf_spec.dart';
 /// (Irreversible Component Transformation).
 class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   /// Identifier for no component transformation. Value is 0.
-  static const int NONE = 0;
+  static const int none = 0;
 
   /// Identifier for the Forward Reversible Component Transformation. Value 1.
-  static const int FORW_RCT = 1;
+  static const int forwRct = 1;
 
   /// Identifier for the Forward Irreversible Component Transformation.
   /// Value 2.
-  static const int FORW_ICT = 2;
+  static const int forwIct = 2;
 
   /// The prefix for component transformation type: 'M'
-  static const String OPT_PREFIX = 'M';
+  static const String optPrefix = 'M';
 
   /// The list of parameters that is accepted by the forward component
   /// transformation module. Options start with an 'M'.
@@ -59,7 +59,7 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
 
   /// The type of the current component transformation. JPEG 2000 part I
   /// only supports NONE, FORW_RCT and FORW_ICT types.
-  int transfType = NONE;
+  int transfType = none;
 
   /// The bit-depths of the transformed components
   List<int>? tdepth;
@@ -97,19 +97,19 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   /// transformation type.
   static List<int> calcMixedBitDepths(
       List<int> ntdepth, int ttype, List<int>? tdepth) {
-    if (ntdepth.length < 3 && ttype != NONE) {
+    if (ntdepth.length < 3 && ttype != none) {
       throw ArgumentError();
     }
 
     tdepth ??= List<int>.filled(ntdepth.length, 0);
 
     switch (ttype) {
-      case NONE:
+      case none:
         for (var i = 0; i < ntdepth.length; i++) {
           tdepth[i] = ntdepth[i];
         }
         break;
-      case FORW_RCT:
+      case forwRct:
         if (ntdepth.length > 3) {
           for (var i = 3; i < ntdepth.length; i++) {
             tdepth[i] = ntdepth[i];
@@ -127,7 +127,7 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
         tdepth[2] =
             MathUtil.log2((1 << ntdepth[0]) + (1 << ntdepth[1]) - 1) + 1;
         break;
-      case FORW_ICT:
+      case forwIct:
         if (ntdepth.length > 3) {
           for (var i = 3; i < ntdepth.length; i++) {
             tdepth[i] = ntdepth[i];
@@ -180,7 +180,7 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
     // Initialize bitdepths
     final utd = List<int>.generate(src.getNumComps(), src.getNomRangeBits,
         growable: false);
-    tdepth = calcMixedBitDepths(utd, FORW_RCT, null);
+    tdepth = calcMixedBitDepths(utd, forwRct, null);
   }
 
   /// Initializes variables used with ICT. Must be called, at least, at the
@@ -206,17 +206,17 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
     // Initialize bitdepths
     final utd = List<int>.generate(src.getNumComps(), src.getNomRangeBits,
         growable: false);
-    tdepth = calcMixedBitDepths(utd, FORW_ICT, null);
+    tdepth = calcMixedBitDepths(utd, forwIct, null);
   }
 
   @override
   String toString() {
     switch (transfType) {
-      case FORW_RCT:
+      case forwRct:
         return 'Forward RCT';
-      case FORW_ICT:
+      case forwIct:
         return 'Forward ICT';
-      case NONE:
+      case none:
         return 'No component transformation';
       default:
         throw ArgumentError('Non JPEG 2000 part I component transformation');
@@ -228,10 +228,10 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   @override
   int getNomRangeBits(int c) {
     switch (transfType) {
-      case FORW_RCT:
-      case FORW_ICT:
+      case forwRct:
+      case forwIct:
         return tdepth![c];
-      case NONE:
+      case none:
         return src.getNomRangeBits(c);
       default:
         throw ArgumentError('Non JPEG 2000 part I component transformation');
@@ -241,10 +241,10 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   /// Returns true if this transform is reversible in the current tile.
   bool isReversible() {
     switch (transfType) {
-      case NONE:
-      case FORW_RCT:
+      case none:
+      case forwRct:
         return true;
-      case FORW_ICT:
+      case forwIct:
         return false;
       default:
         throw ArgumentError('Non JPEG 2000 part I component transformation');
@@ -256,7 +256,7 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
     // If requesting a component whose index is greater than 3 or there is
     // no transform return a copy of data (getInternCompData returns the
     // actual data in those cases)
-    if (c >= 3 || transfType == NONE) {
+    if (c >= 3 || transfType == none) {
       return src.getCompData(blk, c);
     }
     // We can use getInternCompData (since data is a copy anyways)
@@ -266,11 +266,11 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
   @override
   DataBlk getInternCompData(DataBlk blk, int c) {
     switch (transfType) {
-      case NONE:
+      case none:
         return src.getInternCompData(blk, c);
-      case FORW_RCT:
+      case forwRct:
         return _forwRCT(blk, c);
-      case FORW_ICT:
+      case forwIct:
         return _forwICT(blk, c);
       default:
         throw ArgumentError(
@@ -509,12 +509,12 @@ class ForwCompTransf extends ImgDataAdapter implements BlkImgDataSrc {
     // ("none"/"rct"/"ict").
     final def = cts.getTileDef(tileIndex);
     if (def == InvCompTransf.none) {
-      transfType = NONE;
+      transfType = none;
     } else if (def == InvCompTransf.invRct) {
-      transfType = FORW_RCT;
+      transfType = forwRct;
       _initForwRCT();
     } else if (def == InvCompTransf.invIct) {
-      transfType = FORW_ICT;
+      transfType = forwIct;
       _initForwICT();
     } else {
       throw ArgumentError('Component transformation not recognized');

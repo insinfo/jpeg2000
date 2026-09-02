@@ -11,10 +11,10 @@ import 'an_wt_filter_float_lift9x7.dart';
 /// @see ModuleSpec
 class AnWTFilterSpec extends ModuleSpec {
   /// The reversible default filter
-  static const String REV_FILTER_STR = "w5x3";
+  static const String revFilterStr = "w5x3";
 
   /// The non-reversible default filter
-  static const String NON_REV_FILTER_STR = "w9x7";
+  static const String nonRevFilterStr = "w9x7";
 
   /// Constructs a new 'AnWTFilterSpec' for the specified number of
   /// components and tiles.
@@ -42,7 +42,7 @@ class AnWTFilterSpec extends ModuleSpec {
       // If lossless compression, uses the reversible filters in each
       // tile-components
       if (pl.getBooleanParameter("lossless")) {
-        setDefault(parseFilters(REV_FILTER_STR));
+        setDefault(parseFilters(revFilterStr));
         return;
       }
 
@@ -52,48 +52,48 @@ class AnWTFilterSpec extends ModuleSpec {
       for (int t = nt - 1; t >= 0; t--) {
         for (int c = nc - 1; c >= 0; c--) {
           switch (qts.getSpecValType(t, c)) {
-            case ModuleSpec.SPEC_DEF:
+            case ModuleSpec.specDef:
               if (getDefault() == null) {
                 if (pl.getBooleanParameter("lossless")) {
-                  setDefault(parseFilters(REV_FILTER_STR));
+                  setDefault(parseFilters(revFilterStr));
                 }
                 if ((qts.getDefault() as String) == "reversible") {
-                  setDefault(parseFilters(REV_FILTER_STR));
+                  setDefault(parseFilters(revFilterStr));
                 } else {
-                  setDefault(parseFilters(NON_REV_FILTER_STR));
+                  setDefault(parseFilters(nonRevFilterStr));
                 }
               }
-              specValType[t][c] = ModuleSpec.SPEC_DEF;
+              specValType[t][c] = ModuleSpec.specDef;
               break;
-            case ModuleSpec.SPEC_COMP_DEF:
+            case ModuleSpec.specCompDef:
               if (!isCompSpecified(c)) {
                 if ((qts.getCompDef(c) as String) == "reversible") {
-                  setCompDef(c, parseFilters(REV_FILTER_STR));
+                  setCompDef(c, parseFilters(revFilterStr));
                 } else {
-                  setCompDef(c, parseFilters(NON_REV_FILTER_STR));
+                  setCompDef(c, parseFilters(nonRevFilterStr));
                 }
               }
-              specValType[t][c] = ModuleSpec.SPEC_COMP_DEF;
+              specValType[t][c] = ModuleSpec.specCompDef;
               break;
-            case ModuleSpec.SPEC_TILE_DEF:
+            case ModuleSpec.specTileDef:
               if (!isTileSpecified(t)) {
                 if ((qts.getTileDef(t) as String) == "reversible") {
-                  setTileDef(t, parseFilters(REV_FILTER_STR));
+                  setTileDef(t, parseFilters(revFilterStr));
                 } else {
-                  setTileDef(t, parseFilters(NON_REV_FILTER_STR));
+                  setTileDef(t, parseFilters(nonRevFilterStr));
                 }
               }
-              specValType[t][c] = ModuleSpec.SPEC_TILE_DEF;
+              specValType[t][c] = ModuleSpec.specTileDef;
               break;
-            case ModuleSpec.SPEC_TILE_COMP:
+            case ModuleSpec.specTileComp:
               if (!isTileCompSpecified(t, c)) {
                 if ((qts.getTileCompVal(t, c) as String) == "reversible") {
-                  setTileCompVal(t, c, parseFilters(REV_FILTER_STR));
+                  setTileCompVal(t, c, parseFilters(revFilterStr));
                 } else {
-                  setTileCompVal(t, c, parseFilters(NON_REV_FILTER_STR));
+                  setTileCompVal(t, c, parseFilters(nonRevFilterStr));
                 }
               }
-              specValType[t][c] = ModuleSpec.SPEC_TILE_COMP;
+              specValType[t][c] = ModuleSpec.specTileComp;
               break;
             default:
               throw ArgumentError("Unsupported specification type");
@@ -109,7 +109,7 @@ class AnWTFilterSpec extends ModuleSpec {
         param.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
 
     String word; // current word
-    int curSpecType = ModuleSpec.SPEC_DEF; // Specification type of the
+    int curSpecType = ModuleSpec.specDef; // Specification type of the
     // current parameter
     List<bool>? tileSpec; // Tiles concerned by the specification
     List<bool>? compSpec; // Components concerned by the specification
@@ -123,19 +123,19 @@ class AnWTFilterSpec extends ModuleSpec {
         case 't': // Tiles specification
         case 'T': // Tiles specification
           tileSpec = ModuleSpec.parseIdx(word, nTiles);
-          if (curSpecType == ModuleSpec.SPEC_COMP_DEF) {
-            curSpecType = ModuleSpec.SPEC_TILE_COMP;
+          if (curSpecType == ModuleSpec.specCompDef) {
+            curSpecType = ModuleSpec.specTileComp;
           } else {
-            curSpecType = ModuleSpec.SPEC_TILE_DEF;
+            curSpecType = ModuleSpec.specTileDef;
           }
           break;
         case 'c': // Components specification
         case 'C': // Components specification
           compSpec = ModuleSpec.parseIdx(word, nComp);
-          if (curSpecType == ModuleSpec.SPEC_TILE_DEF) {
-            curSpecType = ModuleSpec.SPEC_TILE_COMP;
+          if (curSpecType == ModuleSpec.specTileDef) {
+            curSpecType = ModuleSpec.specTileComp;
           } else {
-            curSpecType = ModuleSpec.SPEC_COMP_DEF;
+            curSpecType = ModuleSpec.specCompDef;
           }
           break;
         case 'w': // WT filters specification
@@ -147,16 +147,16 @@ class AnWTFilterSpec extends ModuleSpec {
           }
 
           filter = parseFilters(word);
-          if (curSpecType == ModuleSpec.SPEC_DEF) {
+          if (curSpecType == ModuleSpec.specDef) {
             setDefault(filter);
-          } else if (curSpecType == ModuleSpec.SPEC_TILE_DEF) {
+          } else if (curSpecType == ModuleSpec.specTileDef) {
             var ts = tileSpec!;
             for (int i = ts.length - 1; i >= 0; i--) {
               if (ts[i]) {
                 setTileDef(i, filter);
               }
             }
-          } else if (curSpecType == ModuleSpec.SPEC_COMP_DEF) {
+          } else if (curSpecType == ModuleSpec.specCompDef) {
             var cs = compSpec!;
             for (int i = cs.length - 1; i >= 0; i--) {
               if (cs[i]) {
@@ -176,7 +176,7 @@ class AnWTFilterSpec extends ModuleSpec {
           }
 
           // Re-initialize
-          curSpecType = ModuleSpec.SPEC_DEF;
+          curSpecType = ModuleSpec.specDef;
           tileSpec = null;
           compSpec = null;
           break;
@@ -191,7 +191,7 @@ class AnWTFilterSpec extends ModuleSpec {
       int ndefspec = 0;
       for (int t = nt - 1; t >= 0; t--) {
         for (int c = nc - 1; c >= 0; c--) {
-          if (specValType[t][c] == ModuleSpec.SPEC_DEF) {
+          if (specValType[t][c] == ModuleSpec.specDef) {
             ndefspec++;
           }
         }
@@ -201,33 +201,33 @@ class AnWTFilterSpec extends ModuleSpec {
       // the default value defined in ParameterList
       if (ndefspec != 0) {
         if ((qts.getDefault() as String) == "reversible") {
-          setDefault(parseFilters(REV_FILTER_STR));
+          setDefault(parseFilters(revFilterStr));
         } else {
-          setDefault(parseFilters(NON_REV_FILTER_STR));
+          setDefault(parseFilters(nonRevFilterStr));
         }
       } else {
         // All tile-component have been specified, takes the first
         // tile-component value as default.
         setDefault(getTileCompVal(0, 0));
         switch (specValType[0][0]) {
-          case ModuleSpec.SPEC_TILE_DEF:
+          case ModuleSpec.specTileDef:
             for (int c = nc - 1; c >= 0; c--) {
-              if (specValType[0][c] == ModuleSpec.SPEC_TILE_DEF) {
-                specValType[0][c] = ModuleSpec.SPEC_DEF;
+              if (specValType[0][c] == ModuleSpec.specTileDef) {
+                specValType[0][c] = ModuleSpec.specDef;
               }
             }
             tileDef![0] = null;
             break;
-          case ModuleSpec.SPEC_COMP_DEF:
+          case ModuleSpec.specCompDef:
             for (int t = nt - 1; t >= 0; t--) {
-              if (specValType[t][0] == ModuleSpec.SPEC_COMP_DEF) {
-                specValType[t][0] = ModuleSpec.SPEC_DEF;
+              if (specValType[t][0] == ModuleSpec.specCompDef) {
+                specValType[t][0] = ModuleSpec.specDef;
               }
             }
             compDef![0] = null;
             break;
-          case ModuleSpec.SPEC_TILE_COMP:
-            specValType[0][0] = ModuleSpec.SPEC_DEF;
+          case ModuleSpec.specTileComp:
+            specValType[0][0] = ModuleSpec.specDef;
             tileCompVal!["t0c0"] = null;
             break;
         }

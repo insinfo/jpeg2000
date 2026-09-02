@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'string_format_exception.dart';
 import '../platform/platform.dart' as platform;
 
@@ -17,7 +15,7 @@ class ParameterList {
 
   /// Returns an iterable view of the parameter names, including defaults.
   Iterable<String> propertyNames() {
-    final ordered = LinkedHashSet<String>()
+    final ordered = <String>{}
       ..addAll(_defaults?.propertyNames() ?? const <String>[])
       ..addAll(_values.keys);
     return ordered;

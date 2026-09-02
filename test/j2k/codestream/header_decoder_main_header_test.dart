@@ -181,21 +181,20 @@ Uint8List _buildMinimalCodestream() {
 
   final qcdSegment = BytesBuilder();
   const guardBits = 2;
-  final sqcd =
-      (guardBits << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+  final sqcd = (guardBits << Markers.sqcxGbShift) | Markers.sqcxNoQuantization;
   final spqcdValues = <int>[
-    5 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
+    5 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
   ];
   qcdSegment.add(uint16(2 + 1 + spqcdValues.length));
   qcdSegment.add(<int>[sqcd]);
   qcdSegment.add(spqcdValues);
-  writeMarkerSegment(Markers.QCD, qcdSegment.takeBytes());
+  writeMarkerSegment(Markers.qcd, qcdSegment.takeBytes());
 
   final sotSegment = BytesBuilder();
   sotSegment.add(uint16(10)); // Lsot
@@ -229,7 +228,7 @@ Uint8List _buildCodestreamWithQcc() {
         value & 0xff,
       ];
 
-  writeMarker(Markers.SOC);
+  writeMarker(Markers.soc);
 
   final sizSegment = BytesBuilder();
   sizSegment.add(uint16(38 + 3 * 2));
@@ -245,7 +244,7 @@ Uint8List _buildCodestreamWithQcc() {
   sizSegment.add(uint16(2));
   sizSegment.add(<int>[0x07, 0x01, 0x01]);
   sizSegment.add(<int>[0x07, 0x01, 0x01]);
-  writeMarkerSegment(Markers.SIZ, sizSegment.takeBytes());
+  writeMarkerSegment(Markers.siz, sizSegment.takeBytes());
 
   final codSegment = BytesBuilder();
   codSegment.add(uint16(12));
@@ -258,28 +257,28 @@ Uint8List _buildCodestreamWithQcc() {
   codSegment.add(<int>[0x04]);
   codSegment.add(<int>[0x00]);
   codSegment.add(<int>[0x01]);
-  writeMarkerSegment(Markers.COD, codSegment.takeBytes());
+  writeMarkerSegment(Markers.cod, codSegment.takeBytes());
 
   final qcdSegment = BytesBuilder();
-  final qcdSqcd = (1 << Markers.SQCX_GB_SHIFT) | Markers.SQCX_NO_QUANTIZATION;
+  final qcdSqcd = (1 << Markers.sqcxGbShift) | Markers.sqcxNoQuantization;
   final qcdValues = <int>[
-    5 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    4 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
-    3 << Markers.SQCX_EXP_SHIFT,
+    5 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    4 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
+    3 << Markers.sqcxExpShift,
   ];
   qcdSegment.add(uint16(2 + 1 + qcdValues.length));
   qcdSegment.add(<int>[qcdSqcd]);
   qcdSegment.add(qcdValues);
-  writeMarkerSegment(Markers.QCD, qcdSegment.takeBytes());
+  writeMarkerSegment(Markers.qcd, qcdSegment.takeBytes());
 
   final qccSegment = BytesBuilder();
   const qccGuardBits = 3;
   final sqcc =
-      (qccGuardBits << Markers.SQCX_GB_SHIFT) | Markers.SQCX_SCALAR_EXPOUNDED;
+      (qccGuardBits << Markers.sqcxGbShift) | Markers.sqcxScalarExpounded;
   final qccValues = <int>[
     5 << 11,
     6 << 11,
@@ -295,7 +294,7 @@ Uint8List _buildCodestreamWithQcc() {
   for (final value in qccValues) {
     qccSegment.add(uint16(value));
   }
-  writeMarkerSegment(Markers.QCC, qccSegment.takeBytes());
+  writeMarkerSegment(Markers.qcc, qccSegment.takeBytes());
 
   final sotSegment = BytesBuilder();
   sotSegment.add(uint16(10));
@@ -303,7 +302,7 @@ Uint8List _buildCodestreamWithQcc() {
   sotSegment.add(uint32(0));
   sotSegment.add(<int>[0x00]);
   sotSegment.add(<int>[0x01]);
-  writeMarkerSegment(Markers.SOT, sotSegment.takeBytes());
+  writeMarkerSegment(Markers.sot, sotSegment.takeBytes());
 
   return builder.takeBytes();
 }
@@ -329,7 +328,7 @@ Uint8List _buildCodestreamWithCoc() {
         value & 0xff,
       ];
 
-  writeMarker(Markers.SOC);
+  writeMarker(Markers.soc);
 
   final sizSegment = BytesBuilder();
   sizSegment.add(uint16(38 + 3 * 2));
@@ -345,7 +344,7 @@ Uint8List _buildCodestreamWithCoc() {
   sizSegment.add(uint16(2));
   sizSegment.add(<int>[0x07, 0x01, 0x01]);
   sizSegment.add(<int>[0x07, 0x01, 0x01]);
-  writeMarkerSegment(Markers.SIZ, sizSegment.takeBytes());
+  writeMarkerSegment(Markers.siz, sizSegment.takeBytes());
 
   final codSegment = BytesBuilder();
   codSegment.add(uint16(12));
@@ -358,7 +357,7 @@ Uint8List _buildCodestreamWithCoc() {
   codSegment.add(<int>[0x04]);
   codSegment.add(<int>[0x00]);
   codSegment.add(<int>[0x01]);
-  writeMarkerSegment(Markers.COD, codSegment.takeBytes());
+  writeMarkerSegment(Markers.cod, codSegment.takeBytes());
 
   final cocSegment = BytesBuilder();
   cocSegment.add(uint16(9));
@@ -369,7 +368,7 @@ Uint8List _buildCodestreamWithCoc() {
   cocSegment.add(<int>[0x05]);
   cocSegment.add(<int>[0x02]);
   cocSegment.add(<int>[0x00]);
-  writeMarkerSegment(Markers.COC, cocSegment.takeBytes());
+  writeMarkerSegment(Markers.coc, cocSegment.takeBytes());
 
   final sotSegment = BytesBuilder();
   sotSegment.add(uint16(10));
@@ -377,7 +376,7 @@ Uint8List _buildCodestreamWithCoc() {
   sotSegment.add(uint32(0));
   sotSegment.add(<int>[0x00]);
   sotSegment.add(<int>[0x01]);
-  writeMarkerSegment(Markers.SOT, sotSegment.takeBytes());
+  writeMarkerSegment(Markers.sot, sotSegment.takeBytes());
 
   return builder.takeBytes();
 }

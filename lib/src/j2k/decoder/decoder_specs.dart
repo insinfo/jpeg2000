@@ -45,15 +45,14 @@ class DecoderSpecs {
   });
 
   factory DecoderSpecs.basic(int numTiles, int numComps) {
-    final dls = IntegerSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+    final dls = IntegerSpec(numTiles, numComps, ModuleSpec.specTypeTileComp)
       ..setDefault(0);
     final wfs =
-        SynWTFilterSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP);
-    final qts =
-        QuantTypeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-          ..setDefault('reversible');
+        SynWTFilterSpec(numTiles, numComps, ModuleSpec.specTypeTileComp);
+    final qts = QuantTypeSpec(numTiles, numComps, ModuleSpec.specTypeTileComp)
+      ..setDefault('reversible');
     final qsss =
-        QuantStepSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
+        QuantStepSizeSpec(numTiles, numComps, ModuleSpec.specTypeTileComp)
           ..setDefault(
             StdDequantizerParams(
               nStep: <List<double>>[
@@ -61,56 +60,54 @@ class DecoderSpecs {
               ],
             ),
           );
-    final gbs =
-        GuardBitsSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-          ..setDefault(1);
+    final gbs = GuardBitsSpec(numTiles, numComps, ModuleSpec.specTypeTileComp)
+      ..setDefault(1);
     final rois = MaxShiftSpec(numTiles, numComps)..setDefault(0);
     final rectRois = RectROISpec(numTiles, numComps);
-    final cts = CompTransfSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE)
+    final cts = CompTransfSpec(numTiles, numComps, ModuleSpec.specTypeTile)
       ..setDefault(InvCompTransf.none);
     final ecopts = ModuleSpec<int>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE_COMP,
+      ModuleSpec.specTypeTileComp,
     )..setDefault(0);
-    final pss = PrecinctSizeSpec(
-        numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP, dls);
-    final cblks =
-        CBlkSizeSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP)
-          ..setDefault(<int>[64, 64]);
+    final pss =
+        PrecinctSizeSpec(numTiles, numComps, ModuleSpec.specTypeTileComp, dls);
+    final cblks = CBlkSizeSpec(numTiles, numComps, ModuleSpec.specTypeTileComp)
+      ..setDefault(<int>[64, 64]);
     final ers = ModuleSpec<bool>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE_COMP,
+      ModuleSpec.specTypeTileComp,
     )..setDefault(false);
-    final nls = IntegerSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE)
+    final nls = IntegerSpec(numTiles, numComps, ModuleSpec.specTypeTile)
       ..setDefault(1);
-    final pos = IntegerSpec(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE)
+    final pos = IntegerSpec(numTiles, numComps, ModuleSpec.specTypeTile)
       ..setDefault(0);
     final pcs = ModuleSpec<List<List<int>>?>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE,
+      ModuleSpec.specTypeTile,
     )..setDefault(null);
     final sops = ModuleSpec<bool>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE,
+      ModuleSpec.specTypeTile,
     )..setDefault(false);
     final ephs = ModuleSpec<bool>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE,
+      ModuleSpec.specTypeTile,
     )..setDefault(false);
     final pphs = ModuleSpec<bool>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE,
+      ModuleSpec.specTypeTile,
     )..setDefault(false);
     final iccs = ModuleSpec<Object?>(
       numTiles,
       numComps,
-      ModuleSpec.SPEC_TYPE_TILE,
+      ModuleSpec.specTypeTile,
     )..setDefault(null);
     return DecoderSpecs(
       dls: dls,

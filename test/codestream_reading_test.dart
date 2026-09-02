@@ -36,7 +36,7 @@ void dumpMarkers(String filename) {
   try {
     final ff = FileFormatReader(input);
     ff.readFileFormat();
-    if (ff.JP2FFUsed) {
+    if (ff.jp2FfUsed) {
       input.seek(ff.getFirstCodeStreamPos());
     }
 

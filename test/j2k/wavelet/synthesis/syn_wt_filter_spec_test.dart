@@ -9,7 +9,7 @@ import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_spec.dart';
 void main() {
   group('SynWTFilterSpec', () {
     test('stores and retrieves per tile/component filters', () {
-      final spec = SynWTFilterSpec(1, 1, ModuleSpec.SPEC_TYPE_TILE_COMP);
+      final spec = SynWTFilterSpec(1, 1, ModuleSpec.specTypeTileComp);
       final intFilters = [
         [SynWTFilterIntLift5x3()],
         [SynWTFilterIntLift5x3()],
@@ -23,7 +23,7 @@ void main() {
     });
 
     test('non-reversible configuration is detected', () {
-      final spec = SynWTFilterSpec(1, 1, ModuleSpec.SPEC_TYPE_TILE_COMP);
+      final spec = SynWTFilterSpec(1, 1, ModuleSpec.specTypeTileComp);
       final floatFilters = [
         [SynWTFilterFloatLift9x7()],
         [SynWTFilterFloatLift9x7()],

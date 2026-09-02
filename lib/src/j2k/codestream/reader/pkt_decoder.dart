@@ -50,11 +50,11 @@ class PktDecoder {
 
   bool get hasReachedNcbQuit => _ncbQuit;
 
-  _CodeBlockGrid restart(
+  CodeBlockGrid restart(
     int numComponents,
     List<int> maxDecompositionLevels,
     int numLayers,
-    _CodeBlockGrid? existing,
+    CodeBlockGrid? existing,
     bool packedHeaders,
     Uint8List? packedHeaderData,
   ) {
@@ -294,8 +294,6 @@ class PktDecoder {
     List<List<List<CBlkInfo?>?>?>? subbandBlocks,
     List<int> remainingBytesPerTile,
   ) {
-    // print('PktDecoder: t=${src.getTileIdx()} c=$component r=$resolution p=$precinct l=$layer pktIdx=$_packetIndex offset=${ehs.getPos()}');
-
     final startOfHeader = ehs.getPos();
     if (startOfHeader >= ehs.length()) {
       return true;
@@ -331,7 +329,6 @@ class PktDecoder {
 
     // Empty packet: nothing to decode beyond the inclusion bit.
     if (reader.readBit() == 0) {
-      // print('PktDecoder: Empty packet');
       for (var s = mins; s < maxs; s++) {
         _includedCodeBlocks[s].clear();
       }
@@ -345,7 +342,6 @@ class PktDecoder {
       remainingBytesPerTile[tileIdx] -= consumed;
 
       if (_ephUsed) {
-        // print('PktDecoder: Reading EPH (empty packet)');
         _readEphMarker(reader);
       }
       return false;
@@ -416,7 +412,6 @@ class PktDecoder {
             if (blockInfo.ctp == 0) {
               blockInfo.pktIdx[layer] = _packetIndex;
               final inclusion = tagIncl.update(m, n, layer + 1, reader);
-              // if (_packetIndex == 90) print('Pkt90: CB($m,$n) incl=$inclusion');
               if (inclusion > layer) {
                 continue;
               }
@@ -428,7 +423,6 @@ class PktDecoder {
                 threshold++;
               }
               blockInfo.msbSkipped = threshold - 2;
-              // if (_packetIndex == 90) print('Pkt90: CB($m,$n) msb=${blockInfo.msbSkipped}');
               blockInfo.addNTP(layer, 0);
 
               _codeBlockCounter++;
@@ -469,10 +463,8 @@ class PktDecoder {
             }
 
             blockInfo.addNTP(layer, newTruncPoints);
-            // if (_packetIndex == 90) print('Pkt90: CB($m,$n) ntp=$newTruncPoints');
             included.add(coord);
 
-            // if (_packetIndex == 90) print('Pkt90: c=$component r=$resolution s=$subband CB($m,$n) lblock_before=${lblockRow[coordIdx.x]}');
             while (reader.readBit() == 1) {
               lblockRow[coordIdx.x]++;
             }
@@ -493,18 +485,7 @@ class PktDecoder {
 
             if (segmentCount == 1) {
               blockInfo.len[layer] = reader.readBits(baseLengthBits);
-              // if (_packetIndex == 90) print('Pkt90: CB($m,$n) len=${blockInfo.len[layer]}');
-              if (blockInfo.len[layer] > 32768) {
-                // final tileIdx = src.getTileIdx();
-                /*
-                print(
-                  'PktDecoder header len anomaly: tile=$tileIdx layer=$layer res=$resolution comp=$component '
-                  'precinct=$precinct subband=$subband block=${coordIdx.x}x${coordIdx.y} '
-                  'len=${blockInfo.len[layer]} bits=$baseLengthBits lblock=${lblockRow[coordIdx.x]} '
-                  'newTruncPoints=$newTruncPoints',
-                );
-                */
-              }
+              if (blockInfo.len[layer] > 32768) {}
             } else {
               final lengths =
                   List<int>.filled(segmentCount, 0, growable: false);
@@ -513,7 +494,7 @@ class PktDecoder {
               var lastTerminated = blockInfo.ctp - newTruncPoints - 1;
               var cursor = 0;
 
-              if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+              if ((options & StdEntropyCoderOptions.optTermPass) != 0) {
                 while (cursor < segmentCount) {
                   final value = reader.readBits(lblockRow[coordIdx.x]);
                   lengths[cursor++] = value;
@@ -522,10 +503,10 @@ class PktDecoder {
               } else {
                 while (cursor < segmentCount - 1) {
                   if (tpIndex >=
-                      StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
+                      StdEntropyCoderOptions.firstBypassPassIdx - 1) {
                     final passType = (tpIndex +
-                            StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
-                        StdEntropyCoderOptions.NUM_PASSES;
+                            StdEntropyCoderOptions.numEmptyPassesInMsBp) %
+                        StdEntropyCoderOptions.numPasses;
                     if (passType != 0) {
                       final value = reader.readBits(
                         lblockRow[coordIdx.x] +
@@ -545,18 +526,7 @@ class PktDecoder {
                 );
                 blockInfo.len[layer] += finalValue;
                 lengths[cursor] = finalValue;
-                // if (_packetIndex == 90) print('Pkt90: CB($m,$n) len=${blockInfo.len[layer]}');
-                if (blockInfo.len[layer] > 32768) {
-                  // final tileIdx = src.getTileIdx();
-                  /*
-                  print(
-                    'PktDecoder header segmented len anomaly: tile=$tileIdx layer=$layer res=$resolution comp=$component '
-                    'precinct=$precinct subband=$subband block=${coordIdx.x}x${coordIdx.y} '
-                    'len=${blockInfo.len[layer]} segments=$segmentCount lblock=${lblockRow[coordIdx.x]} '
-                    'newTruncPoints=$newTruncPoints',
-                  );
-                  */
-                }
+                if (blockInfo.len[layer] > 32768) {}
               }
             }
 
@@ -597,7 +567,6 @@ class PktDecoder {
     }
 
     if (_ephUsed) {
-      // print('PktDecoder: Reading EPH (full packet)');
       _readEphMarker(reader);
     }
 
@@ -662,14 +631,6 @@ class PktDecoder {
           try {
             ehs.readFully(payload, 0, payloadLength);
           } on EOFException {
-            // final currentPos = ehs.getPos();
-            /*
-            print(
-              'PktDecoder payload EOF: tile=$tileIdx layer=$layer res=$resolution comp=$component '
-              'precinct=$precinct subband=$subband block=${coordIdx.x}x${coordIdx.y} '
-              'len=$payloadLength currentOffset=$currentOffset pos=$currentPos remaining=${remainingBytesPerTile[tileIdx]}',
-            );
-            */
             payload = null;
             _handleBodyRollback(subbandBlocks, subband, coordIdx.y, coordIdx.x,
                 blockInfo, layer);
@@ -743,7 +704,7 @@ class PktDecoder {
       final high = ehs.read();
       final low = ehs.read();
       final marker = ((high & 0xff) << 8) | (low & 0xff);
-      if (marker != Markers.SOP) {
+      if (marker != Markers.sop) {
         ehs.seek(position);
         return false;
       }
@@ -753,16 +714,16 @@ class PktDecoder {
       return true;
     }
 
-    if (remainingBytesPerTile[tileIdx] < Markers.SOP_LENGTH) {
+    if (remainingBytesPerTile[tileIdx] < Markers.sopLength) {
       return true;
     }
-    remainingBytesPerTile[tileIdx] -= Markers.SOP_LENGTH;
+    remainingBytesPerTile[tileIdx] -= Markers.sopLength;
 
-    final buffer = Uint8List(Markers.SOP_LENGTH);
+    final buffer = Uint8List(Markers.sopLength);
     ehs.readFully(buffer, 0, buffer.length);
 
     final marker = ((buffer[0] & 0xff) << 8) | (buffer[1] & 0xff);
-    if (marker != Markers.SOP) {
+    if (marker != Markers.sop) {
       throw StateError(
           'Corrupted bitstream: expected SOP marker, found $marker');
     }
@@ -787,19 +748,18 @@ class PktDecoder {
   }
 
   int _computeSegmentCount(CBlkInfo info, int newTruncPoints, int options) {
-    if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+    if ((options & StdEntropyCoderOptions.optTermPass) != 0) {
       return newTruncPoints;
     }
-    if ((options & StdEntropyCoderOptions.OPT_BYPASS) != 0) {
-      if (info.ctp <= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX) {
+    if ((options & StdEntropyCoderOptions.optBypass) != 0) {
+      if (info.ctp <= StdEntropyCoderOptions.firstBypassPassIdx) {
         return 1;
       }
       var segments = 1;
       for (var tp = info.ctp - newTruncPoints; tp < info.ctp - 1; tp++) {
-        if (tp >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
-          final passType =
-              (tp + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
-                  StdEntropyCoderOptions.NUM_PASSES;
+        if (tp >= StdEntropyCoderOptions.firstBypassPassIdx - 1) {
+          final passType = (tp + StdEntropyCoderOptions.numEmptyPassesInMsBp) %
+              StdEntropyCoderOptions.numPasses;
           if (passType == 0 || passType == 1 || passType == 2) {
             segments++;
           }
@@ -899,11 +859,10 @@ class PktDecoder {
   }
 
   void _readEphMarker(PktHeaderBitReader reader) {
-    final buffer = Uint8List(Markers.EPH_LENGTH);
+    final buffer = Uint8List(Markers.ephLength);
     reader.readBytes(buffer, 0, buffer.length);
     final value = ((buffer[0] & 0xff) << 8) | (buffer[1] & 0xff);
-    if (value != Markers.EPH) {
-      // print('PktDecoder: Expected EPH, found $value at pos ${ehs.getPos()}');
+    if (value != Markers.eph) {
       throw StateError(
           'Corrupted bitstream: expected EPH marker, found $value');
     }

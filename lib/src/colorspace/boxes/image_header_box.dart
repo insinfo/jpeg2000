@@ -16,7 +16,7 @@ class ImageHeaderBox extends JP2Box {
   bool unk = false;
   bool ipr = false;
 
-  ImageHeaderBox(super.in_io, super.boxStart) {
+  ImageHeaderBox(super.input, super.boxStart) {
     readBox();
   }
 
@@ -45,8 +45,8 @@ class ImageHeaderBox extends JP2Box {
 
   void readBox() {
     Uint8List bfr = Uint8List(14);
-    in_io.seek(dataStart);
-    in_io.readFully(bfr, 0, 14);
+    input.seek(dataStart);
+    input.readFully(bfr, 0, 14);
 
     height = ICCProfile.getInt(bfr, 0);
     width = ICCProfile.getInt(bfr, 4);

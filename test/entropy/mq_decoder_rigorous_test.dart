@@ -9,7 +9,7 @@ Uint8List _encodeMqSegment({
   required List<int> bits,
   required List<int> contexts,
   required List<int> initStates,
-  int termType = MQCoder.TERM_EASY,
+  int termType = MQCoder.termEasy,
 }) {
   if (bits.length != contexts.length) {
     throw ArgumentError('bits e contexts precisam ter o mesmo tamanho');
@@ -236,7 +236,7 @@ void main() {
         bits: bits,
         contexts: contexts,
         initStates: initStates,
-        termType: MQCoder.TERM_PRED_ER,
+        termType: MQCoder.termPredEr,
       );
 
       final decoder =
@@ -259,7 +259,7 @@ void main() {
         bits: bits,
         contexts: contexts,
         initStates: initStates,
-        termType: MQCoder.TERM_PRED_ER,
+        termType: MQCoder.termPredEr,
       );
 
       final corrupted = Uint8List.fromList(encoded)

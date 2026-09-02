@@ -13,7 +13,7 @@ import 'img_reader.dart';
 /// reader when an arbitrary-shape ROI mask is supplied.
 class ImgReaderPGM extends ImgReader {
   /// DC offset value used when reading image
-  static const int DC_OFFSET = 128;
+  static const int dcOffset = 128;
 
   /// Where to read the data from
   RandomAccessFile? _in;
@@ -116,7 +116,7 @@ class ImgReaderPGM extends ImgReader {
       for (var k = (i - blk.uly) * blk.w + blk.w - 1, j = blk.w - 1;
           j >= 0;
           j--, k--) {
-        barr[k] = (buf[j] & 0xFF) - DC_OFFSET;
+        barr[k] = (buf[j] & 0xFF) - dcOffset;
       }
     }
 

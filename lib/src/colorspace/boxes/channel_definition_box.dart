@@ -11,21 +11,21 @@ class ChannelDefinitionBox extends JP2Box {
   int ndefs = 0;
   final Map<int, List<int>> definitions = <int, List<int>>{};
 
-  ChannelDefinitionBox(super.in_io, super.boxStart) {
+  ChannelDefinitionBox(super.input, super.boxStart) {
     readBox();
   }
 
   void readBox() {
     Uint8List bfr = Uint8List(8);
 
-    in_io.seek(dataStart);
-    in_io.readFully(bfr, 0, 2);
+    input.seek(dataStart);
+    input.readFully(bfr, 0, 2);
     ndefs = ICCProfile.getShort(bfr, 0) & 0x0000ffff;
 
     int offset = dataStart + 2;
-    in_io.seek(offset);
+    input.seek(offset);
     for (int i = 0; i < ndefs; ++i) {
-      in_io.readFully(bfr, 0, 6);
+      input.readFully(bfr, 0, 6);
       // int channel = ICCProfile.getShort(bfr, 0); // Unused
       final channelDef = List<int>.filled(3, 0, growable: false);
       channelDef[0] = _getCn(bfr);

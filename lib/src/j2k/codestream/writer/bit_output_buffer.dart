@@ -13,10 +13,10 @@ class BitOutputBuffer {
   /// The increment size for the buffer, 16 bytes. This is the
   /// number of bytes that are added to the buffer each time it is
   /// needed to enlarge it.
-  static const int SZ_INCR = 16;
+  static const int szIncr = 16;
 
   /// The initial size for the buffer, 32 bytes.
-  static const int SZ_INIT = 32;
+  static const int szInit = 32;
 
   /// The buffer where we store the data
   Uint8List _buf;
@@ -28,7 +28,7 @@ class BitOutputBuffer {
   int _avbits = 8;
 
   /// Creates a new BitOutputBuffer width a buffer of length 'SZ_INIT'.
-  BitOutputBuffer() : _buf = Uint8List(SZ_INIT);
+  BitOutputBuffer() : _buf = Uint8List(szInit);
 
   /// Resets the buffer. This rewinds the current position to the start of
   /// the buffer and sets all tha data to 0. Note that no new buffer is
@@ -62,7 +62,7 @@ class BitOutputBuffer {
       if (_curbyte == _buf.length) {
         // We are at end of 'buf' => extend it
         final oldBuf = _buf;
-        _buf = Uint8List(oldBuf.length + SZ_INCR);
+        _buf = Uint8List(oldBuf.length + szIncr);
         _buf.setRange(0, oldBuf.length, oldBuf);
       }
     }
@@ -80,7 +80,7 @@ class BitOutputBuffer {
     if (((_buf.length - _curbyte) << 3) - 8 + _avbits <= n + 2) {
       // Not enough place, extend it
       final oldBuf = _buf;
-      _buf = Uint8List(oldBuf.length + SZ_INCR);
+      _buf = Uint8List(oldBuf.length + szIncr);
       _buf.setRange(0, oldBuf.length, oldBuf);
       // SZ_INCR is always 6 or more, so it is enough to hold all the
       // new bits plus the ones to come after

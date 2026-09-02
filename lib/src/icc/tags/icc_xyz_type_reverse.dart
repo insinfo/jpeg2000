@@ -11,9 +11,9 @@ class ICCXYZTypeReverse extends ICCXYZType {
             data,
             offset,
             length,
-            ICCProfile.getInt(data, offset + 4 * ICCProfile.int_size),
-            ICCProfile.getInt(data, offset + 3 * ICCProfile.int_size),
-            ICCProfile.getInt(data, offset + 2 * ICCProfile.int_size));
+            ICCProfile.getInt(data, offset + 4 * ICCProfile.intSize),
+            ICCProfile.getInt(data, offset + 3 * ICCProfile.intSize),
+            ICCProfile.getInt(data, offset + 2 * ICCProfile.intSize));
 
   /// Return the string rep of this tag.
   @override

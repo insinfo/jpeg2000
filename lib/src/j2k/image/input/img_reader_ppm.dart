@@ -12,7 +12,7 @@ import 'img_reader.dart';
 /// 2^(number of bits per pixel - 1).
 class ImgReaderPPM extends ImgReader {
   /// DC offset value used when reading image
-  static const int DC_OFFSET = 128;
+  static const int dcOffset = 128;
 
   /// Where to read the data from
   RandomAccessFile? _in;
@@ -152,9 +152,9 @@ class ImgReaderPPM extends ImgReader {
         for (var k = (i - blk.uly) * blk.w + blk.w - 1, j = 3 * blk.w - 1;
             j >= 0;
             k--) {
-          blue[k] = (buf[j--] & 0xFF) - DC_OFFSET;
-          green[k] = (buf[j--] & 0xFF) - DC_OFFSET;
-          red[k] = (buf[j--] & 0xFF) - DC_OFFSET;
+          blue[k] = (buf[j--] & 0xFF) - dcOffset;
+          green[k] = (buf[j--] & 0xFF) - dcOffset;
+          red[k] = (buf[j--] & 0xFF) - dcOffset;
         }
       }
 

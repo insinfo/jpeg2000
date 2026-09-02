@@ -1,6 +1,6 @@
 part of 'bitstream_reader_agent.dart';
 
-typedef _CodeBlockGrid = List<List<List<List<List<CBlkInfo?>?>?>?>?>;
+typedef CodeBlockGrid = List<List<List<List<List<CBlkInfo?>?>?>?>?>;
 
 class _ProgressionSegment {
   const _ProgressionSegment({
@@ -66,9 +66,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         // Normal termination
       } else if (e is EOFException) {
         // Normal termination
-      } else {
-        // print('FileBitstreamReaderAgent: Stopped parsing tile parts: $e');
-      }
+      } else {}
     }
 
     _prepareTileBudgets();
@@ -82,7 +80,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
   late final PktDecoder _pktDecoder;
 
-  _CodeBlockGrid? cbI;
+  CodeBlockGrid? cbI;
   int lQuit = -1;
   late final bool _isTruncationMode;
   late final List<int> _tileBudgets;
@@ -707,16 +705,6 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
           _debugCblkPreviewCounts.putIfAbsent(component, () => 0);
       if (previewCount < 6) {
         _debugCblkPreviewCounts[component] = previewCount + 1;
-        // final displayCount = math.min(layersRequested, requested.ntp.length);
-        // final ntpSummary = requested.ntp.take(displayCount).join(',');
-        // final lenSummary = requested.len.take(displayCount).join(',');
-        /*
-        print(
-          'FileBitstreamReaderAgent cblk meta: tile=$tileIndex comp=$component res=$resolution '
-          'band=$subbandIdx m=$verticalCodeBlockIndex n=$horizontalCodeBlockIndex '
-          'len=[$lenSummary] ntp=[$ntpSummary] msbSkipped=${requested.msbSkipped}',
-        );
-        */
       }
     }
 
@@ -759,18 +747,18 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
 
     final options = decSpec.ecopts.getTileCompVal(tileIndex, component) ?? 0;
     var terminatedSegments = 1;
-    if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+    if ((options & StdEntropyCoderOptions.optTermPass) != 0) {
       terminatedSegments = result.nTrunc - result.ftpIdx;
-    } else if ((options & StdEntropyCoderOptions.OPT_BYPASS) != 0) {
-      if (result.nTrunc <= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX) {
+    } else if ((options & StdEntropyCoderOptions.optBypass) != 0) {
+      if (result.nTrunc <= StdEntropyCoderOptions.firstBypassPassIdx) {
         terminatedSegments = 1;
       } else {
         terminatedSegments = 1;
         for (var tpIdx = result.ftpIdx; tpIdx < result.nTrunc; tpIdx++) {
-          if (tpIdx >= StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
+          if (tpIdx >= StdEntropyCoderOptions.firstBypassPassIdx - 1) {
             final passType =
-                (tpIdx + StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
-                    StdEntropyCoderOptions.NUM_PASSES;
+                (tpIdx + StdEntropyCoderOptions.numEmptyPassesInMsBp) %
+                    StdEntropyCoderOptions.numPasses;
             if (passType == 1 || passType == 2) {
               terminatedSegments++;
             }
@@ -799,9 +787,9 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         result.tsLengths =
             List<int>.filled(terminatedSegments, 0, growable: false);
       } else if ((options &
-              (StdEntropyCoderOptions.OPT_BYPASS |
-                  StdEntropyCoderOptions.OPT_TERM_PASS)) ==
-          StdEntropyCoderOptions.OPT_BYPASS) {
+              (StdEntropyCoderOptions.optBypass |
+                  StdEntropyCoderOptions.optTermPass)) ==
+          StdEntropyCoderOptions.optBypass) {
         ArrayUtil.intArraySet(current, 0);
       }
     } else if (result.tsLengths != null && result.tsLengths!.isNotEmpty) {
@@ -859,7 +847,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         continue;
       }
 
-      if ((options & StdEntropyCoderOptions.OPT_TERM_PASS) != 0) {
+      if ((options & StdEntropyCoderOptions.optTermPass) != 0) {
         final segLengths = requested.segLen[layer];
         for (var j = 0;
             truncationIndex < cumulativeTruncation;
@@ -874,10 +862,10 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         var segCursor = 0;
         for (; truncationIndex < cumulativeTruncation; truncationIndex++) {
           if (truncationIndex >=
-              StdEntropyCoderOptions.FIRST_BYPASS_PASS_IDX - 1) {
+              StdEntropyCoderOptions.firstBypassPassIdx - 1) {
             final passType = (truncationIndex +
-                    StdEntropyCoderOptions.NUM_EMPTY_PASSES_IN_MS_BP) %
-                StdEntropyCoderOptions.NUM_PASSES;
+                    StdEntropyCoderOptions.numEmptyPassesInMsBp) %
+                StdEntropyCoderOptions.numPasses;
             if (passType != 0) {
               if (segLengths != null && segCursor < segLengths.length) {
                 tsLengths[terminatedIndex] += segLengths[segCursor];
@@ -1108,7 +1096,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     final layerEnd = math.min(segment.layerEnd, numLayers);
@@ -1157,7 +1145,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     final layerEnd = math.min(segment.layerEnd, numLayers);
@@ -1215,7 +1203,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     final layerEnd = math.min(segment.layerEnd, numLayers);
@@ -1290,7 +1278,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     final layerEnd = math.min(segment.layerEnd, numLayers);
@@ -1366,7 +1354,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     final layerEnd = math.min(segment.layerEnd, numLayers);
@@ -1438,7 +1426,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     if (pocSpec == null || pocSpec.isEmpty) {
       final progression = decSpec.pos.getTileDef(tileIdx) ??
           decSpec.pos.getDefault() ??
-          ProgressionType.LY_RES_COMP_POS_PROG;
+          ProgressionType.lyResCompPosProg;
       return <_ProgressionSegment>[
         _ProgressionSegment(
           progression: progression,
@@ -1481,26 +1469,26 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int maxResolutions,
     int numLayers,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
     List<List<Coord?>> precinctGrid,
   ) {
     if (segment.layerEnd <= 0) {
       return false;
     }
     switch (segment.progression) {
-      case ProgressionType.LY_RES_COMP_POS_PROG:
+      case ProgressionType.lyResCompPosProg:
         return _decodeLrcp(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
-      case ProgressionType.RES_LY_COMP_POS_PROG:
+      case ProgressionType.resLyCompPosProg:
         return _decodeRlcp(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
-      case ProgressionType.RES_POS_COMP_LY_PROG:
+      case ProgressionType.resPosCompLyProg:
         return _decodeRpcl(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
-      case ProgressionType.POS_COMP_RES_LY_PROG:
+      case ProgressionType.posCompResLyProg:
         return _decodePcrl(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
-      case ProgressionType.COMP_POS_RES_LY_PROG:
+      case ProgressionType.compPosResLyProg:
         return _decodeCprl(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
       default:
@@ -1582,7 +1570,7 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
     int component,
     int precinct,
     List<int> remainingBytes,
-    _CodeBlockGrid grid,
+    CodeBlockGrid grid,
   ) {
     final tileIdx = getTileIdx();
     final before = remainingBytes[tileIdx];

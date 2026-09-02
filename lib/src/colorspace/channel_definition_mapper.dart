@@ -13,63 +13,63 @@ class ChannelDefinitionMapper extends ColorSpaceMapper {
   ChannelDefinitionMapper(super.src, super.csMap);
 
   @override
-  DataBlk getCompData(DataBlk outblk, int c) {
-    return src!.getCompData(outblk, csMap!.getChannelDefinition(c));
+  DataBlk getCompData(DataBlk out, int component) {
+    return src!.getCompData(out, csMap!.getChannelDefinition(component));
   }
 
   @override
-  DataBlk getInternCompData(DataBlk outblk, int c) {
-    return src!.getInternCompData(outblk, csMap!.getChannelDefinition(c));
+  DataBlk getInternCompData(DataBlk out, int component) {
+    return src!.getInternCompData(out, csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getFixedPoint(int c) {
-    return src!.getFixedPoint(csMap!.getChannelDefinition(c));
+  int getFixedPoint(int component) {
+    return src!.getFixedPoint(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getNomRangeBits(int c) {
-    return src!.getNomRangeBits(csMap!.getChannelDefinition(c));
+  int getNomRangeBits(int component) {
+    return src!.getNomRangeBits(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompImgHeight(int c) {
-    return src!.getCompImgHeight(csMap!.getChannelDefinition(c));
+  int getCompImgHeight(int component) {
+    return src!.getCompImgHeight(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompImgWidth(int c) {
-    return src!.getCompImgWidth(csMap!.getChannelDefinition(c));
+  int getCompImgWidth(int component) {
+    return src!.getCompImgWidth(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompSubsX(int c) {
-    return src!.getCompSubsX(csMap!.getChannelDefinition(c));
+  int getCompSubsX(int component) {
+    return src!.getCompSubsX(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompSubsY(int c) {
-    return src!.getCompSubsY(csMap!.getChannelDefinition(c));
+  int getCompSubsY(int component) {
+    return src!.getCompSubsY(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompULX(int c) {
-    return src!.getCompULX(csMap!.getChannelDefinition(c));
+  int getCompULX(int component) {
+    return src!.getCompULX(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getCompULY(int c) {
-    return src!.getCompULY(csMap!.getChannelDefinition(c));
+  int getCompULY(int component) {
+    return src!.getCompULY(csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getTileCompHeight(int t, int c) {
-    return src!.getTileCompHeight(t, csMap!.getChannelDefinition(c));
+  int getTileCompHeight(int tile, int component) {
+    return src!.getTileCompHeight(tile, csMap!.getChannelDefinition(component));
   }
 
   @override
-  int getTileCompWidth(int t, int c) {
-    return src!.getTileCompWidth(t, csMap!.getChannelDefinition(c));
+  int getTileCompWidth(int tile, int component) {
+    return src!.getTileCompWidth(tile, csMap!.getChannelDefinition(component));
   }
 
   @override

@@ -5,7 +5,7 @@ import '../util/parameter_list.dart';
 /// ROI max-shift specification mirroring JJ2000's command line handling.
 class MaxShiftSpec extends IntegerSpec {
   MaxShiftSpec(int numTiles, int numComps)
-      : super(numTiles, numComps, ModuleSpec.SPEC_TYPE_TILE_COMP);
+      : super(numTiles, numComps, ModuleSpec.specTypeTileComp);
 
   MaxShiftSpec.fromParameters(
     int numTiles,
@@ -15,7 +15,7 @@ class MaxShiftSpec extends IntegerSpec {
   ) : super.fromParameters(
           numTiles,
           numComps,
-          ModuleSpec.SPEC_TYPE_TILE_COMP,
+          ModuleSpec.specTypeTileComp,
           parameters,
           optionName,
         ) {
