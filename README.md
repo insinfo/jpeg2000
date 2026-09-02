@@ -2,93 +2,143 @@
 
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
 
-Pure Dart JPEG 2000 codec inspired on the JJ2000/JAI ImageIO implementation. The
-package decodes JP2/J2K codestreams, provides a basic encoder for binary PGM and
-PPM inputs, and ships bit-exact regression fixtures inside the repository.
+Pure Dart JPEG 2000 codec. It decodes JP2 files and raw J2K codestreams to
+8-bit pixels, encodes binary PGM/PPM input, and runs unchanged on the Dart VM,
+dart2js and dart2wasm: the public API is byte-oriented and never imports
+`dart:io`.
 
-## Status
+The decoder is a port of the JJ2000 reference implementation and is bit-exact
+against it on the bundled conformance subset. See
+[Origin and licenses](#origin-and-licenses).
 
-- JP2/J2K decoder with codestream parsing, entropy decoding, ROI de-scaling,
-  dequantization, inverse wavelet transform, inverse RCT/ICT, and JP2 color
-  mapping.
-- Encoder for binary PGM P5 and PPM P6 input, raw J2K output, and optional JP2
-  wrapping.
-- Public byte-oriented API in `package:jpeg2000/jpeg2000.dart`; it does not
-  expose paths or `dart:io` types.
-- Async source loading through conditional platform exports. Browser builds use
-  `package:web` for `Blob`/`File` input.
-- Fixtures are consolidated under `test/fixtures`; tests do not depend on local
-  reference checkouts.
-- CI runs formatting, analysis, VM tests, a Chrome test for the public browser
-  API, a VM benchmark smoke run, production JavaScript compilation, and
-  WebAssembly compilation/execution.
+## Features
+
+- **Decoder:** codestream parsing, EBCOT/MQ entropy decoding, ROI de-scaling,
+  dequantization, reversible 5x3 and irreversible 9x7 inverse wavelets, inverse
+  RCT/ICT, and JP2 colour handling: enumerated sRGB/greyscale/sYCC, restricted
+  ICC profiles, palettes, and channel definitions (alpha).
+- **Output:** gray, gray+alpha, RGB, RGBA or raw multi-component samples,
+  always 8 bits per channel, tightly packed and interleaved.
+- **Header probe:** width, height, components, bit depths, tiling and alpha
+  without decoding a pixel, so callers can apply size policies first.
+- **Budgets:** `maxPixels` and `maxDimension` reject oversized images from the
+  SIZ marker before any allocation.
+- **Typed errors:** a sealed `Jpeg2000Exception` hierarchy separates "not a
+  JPEG 2000 file", "truncated", "corrupted", "unsupported feature" and "over
+  budget".
+- **Encoder:** binary PGM (P5) and PPM (P6) bytes to raw J2K or JP2, lossless
+  or rate-controlled, with optional tiling.
+- **Command line:** `jpeg2000_decode` and `jpeg2000_encode`.
 
 ## Installation
 
-The package is not published on pub.dev yet. Use the Git repository:
-
-```yaml
-dependencies:
-  jpeg2000:
-    git:
-      url: https://github.com/insinfo/jpeg2000.git
-```
-
-Then install dependencies:
-
 ```bash
-dart pub get
+dart pub add jpeg2000
 ```
 
-## Public API
-
-Import the stable facade:
+## Decoding
 
 ```dart
 import 'dart:typed_data';
 
 import 'package:jpeg2000/jpeg2000.dart';
 
-void main() {
-  final Uint8List jp2OrJ2kBytes = loadSomehow();
-  final image = decodeJpeg2000(jp2OrJ2kBytes);
-
-  print('${image.width}x${image.height}');
-  print(image.components);
-  print(image.pixels); // 8-bit interleaved gray or RGB samples.
-}
-```
-
-Encode binary PGM or PPM bytes without using file paths:
-
-```dart
-import 'dart:typed_data';
-
-import 'package:jpeg2000/jpeg2000.dart';
-
-void main() {
-  final Uint8List ppmBytes = makeOrLoadBinaryPpm();
-
-  final j2k = encodeJpeg2000(
-    ppmBytes,
-    options: const Jpeg2000EncodeOptions(lossless: true),
-  );
-
-  final jp2 = encodeJpeg2000(
-    ppmBytes,
-    options: const Jpeg2000EncodeOptions(
-      lossless: true,
-      wrapInJp2: true,
+Jpeg2000Image decode(Uint8List jp2OrJ2kBytes) {
+  final image = decodeJpeg2000(
+    jp2OrJ2kBytes,
+    options: Jpeg2000DecodeOptions(
+      maxPixels: 64 * 1024 * 1024,
+      onWarning: (message) => print('jpeg2000: $message'),
     ),
   );
 
-  print('${j2k.length} raw codestream bytes');
-  print('${jp2.length} JP2 bytes');
+  print('${image.width}x${image.height} ${image.format}');
+  // image.pixels: Uint8List, row-major, `image.components` bytes per pixel.
+  // Pixel (x, y) starts at (y * image.width + x) * image.components.
+  // With image.hasAlpha the last channel is alpha; check
+  // image.alphaIsPremultiplied before compositing.
+  return image;
 }
 ```
 
-Use the async source helpers when the input may be a VM file/path or a browser
-`package:web` `Blob`/`File`:
+`Jpeg2000Image` fields:
+
+| Field | Meaning |
+|---|---|
+| `format` | `gray8`, `grayAlpha8`, `rgb8`, `rgba8` or `multiComponent8` |
+| `components` | channels per pixel in `pixels`, alpha included |
+| `colorComponents` | leading colour channels (1 or 3; all channels for `multiComponent8`) |
+| `hasAlpha`, `alphaIsPremultiplied` | from the JP2 `cdef` box, or the 2/4-channel convention when there is none |
+| `sourceBitsPerComponent` | bit depth of each channel in the file; samples are scaled to 8 bits |
+
+Decode options:
+
+| Option | Default | Effect |
+|---|---|---|
+| `applyColorSpace` | `true` | apply JP2 colour metadata (ICC, palette, channel definitions) |
+| `applyComponentTransform` | `true` | apply the inverse RCT/ICT signalled in the codestream |
+| `rate` / `bytes` | none | stop after this many bits per pixel or bytes (progressive preview) |
+| `resolution` | none | discard this many highest resolution levels |
+| `maxPixels` / `maxDimension` | none | throw `Jpeg2000BudgetException` before allocating |
+| `onWarning` | none | receive non-fatal diagnostics; nothing is ever printed |
+
+## Probing without decoding
+
+```dart
+final info = probeJpeg2000(bytes);
+if (info.pixelCount > budget) {
+  throw StateError('too large: ${info.width}x${info.height}');
+}
+print('${info.components} components, ${info.bitsPerComponent} bits, '
+    'alpha=${info.hasAlpha}, tiles=${info.tileColumns}x${info.tileRows}');
+```
+
+## Errors
+
+All input problems are subtypes of the sealed `Jpeg2000Exception`; API misuse
+is an `ArgumentError`.
+
+```dart
+try {
+  decodeJpeg2000(bytes);
+} on Jpeg2000FormatException {
+  // Neither a JP2 container nor a J2K codestream.
+} on Jpeg2000TruncatedException {
+  // The data ends early; a retry with the complete file may work.
+} on Jpeg2000CorruptedException {
+  // The file violates the standard.
+} on Jpeg2000UnsupportedException {
+  // Valid, but uses a feature this codec does not implement yet.
+} on Jpeg2000BudgetException catch (e) {
+  // Larger than options.maxPixels / maxDimension: e.budget, e.limit, e.actual.
+}
+```
+
+## Encoding
+
+```dart
+final j2k = encodeJpeg2000(ppmBytes); // lossless raw codestream
+
+final jp2 = encodeJpeg2000(
+  ppmBytes,
+  options: const Jpeg2000EncodeOptions(
+    lossless: false,
+    rate: 1.0, // bits per pixel
+    wrapInJp2: true,
+    tileWidth: 256,
+    tileHeight: 256,
+  ),
+);
+```
+
+The encoder takes binary PGM (P5) or PPM (P6) bytes, 8 bits per sample. A
+pixel-buffer entry point is planned.
+
+## Files, paths and browser blobs
+
+`decodeJpeg2000Source` and `encodeJpeg2000Source` accept bytes everywhere. On
+the VM they also accept a `dart:io` `File` or a path; in browsers they accept a
+`package:web` `Blob` or `File`.
 
 ```dart
 import 'package:jpeg2000/jpeg2000.dart';
@@ -100,46 +150,40 @@ Future<void> decodeBrowserFile(web.File file) async {
 }
 ```
 
-`decodeJpeg2000Source` and `encodeJpeg2000Source` accept bytes on every
-platform. On the VM they also accept `dart:io` `File` and filesystem paths. In
-the browser they accept `package:web` `Blob` and `File`.
-
-## Command Line
-
-Decode JP2/J2K to PPM, PGM, PGX, or BMP:
+## Command line
 
 ```bash
-dart run jpeg2000:decode -i input.jp2 -o output.ppm
-dart run jpeg2000:decode -i input.j2k -o output.bmp
-```
-
-Encode PPM/PGM to a lossless J2K codestream:
-
-```bash
+dart run jpeg2000:decode -i input.jp2 -o output.ppm   # also .pgm, .pgx, .bmp
 dart run jpeg2000:encode -i input.ppm -o output.j2k -lossless on
-dart run jpeg2000:encode -i input.pgm -o output.j2k -lossless on
-```
-
-Encode with a JP2 wrapper:
-
-```bash
 dart run jpeg2000:encode -i input.ppm -o output.jp2 -lossless on -file_format on
-```
-
-Encode with a target bitrate:
-
-```bash
 dart run jpeg2000:encode -i input.ppm -o output.j2k -rate 1.0
 ```
+
+After `dart pub global activate jpeg2000` the tools are available as
+`jpeg2000_decode` and `jpeg2000_encode`.
+
+## Limitations
+
+- Output is 8 bits per channel; 12- and 16-bit sources are scaled down (the
+  original depth is reported in `sourceBitsPerComponent`).
+- Raw codestreams with subsampled components and no JP2 colour metadata throw
+  `Jpeg2000UnsupportedException`; JP2 files resample through the colour
+  pipeline.
+- Custom (non 5x3 / 9x7) wavelet kernels, progression orders outside the five
+  standard ones, and Part 2 (JPX) extensions are not supported.
+- The encoder reads PNM only, 8 bits, unsigned.
+- Decoding is single-threaded and, for now, several times slower than native
+  codecs; see [doc/BENCHMARKS.md](https://github.com/insinfo/jpeg2000/blob/main/doc/BENCHMARKS.md).
+  Decode large images off the UI thread.
 
 ## Development
 
 Run the same checks as CI:
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test bin benchmark
+dart format --output=none --set-exit-if-changed lib test bin benchmark example
 dart analyze
-dart test
+dart test -j 1
 dart test -p chrome test/jpeg2000_public_api_test.dart
 dart run benchmark/codec_benchmark.dart
 dart compile js -O2 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
@@ -147,122 +191,20 @@ dart compile wasm -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
 node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
 ```
 
-The JavaScript compile smoke uses `-O2`, Dart's safe production-oriented
-optimization level. `-O4` is intentionally avoided in CI because it enables
-aggressive unsafe optimizations and is better reserved for separate optimizer
-experiments.
+`test/architecture/public_facade_imports_test.dart` walks the import graph
+from `lib/jpeg2000.dart` the way pub.dev does and fails if `dart:io` becomes
+reachable, which would cost the package its Web and Wasm support.
 
-Fixtures live in:
+Fixtures live in `test/fixtures` (synthetic JP2/J2K files with decoded
+references, a conformance subset with bit-exact references, and small MQ and
+entropy fixtures). They are not published with the package.
 
-- `test/fixtures/test_images`: synthetic JP2/J2K files and decoded references.
-- `test/fixtures/j2k_tests`: conformance subset and bit-exact references.
-- `test/fixtures/*.json`: small MQ/entropy/parity fixtures.
+## Origin and licenses
 
-## Performance Snapshot
+The Dart code is released under the MIT license (see `LICENSE`).
 
-These local measurements were taken on 2026-07-05 on Windows x64, Intel Core
-i3-1215U (6 cores, 8 logical processors), Dart 3.6.2, Node 24.14.1, Java
-25.0.2, Go 1.26.4, OpenJPEG 2.5.4 built from `referencias/openjpeg` with CMake
-4.3.3, Ninja 1.13.2, and GCC 16.1.0 from `C:\w64devkit`.
-
-The Dart, JAI ImageIO, and Go rows are in-process API benchmarks. The JAI row is
-the original Java reference this port is based on, built from
-`referencias/jai-imageio-jpeg2000` and measured through its ImageIO SPI. The
-OpenJPEG row uses the `opj_compress`/`opj_decompress` command line tools, so
-process startup and file I/O are included and dominate this tiny 64x64 fixture.
-Lower is better.
-
-| Codec/runtime | Execution model | Gray encode PGM->J2K | Gray decode J2K | RGB/RGBA encode | RGB/RGBA decode | Notes |
-|---|---|---:|---:|---:|---:|---|
-| Dart VM JIT | in-process | 2772.2 us/op | 4733.0 us/op | 3850.8 us/op | 9863.6 us/op | `dart run`, 64x64 PGM/PPM, 80 iterations |
-| Dart AOT exe | in-process | 2525.4 us/op | 5137.8 us/op | 6168.0 us/op | 12435.5 us/op | `dart compile exe` |
-| Dart JavaScript `-O2` | Node 24 | 7900.0 us/op | 3762.5 us/op | 17075.0 us/op | 8400.0 us/op | `dart compile js -O2` |
-| Dart WasmGC | Node 24 | 5046.7 us/op | 6768.2 us/op | 10024.4 us/op | 12250.3 us/op | `dart compile wasm` |
-| JAI ImageIO JJ2000 | in-process | 5132.3 us/op | 4194.1 us/op | 9415.7 us/op | 7263.0 us/op | Original Java port reference; ImageIO SPI, fixed 512 MB heap |
-| Go reference | in-process | 395.9 us/op | 1126.0 us/op | 819.7 us/op | 3271.2 us/op | `referencias/go-jpeg2000`; color case is RGBA |
-| OpenJPEG C | CLI end-to-end | 11773.4 us/op | 12484.6 us/op | 12991.8 us/op | 15697.9 us/op | Native tools; includes startup and filesystem I/O |
-
-### Optimization Targets
-
-The first performance target is the original JAI ImageIO/JJ2000 Java reference.
-On the Dart VM JIT, this port is already faster than JAI for lossless encoding,
-but decoding still needs work:
-
-| Target | Current Dart VM status |
-|---|---:|
-| Match JAI gray encode | Dart is about 1.85x faster |
-| Match JAI RGB encode | Dart is about 2.44x faster |
-| Match JAI gray decode | Dart is about 1.13x slower; needs roughly 11% less time |
-| Match JAI RGB decode | Dart is about 1.36x slower; needs roughly 26% less time |
-
-The longer-term target is the Go reference implementation. Against that row,
-the Dart VM still needs a much larger gain:
-
-| Target | Current Dart VM gap |
-|---|---:|
-| Match Go gray encode | Dart is about 7.0x slower |
-| Match Go gray decode | Dart is about 4.2x slower |
-| Match Go RGB encode | Dart is about 4.7x slower |
-| Match Go RGB decode | Dart is about 3.0x slower |
-
-In practical terms, the VM target after parity with JAI is a 4x to 5x average
-speedup, with the worst current path near 7x. The first places to optimize are
-RGB decode/component conversion/writer buffering, MQ and entropy decoder hot
-loops, and allocation reuse in code-block and wavelet buffers. JavaScript and
-Wasm should be treated as a separate browser optimization pass after the VM hot
-paths are cleaner.
-
-Reproduce the Dart rows with:
-
-```bash
-dart run benchmark/codec_benchmark.dart --size=64 --iterations=80 --warmup=8
-dart compile exe benchmark/codec_benchmark.dart -o build/codec_benchmark.exe
-build/codec_benchmark.exe --size=64 --iterations=80 --warmup=8
-dart compile js -O2 --define=jpeg2000.benchmark.size=64 --define=jpeg2000.benchmark.iterations=80 --define=jpeg2000.benchmark.warmup=8 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
-node build/codec_benchmark.js
-dart compile wasm --define=jpeg2000.benchmark.size=64 --define=jpeg2000.benchmark.iterations=80 --define=jpeg2000.benchmark.warmup=8 -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
-node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
-```
-
-Reproduce the JAI ImageIO row on Windows PowerShell:
-
-```powershell
-C:\maven-mvnd-1.0.6\bin\mvnd.exe -f referencias\jai-imageio-jpeg2000\pom.xml '-DincludeScope=runtime' '-DoutputDirectory=C:\MyDartProjects\jpeg2000\build\jai-imageio-deps' dependency:copy-dependencies
-
-$sources = Get-ChildItem referencias\jai-imageio-jpeg2000\src\main\java -Recurse -Filter *.java | ForEach-Object { $_.FullName }
-$sources | Set-Content $env:TEMP\jai-imageio-jpeg2000-sources.txt
-javac --release 8 -encoding UTF-8 -cp build\jai-imageio-deps\jai-imageio-core-1.4.0.jar -d build\jai-imageio-jpeg2000-classes "@$env:TEMP\jai-imageio-jpeg2000-sources.txt"
-Copy-Item referencias\jai-imageio-jpeg2000\src\main\resources\* build\jai-imageio-jpeg2000-classes -Recurse -Force
-jar cf build\jai-imageio-jpeg2000-local.jar -C build\jai-imageio-jpeg2000-classes .
-
-javac --release 8 -encoding UTF-8 -cp "build\jai-imageio-jpeg2000-local.jar;build\jai-imageio-deps\jai-imageio-core-1.4.0.jar" -d build\java-benchmark benchmark\JaiImageioBenchmark.java
-java '-Djava.awt.headless=true' -Xms512m -Xmx512m -cp "build\java-benchmark;build\jai-imageio-jpeg2000-local.jar;build\jai-imageio-deps\jai-imageio-core-1.4.0.jar" JaiImageioBenchmark --size=64 --iterations=200 --warmup=20
-```
-
-The JAI ImageIO POM still targets Java 6, which current JDKs reject, so the
-commands above use `mvnd` to resolve dependencies and `javac --release 8` to
-compile the local reference source. JDeli remains a correctness reference for
-bit-exact fixture checks, but it is not included in this table because the
-checked local JDeli CLI does not accept PGM/PPM input directly.
-
-## Performance Roadmap
-
-- Reduce allocations in code-blocks, wavelet buffers, color conversion, and
-  writers by reusing `TypedData` across blocks.
-- Profile and optimize MQ coder/decoder and entropy coder/decoder hot loops on
-  the Dart VM and generated JavaScript.
-- Expand automated benchmarks with larger fixture sets and a browser timing
-  harness for Chrome.
-- Evaluate tile/component parallelism with isolates on the VM and Web Workers
-  in browsers.
-- Implement true incremental reads for large inputs with configurable cache
-  policies per platform.
-- Expand the encoder to PGX, multiple independent input components, tile-parts,
-  and packed packet headers.
-
-## Notes
-
-The source still contains many JJ2000-style internal names while the port is
-being stabilized. The public API uses Dart-style names; internal cleanup is
-tracked by the analyzer lints and can be done incrementally without changing
-the byte-oriented facade.
+It is a port of **JJ2000**, the Java reference implementation of JPEG 2000
+Part 1 written by EPFL, Ericsson and Canon Research Centre France. The JJ2000
+license requires its copyright notice to accompany every copy or derivative
+work; it is reproduced in `LICENSE-JJ2000.txt` and applies to the ported
+algorithms alongside the MIT terms.

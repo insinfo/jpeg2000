@@ -1,0 +1,15 @@
+# When this file exists pub ignores .gitignore, so the git-ignored paths are
+# repeated here.
+.dart_tool/
+build/
+pubspec.lock
+.local-chrome/
+downloads/
+referencias/
+
+# Development-only material: 11 MB of fixtures, the benchmark harnesses in
+# three languages, the CI definition and the decoder investigation diary.
+test/
+benchmark/
+.github/
+DEBUG_FINDINGS.md

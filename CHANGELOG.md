@@ -1,0 +1,25 @@
+## 1.0.0
+
+First release.
+
+- JP2 and raw J2K decoder ported from JJ2000: codestream parsing, EBCOT/MQ
+  entropy decoding, ROI de-scaling, dequantization, 5x3 and 9x7 inverse
+  wavelets, inverse RCT/ICT, and JP2 colour handling (enumerated colour spaces,
+  restricted ICC profiles, palettes, channel definitions). Bit-exact against
+  the JJ2000 reference on the bundled conformance subset.
+- `decodeJpeg2000` returns 8-bit interleaved pixels as gray, gray+alpha, RGB,
+  RGBA or raw multi-component data, with `hasAlpha`, `alphaIsPremultiplied`
+  and the source bit depths.
+- `probeJpeg2000` reads geometry, bit depths, tiling and alpha from the
+  headers without decoding.
+- `Jpeg2000DecodeOptions.maxPixels` and `maxDimension` reject oversized
+  images before any allocation; `onWarning` receives non-fatal diagnostics.
+- Sealed `Jpeg2000Exception` hierarchy: format, truncated, corrupted,
+  unsupported and budget errors.
+- Encoder for binary PGM (P5) and PPM (P6) bytes to raw J2K or JP2, lossless
+  or rate-controlled, with optional tiling.
+- Byte-oriented API with no `dart:io` in the import graph; works on the Dart
+  VM, dart2js and dart2wasm. `decodeJpeg2000Source` and
+  `encodeJpeg2000Source` accept files and paths on the VM and `Blob`/`File`
+  in browsers.
+- Command-line tools `jpeg2000_decode` and `jpeg2000_encode`.
