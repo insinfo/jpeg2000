@@ -197,19 +197,6 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
         final int r = g + crVal;
         final int b = g + cbVal;
 
-        if (component < _componentDebugCountdown.length &&
-            _componentDebugCountdown[component] > 0) {
-          if (_componentDebugCountdown[component] == 5) {
-            _log(
-              'RCT geometry c=$component y.off=${y.offset} y.scan=${y.scanw} '
-              'cb.off=${cb.offset} cb.scan=${cb.scanw} cr.off=${cr.offset} cr.scan=${cr.scanw}',
-            );
-          }
-          _componentDebugCountdown[component]--;
-          _log(
-              'RCT debug c=$component y=$yVal cb=$cbVal cr=$crVal -> r=$r g=$g b=$b');
-        }
-
         buffer[destIndex++] = isR ? r : (isG ? g : b);
 
         yPos++;

@@ -104,3 +104,27 @@ checked local JDeli CLI does not accept PGM/PPM input directly.
 - Expand the encoder to PGX, multiple independent input components, tile-parts,
   and packed packet headers.
 
+
+## Update: 2 September 2026
+
+Two changes moved the decoder well past the numbers above, measured on the
+same machine with `decodeJpeg2000` on `test/fixtures/test_images/file1.jp2`
+(768x512 RGB, 5x3 reversible) and `relax.jp2` (400x300, 12 layers), warm,
+best of six:
+
+| Build | file1.jp2 before | file1.jp2 after | relax.jp2 before | relax.jp2 after |
+|---|---:|---:|---:|---:|
+| Dart VM JIT | 672 ms | 182 ms | 30 ms | 21 ms |
+| Dart AOT (`dart compile exe`) | 863 ms | 219 ms | 47 ms | 24 ms |
+
+- The entropy decoder built its trace strings on every symbol even with
+  tracing off; the interpolation alone was 70% of the samples. The calls are
+  now guarded.
+- The MQ decoder tables and context state, and the entropy decoder's
+  neighbourhood state and lookup tables, are typed lists (`Uint8List`,
+  `Uint32List`, `Int32List`) instead of `List<int>`.
+
+What remains, from `build/profile.dart` (VM service CPU samples): MQ
+`decodeSymbol` 47%, the three coding passes 31%, 5x3 synthesis 6%,
+dequantization 4%. The next step is the MQ decoder itself: inlining `_byteIn`
+and keeping the code register in a local across a whole pass.

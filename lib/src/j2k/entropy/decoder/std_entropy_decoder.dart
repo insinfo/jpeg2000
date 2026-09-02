@@ -72,11 +72,11 @@ class StdEntropyDecoder extends EntropyDecoder {
     0,
   ];
 
-  static final List<int> _zcLutLh = _buildZcLutLh();
-  static final List<int> _zcLutHl = _buildZcLutHl();
-  static final List<int> _zcLutHh = _buildZcLutHh();
-  static final List<int> _scLut = _buildScLut();
-  static final List<int> _mrLut = _buildMrLut();
+  static final Uint8List _zcLutLh = _buildZcLutLh();
+  static final Uint8List _zcLutHl = _buildZcLutHl();
+  static final Uint8List _zcLutHh = _buildZcLutHh();
+  static final Uint32List _scLut = _buildScLut();
+  static final Uint8List _mrLut = _buildMrLut();
 
   static const int _stateSep = 16;
 
@@ -159,11 +159,7 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
     final maxWidth = decoderSpecs.cblks.getMaxCBlkWidth();
     final maxHeight = decoderSpecs.cblks.getMaxCBlkHeight();
-    state = List<int>.filled(
-      (maxWidth + 2) * (((maxHeight + 1) >> 1) + 2),
-      0,
-      growable: false,
-    );
+    state = Uint32List((maxWidth + 2) * (((maxHeight + 1) >> 1) + 2));
   }
 
   final DecoderSpecs decoderSpecs;
@@ -181,7 +177,7 @@ class StdEntropyDecoder extends EntropyDecoder {
 
   List<int>? _timings;
 
-  late final List<int> state;
+  late final Uint32List state;
 
   int _currentResLevel = -1;
   int _currentBand = -1;
@@ -588,7 +584,7 @@ class StdEntropyDecoder extends EntropyDecoder {
       getCodeBlock(component, verticalCodeBlockIndex, horizontalCodeBlockIndex,
           subband, block);
 
-  static List<int> _selectZcLut(int orientation) {
+  static Uint8List _selectZcLut(int orientation) {
     switch (orientation) {
       case Subband.wtOrientHl:
         return _zcLutHl;
@@ -770,7 +766,7 @@ class StdEntropyDecoder extends EntropyDecoder {
   /// current bit-plane, the (partially) decoded block and the significance
   /// state array.
   static void Function(
-          String pass, int bitPlane, DataBlkInt block, List<int> state)?
+          String pass, int bitPlane, DataBlkInt block, Uint32List state)?
       passDumpHook;
 
   void _logPassResult(String pass, int bitPlane, DataBlkInt block) {
@@ -903,11 +899,13 @@ class StdEntropyDecoder extends EntropyDecoder {
     DataBlkInt cblk,
     MQDecoder mq,
     int bitPlane,
-    List<int> state,
+    Uint32List state,
     List<int> zcLut,
     bool terminated,
   ) {
-    trace('sigProgPass start bp=$bitPlane');
+    if (tracing) {
+      trace('sigProgPass start bp=$bitPlane');
+    }
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
@@ -949,15 +947,19 @@ class StdEntropyDecoder extends EntropyDecoder {
           if ((csj & (_stateSigR1 | _stateNzCtxtR1)) == _stateNzCtxtR1) {
             final zcCtxIndex = csj & _zcMask;
             final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-            trace('sigProgPass ZC R1 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (tracing) {
+              trace('sigProgPass ZC R1 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            }
             if (zcSym != 0) {
               final signLut = _scLut[(csj >>> _scShiftR1) & _scMask];
               final scCtx = signLut & ((1 << _scShiftR1) - 1);
               final predictedSign = (signLut >>> _scSpredShift) & 1;
               final rawSym = mq.decodeSymbol(scCtx);
               final sym = rawSym ^ predictedSign;
-              trace(
-                  'sigProgPass SC R1 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'sigProgPass SC R1 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              }
               data[k] = _encodeSignSample(sym, setmask);
               if (tracing) {
                 traceSample('R1', k, sym, data[k]);
@@ -1014,15 +1016,19 @@ class StdEntropyDecoder extends EntropyDecoder {
             k += dscanw;
             final zcCtxIndex = (csj >>> _stateSep) & _zcMask;
             final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-            trace('sigProgPass ZC R2 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (tracing) {
+              trace('sigProgPass ZC R2 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            }
             if (zcSym != 0) {
               final signLut = _scLut[(csj >>> _scShiftR2) & _scMask];
               final scCtx = signLut & ((1 << _scShiftR1) - 1);
               final predictedSign = (signLut >>> _scSpredShift) & 1;
               final rawSym = mq.decodeSymbol(scCtx);
               final sym = rawSym ^ predictedSign;
-              trace(
-                  'sigProgPass SC R2 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'sigProgPass SC R2 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              }
               data[k] = _encodeSignSample(sym, setmask);
               if (tracing) {
                 traceSample('R2', k, sym, data[k]);
@@ -1073,15 +1079,19 @@ class StdEntropyDecoder extends EntropyDecoder {
           if ((csj & (_stateSigR1 | _stateNzCtxtR1)) == _stateNzCtxtR1) {
             final zcCtxIndex = csj & _zcMask;
             final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-            trace('sigProgPass ZC R3 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (tracing) {
+              trace('sigProgPass ZC R3 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            }
             if (zcSym != 0) {
               final signLut = _scLut[(csj >>> _scShiftR1) & _scMask];
               final scCtx = signLut & ((1 << _scShiftR1) - 1);
               final predictedSign = (signLut >>> _scSpredShift) & 1;
               final rawSym = mq.decodeSymbol(scCtx);
               final sym = rawSym ^ predictedSign;
-              trace(
-                  'sigProgPass SC R3 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'sigProgPass SC R3 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              }
               data[k] = _encodeSignSample(sym, setmask);
               if (tracing) {
                 traceSample('R3', k, sym, data[k]);
@@ -1127,15 +1137,19 @@ class StdEntropyDecoder extends EntropyDecoder {
             k += dscanw;
             final zcCtxIndex = (csj >>> _stateSep) & _zcMask;
             final zcSym = mq.decodeSymbol(zcLut[zcCtxIndex]);
-            trace('sigProgPass ZC R4 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            if (tracing) {
+              trace('sigProgPass ZC R4 k=$k ctx=$zcCtxIndex sym=$zcSym');
+            }
             if (zcSym != 0) {
               final signLut = _scLut[(csj >>> _scShiftR2) & _scMask];
               final scCtx = signLut & ((1 << _scShiftR1) - 1);
               final predictedSign = (signLut >>> _scSpredShift) & 1;
               final rawSym = mq.decodeSymbol(scCtx);
               final sym = rawSym ^ predictedSign;
-              trace(
-                  'sigProgPass SC R4 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'sigProgPass SC R4 k=$k ctx=$scCtx pred=$predictedSign rawSym=$rawSym sym=$sym');
+              }
               data[k] = _encodeSignSample(sym, setmask);
               if (tracing) {
                 traceSample('R4', k, sym, data[k]);
@@ -1194,10 +1208,12 @@ class StdEntropyDecoder extends EntropyDecoder {
     DataBlkInt cblk,
     MQDecoder mqDecoder,
     int bitPlane,
-    List<int> state,
+    Uint32List state,
     bool terminated,
   ) {
-    trace('magRefPass start bp=$bitPlane');
+    if (tracing) {
+      trace('magRefPass start bp=$bitPlane');
+    }
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
@@ -1234,7 +1250,9 @@ class StdEntropyDecoder extends EntropyDecoder {
             final ctxIdx = csj & _mrMask;
             final ctx = _mrLut[ctxIdx];
             final sym = mqDecoder.decodeSymbol(ctx);
-            trace('magRefPass MR R1 k=$k ctx=$ctxIdx sym=$sym');
+            if (tracing) {
+              trace('magRefPass MR R1 k=$k ctx=$ctxIdx sym=$sym');
+            }
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
@@ -1252,7 +1270,9 @@ class StdEntropyDecoder extends EntropyDecoder {
             final ctxIdx = (csj >>> _stateSep) & _mrMask;
             final ctx = _mrLut[ctxIdx];
             final sym = mqDecoder.decodeSymbol(ctx);
-            trace('magRefPass MR R2 k=$k ctx=$ctxIdx sym=$sym');
+            if (tracing) {
+              trace('magRefPass MR R2 k=$k ctx=$ctxIdx sym=$sym');
+            }
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
@@ -1274,7 +1294,9 @@ class StdEntropyDecoder extends EntropyDecoder {
             final ctxIdx = csj & _mrMask;
             final ctx = _mrLut[ctxIdx];
             final sym = mqDecoder.decodeSymbol(ctx);
-            trace('magRefPass MR R3 k=$k ctx=$ctxIdx sym=$sym');
+            if (tracing) {
+              trace('magRefPass MR R3 k=$k ctx=$ctxIdx sym=$sym');
+            }
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
@@ -1292,7 +1314,9 @@ class StdEntropyDecoder extends EntropyDecoder {
             final ctxIdx = (csj >>> _stateSep) & _mrMask;
             final ctx = _mrLut[ctxIdx];
             final sym = mqDecoder.decodeSymbol(ctx);
-            trace('magRefPass MR R4 k=$k ctx=$ctxIdx sym=$sym');
+            if (tracing) {
+              trace('magRefPass MR R4 k=$k ctx=$ctxIdx sym=$sym');
+            }
             final refined =
                 _refineMagnitude(data[k], resetmask, sym, bitPlane, setmask);
             data[k] = refined;
@@ -1320,10 +1344,12 @@ class StdEntropyDecoder extends EntropyDecoder {
     DataBlkInt cblk,
     ByteToBitInput bin,
     int bitPlane,
-    List<int> state,
+    Uint32List state,
     bool terminated,
   ) {
-    trace('rawSigProgPass start bp=$bitPlane');
+    if (tracing) {
+      trace('rawSigProgPass start bp=$bitPlane');
+    }
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
@@ -1582,8 +1608,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     }
   }
 
-  static List<int> _buildZcLutLh() {
-    final lut = List<int>.filled(1 << _zcLutBits, 0, growable: false);
+  static Uint8List _buildZcLutLh() {
+    final lut = Uint8List(1 << _zcLutBits);
     lut[0] = 2;
     for (var i = 1; i < 16; i++) {
       lut[i] = 4;
@@ -1614,8 +1640,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     return lut;
   }
 
-  static List<int> _buildZcLutHl() {
-    final lut = List<int>.filled(1 << _zcLutBits, 0, growable: false);
+  static Uint8List _buildZcLutHl() {
+    final lut = Uint8List(1 << _zcLutBits);
     lut[0] = 2;
     for (var i = 1; i < 16; i++) {
       lut[i] = 4;
@@ -1648,8 +1674,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     return lut;
   }
 
-  static List<int> _buildZcLutHh() {
-    final lut = List<int>.filled(1 << _zcLutBits, 0, growable: false);
+  static Uint8List _buildZcLutHh() {
+    final lut = Uint8List(1 << _zcLutBits);
     lut[0] = 2;
     final twoBits = <int>[3, 5, 6, 9, 10, 12];
     final oneBit = <int>[1, 2, 4, 8];
@@ -1693,8 +1719,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     return lut;
   }
 
-  static List<int> _buildScLut() {
-    final lut = List<int>.filled(1 << _scLutBits, 0, growable: false);
+  static Uint32List _buildScLut() {
+    final lut = Uint32List(1 << _scLutBits);
     final inter = List<int>.filled(36, 0, growable: false);
     inter[(2 << 3) | 2] = 15;
     inter[(2 << 3) | 1] = 14;
@@ -1726,8 +1752,8 @@ class StdEntropyDecoder extends EntropyDecoder {
     return lut;
   }
 
-  static List<int> _buildMrLut() {
-    final lut = List<int>.filled(1 << _mrLutBits, 0, growable: false);
+  static Uint8List _buildMrLut() {
+    final lut = Uint8List(1 << _mrLutBits);
     lut[0] = 16;
     for (var i = 1; i < (1 << (_mrLutBits - 1)); i++) {
       lut[i] = 17;
@@ -1761,11 +1787,13 @@ class StdEntropyDecoder extends EntropyDecoder {
     DataBlkInt cblk,
     MQDecoder mq,
     int bitPlane,
-    List<int> state,
+    Uint32List state,
     List<int> zcLut,
     bool terminated,
   ) {
-    trace('cleanuppass start bp=$bitPlane');
+    if (tracing) {
+      trace('cleanuppass start bp=$bitPlane');
+    }
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;
@@ -1806,14 +1834,18 @@ class StdEntropyDecoder extends EntropyDecoder {
             state[j + sscanw] == 0 &&
             stripeHeight == StdEntropyCoderOptions.stripeHeight) {
           final rlcSym = mq.decodeSymbol(_rlcCtxt);
-          trace('cleanuppass RLC k=$sk sym=$rlcSym');
+          if (tracing) {
+            trace('cleanuppass RLC k=$sk sym=$rlcSym');
+          }
 
           if (rlcSym != 0) {
             // run-length is significant, decode length
             final rlc1 = mq.decodeSymbol(_unifCtxt);
             final rlc2 = mq.decodeSymbol(_unifCtxt);
             final rlclen = (rlc1 << 1) | rlc2;
-            trace('cleanuppass RLC len=$rlclen (bits $rlc1, $rlc2)');
+            if (tracing) {
+              trace('cleanuppass RLC len=$rlclen (bits $rlc1, $rlc2)');
+            }
 
             // Set 'k' and 'j' accordingly
             var k = sk + rlclen * dscanw;
@@ -1829,8 +1861,10 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace(
-                  'cleanuppass SC RLC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'cleanuppass SC RLC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              }
 
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
@@ -1882,8 +1916,10 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace(
-                  'cleanuppass SC RLC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'cleanuppass SC RLC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              }
 
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
@@ -1939,7 +1975,9 @@ class StdEntropyDecoder extends EntropyDecoder {
             // Scan first row
             if ((csj & (_stateSigR1 | _stateVisitedR1)) == 0) {
               final zcSym = mq.decodeSymbol(zcLut[csj & _zcMask]);
-              trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
+              if (tracing) {
+                trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
+              }
 
               if (zcSym != 0) {
                 // Became significant - use sign coding
@@ -1947,8 +1985,10 @@ class StdEntropyDecoder extends EntropyDecoder {
                 final ctxt = signLut & ((1 << _scShiftR1) - 1);
                 final rawSym = mq.decodeSymbol(ctxt);
                 final sym = rawSym ^ (signLut >>> _scSpredShift);
-                trace(
-                    'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+                if (tracing) {
+                  trace(
+                      'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+                }
 
                 // Update the data
                 data[k] = _encodeSignSample(sym, setmask);
@@ -2010,8 +2050,10 @@ class StdEntropyDecoder extends EntropyDecoder {
               k += dscanw;
               final zcSym =
                   mq.decodeSymbol(zcLut[(csj >>> _stateSep) & _zcMask]);
-              trace(
-                  'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+              if (tracing) {
+                trace(
+                    'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+              }
 
               if (zcSym != 0) {
                 // Became significant - use sign coding
@@ -2019,8 +2061,10 @@ class StdEntropyDecoder extends EntropyDecoder {
                 final ctxt = signLut & ((1 << _scShiftR1) - 1);
                 final rawSym = mq.decodeSymbol(ctxt);
                 final sym = rawSym ^ (signLut >>> _scSpredShift);
-                trace(
-                    'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+                if (tracing) {
+                  trace(
+                      'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+                }
 
                 // Update the data
                 data[k] = _encodeSignSample(sym, setmask);
@@ -2082,7 +2126,9 @@ class StdEntropyDecoder extends EntropyDecoder {
           // Scan first row
           if ((csj & (_stateSigR1 | _stateVisitedR1)) == 0) {
             final zcSym = mq.decodeSymbol(zcLut[csj & _zcMask]);
-            trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
+            if (tracing) {
+              trace('cleanuppass ZC R1 k=$k ctx=${csj & _zcMask} sym=$zcSym');
+            }
 
             if (zcSym != 0) {
               // Became significant - use sign coding
@@ -2090,8 +2136,10 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace(
-                  'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'cleanuppass SC R1 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              }
 
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
@@ -2140,8 +2188,10 @@ class StdEntropyDecoder extends EntropyDecoder {
           if ((csj & (_stateSigR2 | _stateVisitedR2)) == 0) {
             k += dscanw;
             final zcSym = mq.decodeSymbol(zcLut[(csj >>> _stateSep) & _zcMask]);
-            trace(
-                'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+            if (tracing) {
+              trace(
+                  'cleanuppass ZC R2 k=$k ctx=${(csj >>> _stateSep) & _zcMask} sym=$zcSym');
+            }
 
             if (zcSym != 0) {
               // Became significant - use sign coding
@@ -2149,8 +2199,10 @@ class StdEntropyDecoder extends EntropyDecoder {
               final ctxt = signLut & ((1 << _scShiftR1) - 1);
               final rawSym = mq.decodeSymbol(ctxt);
               final sym = rawSym ^ (signLut >>> _scSpredShift);
-              trace(
-                  'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              if (tracing) {
+                trace(
+                    'cleanuppass SC R2 k=$k ctxt=$ctxt rawSym=$rawSym sym=$sym');
+              }
 
               // Update the data
               data[k] = _encodeSignSample(sym, setmask);
@@ -2225,12 +2277,14 @@ class StdEntropyDecoder extends EntropyDecoder {
     DataBlkInt cblk,
     ByteToBitInput bin,
     int bitPlane,
-    List<int> state,
+    Uint32List state,
     bool terminated,
   ) {
     // Raw magnitude refinement pass - processes magnitude refinement using raw bit input
     // without MQ coding. This is used for speed in higher bit-planes.
-    trace('rawMagRefPass start bp=$bitPlane');
+    if (tracing) {
+      trace('rawMagRefPass start bp=$bitPlane');
+    }
     final data = cblk.data!;
     final dscanw = cblk.scanw;
     final sscanw = cblk.w + 2;

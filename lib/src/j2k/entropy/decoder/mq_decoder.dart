@@ -13,15 +13,15 @@ import 'byte_input_buffer.dart';
 class MQDecoder {
   MQDecoder(ByteInputBuffer input, int numContexts, List<int> initialStates)
       : _input = input,
-        _mps = List<int>.filled(numContexts, 0, growable: false),
-        _states = List<int>.filled(numContexts, 0, growable: false),
-        _initialStates = List<int>.from(initialStates, growable: false) {
+        _mps = Uint8List(numContexts),
+        _states = Uint8List(numContexts),
+        _initialStates = Int32List.fromList(initialStates) {
     _initDecoder();
     resetCtxts();
   }
 
   // Probability tables (Qe values and state transitions) copied from JJ2000.
-  static const List<int> _qe = <int>[
+  static final Int32List _qe = Int32List.fromList(const <int>[
     0x5601,
     0x3401,
     0x1801,
@@ -69,9 +69,9 @@ class MQDecoder {
     0x0005,
     0x0001,
     0x5601,
-  ];
+  ]);
 
-  static const List<int> _nextMps = <int>[
+  static final Uint8List _nextMps = Uint8List.fromList(const <int>[
     1,
     2,
     3,
@@ -119,9 +119,9 @@ class MQDecoder {
     45,
     45,
     46,
-  ];
+  ]);
 
-  static const List<int> _nextLps = <int>[
+  static final Uint8List _nextLps = Uint8List.fromList(const <int>[
     1,
     6,
     9,
@@ -169,9 +169,9 @@ class MQDecoder {
     42,
     43,
     46,
-  ];
+  ]);
 
-  static const List<int> _switchLM = <int>[
+  static final Uint8List _switchLM = Uint8List.fromList(const <int>[
     1,
     0,
     0,
@@ -219,7 +219,7 @@ class MQDecoder {
     0,
     0,
     0,
-  ];
+  ]);
 
   final ByteInputBuffer _input;
   final List<int> _mps;
