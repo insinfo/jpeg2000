@@ -1865,11 +1865,18 @@ class EBCOTRateAllocator extends PostCompRateAllocator {
           cbCoord = cbInfo.idx;
           b = cbCoord.x + cbCoord.y * sb.numCb!.x;
           curCblk = cblks[tileIdx][compIdx][lvlIdx][s][b];
-          for (n = 0; n < curCblk.nVldTrunc; n++) {
-            if (curCblk.truncSlopes[n] < fthresh) {
-              break;
-            } else {
-              continue;
+          if (fthresh <= 0.0) {
+            // A zero threshold means "send everything" (the lossless final
+            // layer). The last truncation point is forced valid by
+            // selectConvexHull, but its estimated slope can come out slightly
+            // negative at high bit depths, so comparing it with the threshold
+            // would drop the last bit-planes.
+            n = curCblk.nVldTrunc;
+          } else {
+            for (n = 0; n < curCblk.nVldTrunc; n++) {
+              if (curCblk.truncSlopes[n] < fthresh) {
+                break;
+              }
             }
           }
           // Store the index in the code-block truncIdxs that gives

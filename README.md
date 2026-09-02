@@ -18,7 +18,8 @@ against it on the bundled conformance subset. See
   RCT/ICT, and JP2 colour handling: enumerated sRGB/greyscale/sYCC, restricted
   ICC profiles, palettes, and channel definitions (alpha).
 - **Output:** gray, gray+alpha, RGB, RGBA or raw multi-component samples,
-  always 8 bits per channel, tightly packed and interleaved.
+  tightly packed and interleaved, 8 bits per sample by default or 16 on
+  request.
 - **Header probe:** width, height, components, bit depths, tiling and alpha
   without decoding a pixel, so callers can apply size policies first.
 - **Budgets:** `maxPixels` and `maxDimension` reject oversized images from the
@@ -26,8 +27,9 @@ against it on the bundled conformance subset. See
 - **Typed errors:** a sealed `Jpeg2000Exception` hierarchy separates "not a
   JPEG 2000 file", "truncated", "corrupted", "unsupported feature" and "over
   budget".
-- **Encoder:** binary PGM (P5) and PPM (P6) bytes to raw J2K or JP2, lossless
-  or rate-controlled, with optional tiling.
+- **Encoder:** interleaved pixel buffers (1 to 16 bits per sample, with or
+  without alpha) or binary PGM/PPM bytes to raw J2K or JP2, lossless or
+  rate-controlled, with optional tiling.
 - **Command line:** `jp2dec` and `jp2enc`.
 
 ## Installation
@@ -65,11 +67,13 @@ Jpeg2000Image decode(Uint8List jp2OrJ2kBytes) {
 
 | Field | Meaning |
 |---|---|
-| `format` | `gray8`, `grayAlpha8`, `rgb8`, `rgba8` or `multiComponent8` |
-| `components` | channels per pixel in `pixels`, alpha included |
-| `colorComponents` | leading colour channels (1 or 3; all channels for `multiComponent8`) |
+| `format` | `gray`, `grayAlpha`, `rgb`, `rgba` or `multiComponent` |
+| `components` | channels per pixel, alpha included |
+| `colorComponents` | leading colour channels (1 or 3; all channels for `multiComponent`) |
 | `hasAlpha`, `alphaIsPremultiplied` | from the JP2 `cdef` box, or the 2/4-channel convention when there is none |
-| `sourceBitsPerComponent` | bit depth of each channel in the file; samples are scaled to 8 bits |
+| `bitsPerSample` | 8 or 16, as requested by `outputBitDepth` |
+| `pixels` | the sample bytes; with 16-bit samples use the `pixels16` view |
+| `sourceBitsPerComponent` | bit depth of each channel in the file, before rescaling |
 
 Decode options:
 
@@ -77,6 +81,7 @@ Decode options:
 |---|---|---|
 | `applyColorSpace` | `true` | apply JP2 colour metadata (ICC, palette, channel definitions) |
 | `applyComponentTransform` | `true` | apply the inverse RCT/ICT signalled in the codestream |
+| `outputBitDepth` | `8` | `8` or `16`; deeper sources are shifted down, shallower ones rescaled to the full range |
 | `rate` / `bytes` | none | stop after this many bits per pixel or bytes (progressive preview) |
 | `resolution` | none | discard this many highest resolution levels |
 | `maxPixels` / `maxDimension` | none | throw `Jpeg2000BudgetException` before allocating |
@@ -116,23 +121,43 @@ try {
 
 ## Encoding
 
-```dart
-final j2k = encodeJpeg2000(ppmBytes); // lossless raw codestream
+From an interleaved pixel buffer (`Uint8List` up to 8 bits per sample,
+`Uint16List` above that; with 2 or 4 components the last one is alpha unless
+`hasAlpha: false`):
 
-final jp2 = encodeJpeg2000(
-  ppmBytes,
+```dart
+final jp2 = encodeJpeg2000Pixels(
+  rgbaBytes,
+  width: 640,
+  height: 480,
+  components: 4,
+  options: const Jpeg2000EncodeOptions(wrapInJp2: true), // lossless
+);
+
+final j2k = encodeJpeg2000Pixels(
+  gray16Samples, // Uint16List
+  width: 512,
+  height: 512,
+  components: 1,
+  bitsPerSample: 16,
   options: const Jpeg2000EncodeOptions(
     lossless: false,
     rate: 1.0, // bits per pixel
-    wrapInJp2: true,
     tileWidth: 256,
     tileHeight: 256,
   ),
 );
 ```
 
-The encoder takes binary PGM (P5) or PPM (P6) bytes, 8 bits per sample. A
-pixel-buffer entry point is planned.
+From binary PGM (P5) or PPM (P6) bytes, 8 or 16 bits per sample:
+
+```dart
+final j2k = encodeJpeg2000(ppmBytes);
+```
+
+The JP2 wrapper carries greyscale or sRGB colour metadata and, when there is
+alpha, a channel definition box, so the file decodes back as `rgba` or
+`grayAlpha`.
 
 ## Files, paths and browser blobs
 
@@ -164,14 +189,15 @@ After `dart pub global activate jpeg2000` the tools are available as
 
 ## Limitations
 
-- Output is 8 bits per channel; 12- and 16-bit sources are scaled down (the
+- Output is 8 or 16 bits per sample; other source depths are rescaled (the
   original depth is reported in `sourceBitsPerComponent`).
 - Raw codestreams with subsampled components and no JP2 colour metadata throw
   `Jpeg2000UnsupportedException`; JP2 files resample through the colour
   pipeline.
 - Custom (non 5x3 / 9x7) wavelet kernels, progression orders outside the five
   standard ones, and Part 2 (JPX) extensions are not supported.
-- The encoder reads PNM only, 8 bits, unsigned.
+- The encoder takes unsigned samples only; signed components and
+  per-component depths are not exposed.
 - Decoding is single-threaded and, for now, several times slower than native
   codecs; see [doc/BENCHMARKS.md](https://github.com/insinfo/jpeg2000/blob/main/doc/BENCHMARKS.md).
   Decode large images off the UI thread.

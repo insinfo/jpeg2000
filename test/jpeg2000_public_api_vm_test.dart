@@ -26,7 +26,7 @@ void main() {
       expect(info.colorComponents, 3);
       expect(info.hasAlpha, isFalse);
       expect(info.bitsPerComponent, <int>[8, 8, 8]);
-      expect(info.pixelFormat, Jpeg2000PixelFormat.rgb8);
+      expect(info.pixelFormat, Jpeg2000PixelFormat.rgb);
       expect(info.tileColumns * info.tileRows, greaterThan(0));
     });
 
@@ -35,7 +35,7 @@ void main() {
       expect(info.components, 4);
       expect(info.colorComponents, 3);
       expect(info.hasAlpha, isTrue);
-      expect(info.pixelFormat, Jpeg2000PixelFormat.rgba8);
+      expect(info.pixelFormat, Jpeg2000PixelFormat.rgba);
     });
 
     test('reports 16-bit sources', () {
@@ -51,14 +51,14 @@ void main() {
       expect(info.width, 5);
       expect(info.height, 3);
       expect(info.components, 1);
-      expect(info.pixelFormat, Jpeg2000PixelFormat.gray8);
+      expect(info.pixelFormat, Jpeg2000PixelFormat.gray);
     });
   });
 
   group('decodeJpeg2000 layout', () {
     test('keeps the alpha channel of a four-component JP2', () {
       final image = decodeJpeg2000(fixture('barras_rgb.jp2'));
-      expect(image.format, Jpeg2000PixelFormat.rgba8);
+      expect(image.format, Jpeg2000PixelFormat.rgba);
       expect(image.components, 4);
       expect(image.colorComponents, 3);
       expect(image.hasAlpha, isTrue);
@@ -80,7 +80,7 @@ void main() {
 
     test('scales 16-bit sources to 8 bits and says so', () {
       final image = decodeJpeg2000(fixture('grad_final.jp2'));
-      expect(image.format, Jpeg2000PixelFormat.rgb8);
+      expect(image.format, Jpeg2000PixelFormat.rgb);
       expect(image.sourceBitsPerComponent, <int>[16, 16, 16]);
       expect(image.pixels.length, 32 * 32 * 3);
     });

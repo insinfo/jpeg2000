@@ -39,39 +39,43 @@ import '../j2k/wavelet/synthesis/syn_wt_filter.dart';
 import '../j2k/wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
 import '../j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
 import '../jpeg2000_exceptions.dart';
+import 'interleaved_memory_reader.dart';
 import 'memory_codestream_writer.dart';
-import 'pnm_memory_reader.dart';
+import 'pnm_parser.dart';
 
-/// Layout of the interleaved 8-bit samples in [Jpeg2000Image.pixels].
+/// Channel layout of [Jpeg2000Image.pixels].
+///
+/// The sample width is a separate property, [Jpeg2000Image.bitsPerSample].
 enum Jpeg2000PixelFormat {
   /// One luminance sample per pixel.
-  gray8,
+  gray,
 
   /// Luminance followed by alpha.
-  grayAlpha8,
+  grayAlpha,
 
   /// Red, green and blue.
-  rgb8,
+  rgb,
 
   /// Red, green, blue and alpha.
-  rgba8,
+  rgba,
 
   /// Every codestream component in order, with no colour interpretation.
   ///
   /// Used for CMYK, multispectral and other images whose colour channels are
   /// not one or three. [Jpeg2000Image.components] says how many there are.
-  multiComponent8,
+  multiComponent,
 }
 
-/// Decoded 8-bit interleaved pixels.
+/// Decoded interleaved pixels.
 ///
-/// Samples are always 8 bits wide, unsigned, row-major and tightly packed:
-/// pixel `(x, y)` starts at `(y * width + x) * components`. Sources with more
-/// than 8 bits per component are scaled down to 8; the original depth is kept
-/// in [sourceBitsPerComponent].
+/// Samples are unsigned, row-major and tightly packed: pixel `(x, y)` starts
+/// at sample index `(y * width + x) * components`. They are 8 bits wide by
+/// default and 16 bits wide when [Jpeg2000DecodeOptions.outputBitDepth] asks
+/// for it; [bitsPerSample] says which. Sources with a different depth are
+/// rescaled, and the original depth is kept in [sourceBitsPerComponent].
 class Jpeg2000Image {
   /// Creates a decoded image; normally produced by [decodeJpeg2000].
-  const Jpeg2000Image({
+  Jpeg2000Image({
     required this.width,
     required this.height,
     required this.components,
@@ -79,9 +83,25 @@ class Jpeg2000Image {
     required this.hasAlpha,
     required this.alphaIsPremultiplied,
     required this.sourceBitsPerComponent,
+    required this.bitsPerSample,
     required this.pixels,
     required this.format,
-  });
+  }) {
+    if (bitsPerSample != 8 && bitsPerSample != 16) {
+      throw ArgumentError.value(
+        bitsPerSample,
+        'bitsPerSample',
+        'must be 8 or 16',
+      );
+    }
+    final expected = width * height * components * (bitsPerSample ~/ 8);
+    if (pixels.length != expected) {
+      throw ArgumentError(
+        'pixels holds ${pixels.length} bytes; ${width}x$height with '
+        '$components channel(s) at $bitsPerSample bits needs $expected.',
+      );
+    }
+  }
 
   /// Image width in pixels.
   final int width;
@@ -89,11 +109,11 @@ class Jpeg2000Image {
   /// Image height in pixels.
   final int height;
 
-  /// Number of interleaved channels per pixel in [pixels], alpha included.
+  /// Number of interleaved channels per pixel, alpha included.
   final int components;
 
   /// Number of colour channels: 1 for gray, 3 for RGB, or every channel for
-  /// [Jpeg2000PixelFormat.multiComponent8].
+  /// [Jpeg2000PixelFormat.multiComponent].
   final int colorComponents;
 
   /// Whether the last channel of every pixel is alpha.
@@ -108,18 +128,36 @@ class Jpeg2000Image {
   /// Bit depth of each output channel in the codestream, in output order.
   final List<int> sourceBitsPerComponent;
 
-  /// The samples; see the class comment for the layout.
+  /// Width of every sample in [pixels]: 8 or 16.
+  final int bitsPerSample;
+
+  /// The sample bytes.
+  ///
+  /// With [bitsPerSample] 8 each byte is one sample. With 16 the buffer holds
+  /// host-endian 16-bit samples and [pixels16] is the typed view of it.
   final Uint8List pixels;
 
-  /// How to interpret [pixels].
+  /// How to interpret the channels.
   final Jpeg2000PixelFormat format;
 
+  /// [pixels] as 16-bit samples; only valid when [bitsPerSample] is 16.
+  Uint16List get pixels16 {
+    if (bitsPerSample != 16) {
+      throw StateError('pixels16 needs bitsPerSample 16, got $bitsPerSample.');
+    }
+    return Uint16List.view(
+      pixels.buffer,
+      pixels.offsetInBytes,
+      pixels.length ~/ 2,
+    );
+  }
+
   /// Bytes from one row to the next.
-  int get rowStride => width * components;
+  int get rowStride => width * components * (bitsPerSample ~/ 8);
 
   @override
   String toString() => 'Jpeg2000Image(${width}x$height, $format, '
-      'components=$components, alpha=$hasAlpha)';
+      'components=$components, bits=$bitsPerSample, alpha=$hasAlpha)';
 }
 
 /// What [probeJpeg2000] learns from the headers without decoding any pixel.
@@ -195,6 +233,10 @@ class Jpeg2000Info {
   /// Total pixel count, `width * height`.
   int get pixelCount => width * height;
 
+  /// Largest bit depth among the components.
+  int get maxBitsPerComponent =>
+      bitsPerComponent.fold(0, (max, bits) => bits > max ? bits : max);
+
   @override
   String toString() => 'Jpeg2000Info(${width}x$height, '
       'components=$components, $pixelFormat, jp2=$isJp2)';
@@ -210,6 +252,7 @@ class Jpeg2000DecodeOptions {
     this.bytes,
     this.resolution,
     this.parsing = true,
+    this.outputBitDepth = 8,
     this.maxPixels,
     this.maxDimension,
     this.onWarning,
@@ -239,6 +282,12 @@ class Jpeg2000DecodeOptions {
   /// Parse packet headers even when rate limiting truncates the stream.
   final bool parsing;
 
+  /// Sample width of the result: 8 (default) or 16.
+  ///
+  /// Sources deeper than the output are shifted down; shallower ones are
+  /// rescaled to the full output range, so an 8-bit 255 becomes 65535.
+  final int outputBitDepth;
+
   /// Refuse images with more than this many pixels.
   ///
   /// Checked from the SIZ marker before anything is allocated. Null means no
@@ -256,7 +305,7 @@ class Jpeg2000DecodeOptions {
   final void Function(String message)? onWarning;
 }
 
-/// Options for [encodeJpeg2000].
+/// Options for [encodeJpeg2000] and [encodeJpeg2000Pixels].
 class Jpeg2000EncodeOptions {
   /// Creates encode options; the default is a lossless single-tile
   /// codestream.
@@ -279,8 +328,9 @@ class Jpeg2000EncodeOptions {
   /// Mutually exclusive with [lossless].
   final double? rate;
 
-  /// Wrap the codestream in a JP2 container with sRGB or greyscale colour
-  /// metadata; false returns the raw J2K codestream.
+  /// Wrap the codestream in a JP2 container with colour metadata (greyscale
+  /// or sRGB, plus a channel definition box when there is alpha); false
+  /// returns the raw J2K codestream.
   final bool wrapInJp2;
 
   /// Nominal tile width; 0 uses a single tile.
@@ -346,7 +396,7 @@ Jpeg2000Info probeJpeg2000(Uint8List bytes) {
   });
 }
 
-/// Decodes JP2 or raw J2K [bytes] into 8-bit interleaved pixels.
+/// Decodes JP2 or raw J2K [bytes] into interleaved pixels.
 ///
 /// Throws a [Jpeg2000Exception] subtype for input problems and an
 /// [ArgumentError] for invalid [options].
@@ -395,6 +445,7 @@ Jpeg2000Image decodeJpeg2000(
         source,
         headerDecoder,
         options.applyColorSpace ? colorSpace : null,
+        options.outputBitDepth,
       );
     } finally {
       input.close();
@@ -416,15 +467,72 @@ Future<Jpeg2000Image> decodeJpeg2000Source(
 
 /// Encodes binary PGM (P5) or PPM (P6) [pnmBytes] to raw J2K or JP2 bytes.
 ///
-/// Throws an [ArgumentError] when the PNM header is invalid or the options
-/// contradict each other.
+/// Maximum values up to 255 give 8-bit samples; up to 65535 give 16-bit
+/// samples (two bytes each, most significant first). Throws an
+/// [ArgumentError] when the PNM header is invalid or the options contradict
+/// each other.
 Uint8List encodeJpeg2000(
   Uint8List pnmBytes, {
   Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
 }) {
-  final params = _buildEncodeParameters(options);
-  final reader = PnmMemoryReader(pnmBytes);
+  final reader = parsePnm(pnmBytes);
+  return _encodeWithReader(reader, options, hasAlpha: false);
+}
 
+/// Encodes interleaved, unsigned, tightly packed [samples] to raw J2K or JP2
+/// bytes.
+///
+/// Sample `(x, y)` of component `c` is `samples[(y * width + x) * components
+/// + c]`. Use a [Uint8List] for up to 8 bits per sample and a [Uint16List]
+/// above that. With 2 or 4 components the last one is treated as alpha
+/// unless [hasAlpha] says otherwise; the JP2 wrapper records that in a
+/// channel definition box so decoders return it as alpha again. The
+/// multiple-component transform applies to the first three components when
+/// there are at least three.
+Uint8List encodeJpeg2000Pixels(
+  List<int> samples, {
+  required int width,
+  required int height,
+  required int components,
+  int bitsPerSample = 8,
+  bool? hasAlpha,
+  Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
+}) {
+  final reader = InterleavedMemoryReader(
+    samples,
+    width: width,
+    height: height,
+    components: components,
+    bitsPerSample: bitsPerSample,
+  );
+  final alpha = hasAlpha ?? (components == 2 || components == 4);
+  if (alpha && components != 2 && components != 4) {
+    throw ArgumentError(
+      'hasAlpha needs 2 (gray+alpha) or 4 (RGB+alpha) components; '
+      'got $components.',
+    );
+  }
+  return _encodeWithReader(reader, options, hasAlpha: alpha);
+}
+
+/// Loads PNM bytes with the platform abstraction and encodes them.
+///
+/// On the VM [source] may be bytes, `List<int>`, `dart:io` `File`, or a path.
+/// In browsers it may be bytes or a `package:web` `Blob`/`File`.
+Future<Uint8List> encodeJpeg2000Source(
+  Object source, {
+  Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
+}) async {
+  final bytes = await platform.readBinarySource(source);
+  return encodeJpeg2000(bytes, options: options);
+}
+
+Uint8List _encodeWithReader(
+  ImgReader reader,
+  Jpeg2000EncodeOptions options, {
+  required bool hasAlpha,
+}) {
+  final params = _buildEncodeParameters(options);
   try {
     final codestream = _encodeReader(reader, params, options);
     if (!options.wrapInJp2) {
@@ -441,22 +549,11 @@ Uint8List encodeJpeg2000(
       height: reader.getImgHeight(),
       components: reader.getNumComps(),
       bitsPerComponent: bitsPerComponent,
+      hasAlpha: hasAlpha,
     );
   } finally {
     reader.close();
   }
-}
-
-/// Loads PNM bytes with the platform abstraction and encodes them.
-///
-/// On the VM [source] may be bytes, `List<int>`, `dart:io` `File`, or a path.
-/// In browsers it may be bytes or a `package:web` `Blob`/`File`.
-Future<Uint8List> encodeJpeg2000Source(
-  Object source, {
-  Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
-}) async {
-  final bytes = await platform.readBinarySource(source);
-  return encodeJpeg2000(bytes, options: options);
 }
 
 // ---------------------------------------------------------------------------
@@ -545,6 +642,13 @@ void _validateDecodeOptions(Jpeg2000DecodeOptions options) {
   final resolution = options.resolution;
   if (resolution != null && resolution < 0) {
     throw ArgumentError.value(resolution, 'resolution', 'must not be negative');
+  }
+  if (options.outputBitDepth != 8 && options.outputBitDepth != 16) {
+    throw ArgumentError.value(
+      options.outputBitDepth,
+      'outputBitDepth',
+      'must be 8 or 16',
+    );
   }
   final maxPixels = options.maxPixels;
   if (maxPixels != null && maxPixels <= 0) {
@@ -902,18 +1006,17 @@ _ChannelLayout _makeLayout(
       colorComponents: all.length,
       alpha: null,
       alphaIsPremultiplied: false,
-      format: Jpeg2000PixelFormat.multiComponent8,
+      format: Jpeg2000PixelFormat.multiComponent,
     );
   }
   final channels = <int>[...colour, if (alpha != null) alpha];
   final Jpeg2000PixelFormat format;
   if (colour.length == 1) {
     format = alpha != null
-        ? Jpeg2000PixelFormat.grayAlpha8
-        : Jpeg2000PixelFormat.gray8;
+        ? Jpeg2000PixelFormat.grayAlpha
+        : Jpeg2000PixelFormat.gray;
   } else {
-    format =
-        alpha != null ? Jpeg2000PixelFormat.rgba8 : Jpeg2000PixelFormat.rgb8;
+    format = alpha != null ? Jpeg2000PixelFormat.rgba : Jpeg2000PixelFormat.rgb;
   }
   return _ChannelLayout(
     channels: channels,
@@ -946,6 +1049,7 @@ Jpeg2000Image _collectImage(
   BlkImgDataSrc source,
   HeaderDecoder headerDecoder,
   ColorSpace? colorSpace,
+  int outputBitDepth,
 ) {
   final sourceComponents = source.getNumComps();
   if (sourceComponents <= 0) {
@@ -969,7 +1073,22 @@ Jpeg2000Image _collectImage(
     }
   }
 
-  final pixels = Uint8List(width * height * outputComponents);
+  final sampleCount = width * height * outputComponents;
+  final wide = outputBitDepth == 16;
+  final Uint8List bytes;
+  final Uint8List? pixels8;
+  final Uint16List? pixels16;
+  if (wide) {
+    pixels16 = Uint16List(sampleCount);
+    pixels8 = null;
+    bytes = Uint8List.view(pixels16.buffer);
+  } else {
+    pixels8 = Uint8List(sampleCount);
+    pixels16 = null;
+    bytes = pixels8;
+  }
+  final outputMax = (1 << outputBitDepth) - 1;
+
   final bitDepths = List<int>.generate(
     outputComponents,
     (i) => source.getNomRangeBits(channels[i]),
@@ -993,53 +1112,101 @@ Jpeg2000Image _collectImage(
       final tileIndex = source.getTileIdx();
       final tileWidth = source.getTileCompWidth(tileIndex, channels[0]);
       final tileHeight = source.getTileCompHeight(tileIndex, channels[0]);
-      for (var row = 0; row < tileHeight; row++) {
-        for (var slot = 0; slot < outputComponents; slot++) {
-          final component = channels[slot];
-          final block = blocks[slot]
-            ..ulx = 0
-            ..uly = row
-            ..w = tileWidth
-            ..h = 1;
-          DataBlkInt dataBlock;
-          do {
-            dataBlock =
-                source.getInternCompData(block, component) as DataBlkInt;
-          } while (dataBlock.progressive);
+      for (var slot = 0; slot < outputComponents; slot++) {
+        final component = channels[slot];
+        final block = blocks[slot]
+          ..ulx = 0
+          ..uly = 0
+          ..w = tileWidth
+          ..h = tileHeight;
+        DataBlkInt dataBlock;
+        do {
+          dataBlock = source.getInternCompData(block, component) as DataBlkInt;
+        } while (dataBlock.progressive);
 
-          final data = dataBlock.getDataInt();
-          if (data == null) {
-            throw const Jpeg2000CorruptedException(
-              'Decoded component block has no data.',
-            );
-          }
-          final tOffx = source.getCompULX(component) -
-              (source.getImgULX() / source.getCompSubsX(component)).ceil();
-          final tOffy = source.getCompULY(component) -
-              (source.getImgULY() / source.getCompSubsY(component)).ceil();
-          final imageRow = row + tOffy;
-          final imageCol = tOffx;
-          final base = (imageRow * width + imageCol) * outputComponents + slot;
-          final fixedPoint = source.getFixedPoint(component);
-          final bitDepth = bitDepths[slot];
-          final levelShift = signed[slot] ? 0 : 1 << (bitDepth - 1);
-          final maxValue = (1 << bitDepth) - 1;
-          final downShift = bitDepth > 8 ? bitDepth - 8 : 0;
-          var sourceIndex = dataBlock.offset;
-          var targetIndex = base;
-          for (var x = 0; x < tileWidth; x++) {
-            var sample = fixedPoint == 0
-                ? data[sourceIndex]
-                : data[sourceIndex] >> fixedPoint;
-            sample += levelShift;
-            if (sample < 0) {
-              sample = 0;
-            } else if (sample > maxValue) {
-              sample = maxValue;
+        final data = dataBlock.getDataInt();
+        if (data == null) {
+          throw const Jpeg2000CorruptedException(
+            'Decoded component block has no data.',
+          );
+        }
+        final tOffx = source.getCompULX(component) -
+            (source.getImgULX() / source.getCompSubsX(component)).ceil();
+        final tOffy = source.getCompULY(component) -
+            (source.getImgULY() / source.getCompSubsY(component)).ceil();
+        final fixedPoint = source.getFixedPoint(component);
+        final bitDepth = bitDepths[slot];
+        final levelShift = signed[slot] ? 0 : 1 << (bitDepth - 1);
+        final maxValue = (1 << bitDepth) - 1;
+        final scanw = dataBlock.scanw;
+
+        for (var row = 0; row < tileHeight; row++) {
+          var sourceIndex = dataBlock.offset + row * scanw;
+          var targetIndex =
+              ((row + tOffy) * width + tOffx) * outputComponents + slot;
+          if (bitDepth == outputBitDepth) {
+            for (var x = 0; x < tileWidth; x++) {
+              var sample = (fixedPoint == 0
+                      ? data[sourceIndex]
+                      : data[sourceIndex] >> fixedPoint) +
+                  levelShift;
+              if (sample < 0) {
+                sample = 0;
+              } else if (sample > maxValue) {
+                sample = maxValue;
+              }
+              if (wide) {
+                pixels16![targetIndex] = sample;
+              } else {
+                pixels8![targetIndex] = sample;
+              }
+              sourceIndex++;
+              targetIndex += outputComponents;
             }
-            pixels[targetIndex] = downShift == 0 ? sample : sample >> downShift;
-            sourceIndex++;
-            targetIndex += outputComponents;
+          } else if (bitDepth > outputBitDepth) {
+            final downShift = bitDepth - outputBitDepth;
+            for (var x = 0; x < tileWidth; x++) {
+              var sample = (fixedPoint == 0
+                      ? data[sourceIndex]
+                      : data[sourceIndex] >> fixedPoint) +
+                  levelShift;
+              if (sample < 0) {
+                sample = 0;
+              } else if (sample > maxValue) {
+                sample = maxValue;
+              }
+              sample >>= downShift;
+              if (wide) {
+                pixels16![targetIndex] = sample;
+              } else {
+                pixels8![targetIndex] = sample;
+              }
+              sourceIndex++;
+              targetIndex += outputComponents;
+            }
+          } else {
+            // Shallower source: rescale so the source maximum maps to the
+            // output maximum (255 -> 65535), not to a shifted 65280.
+            final half = maxValue ~/ 2;
+            for (var x = 0; x < tileWidth; x++) {
+              var sample = (fixedPoint == 0
+                      ? data[sourceIndex]
+                      : data[sourceIndex] >> fixedPoint) +
+                  levelShift;
+              if (sample < 0) {
+                sample = 0;
+              } else if (sample > maxValue) {
+                sample = maxValue;
+              }
+              sample = (sample * outputMax + half) ~/ maxValue;
+              if (wide) {
+                pixels16![targetIndex] = sample;
+              } else {
+                pixels8![targetIndex] = sample;
+              }
+              sourceIndex++;
+              targetIndex += outputComponents;
+            }
           }
         }
       }
@@ -1054,7 +1221,8 @@ Jpeg2000Image _collectImage(
     hasAlpha: layout.alpha != null,
     alphaIsPremultiplied: layout.alphaIsPremultiplied,
     sourceBitsPerComponent: List<int>.unmodifiable(bitDepths),
-    pixels: pixels,
+    bitsPerSample: outputBitDepth,
+    pixels: bytes,
     format: layout.format,
   );
 }
@@ -1349,17 +1517,21 @@ Uint8List _wrapJp2(
   required int height,
   required int components,
   required List<int> bitsPerComponent,
+  required bool hasAlpha,
 }) {
   final writer = _ByteWriter();
   final bitsVary = !_hasUniformBits(bitsPerComponent);
+  final colourChannels = hasAlpha ? components - 1 : components;
   const colourSpecificationBoxLength = 15;
   const fileTypeBoxLength = 20;
   const imageHeaderBoxLength = 22;
   const bitsPerComponentBoxBaseLength = 8;
+  final channelDefinitionBoxLength = hasAlpha ? 8 + 2 + 6 * components : 0;
   final jp2HeaderLength = 8 +
       imageHeaderBoxLength +
       colourSpecificationBoxLength +
-      (bitsVary ? bitsPerComponentBoxBaseLength + components : 0);
+      (bitsVary ? bitsPerComponentBoxBaseLength + components : 0) +
+      channelDefinitionBoxLength;
 
   writer
     ..writeInt(0x0000000c)
@@ -1386,7 +1558,7 @@ Uint8List _wrapJp2(
     ..writeByte(FileFormatBoxes.csbMeth)
     ..writeByte(FileFormatBoxes.csbPrec)
     ..writeByte(FileFormatBoxes.csbApprox)
-    ..writeInt(components > 1
+    ..writeInt(colourChannels > 1
         ? FileFormatBoxes.csbEnumSrgb
         : FileFormatBoxes.csbEnumGrey);
 
@@ -1397,6 +1569,25 @@ Uint8List _wrapJp2(
     for (final value in bitsPerComponent) {
       writer.writeByte(value - 1);
     }
+  }
+
+  if (hasAlpha) {
+    // cdef: colour channel i is associated with colour i + 1; the last
+    // channel is straight (non-premultiplied) opacity for the whole image.
+    writer
+      ..writeInt(channelDefinitionBoxLength)
+      ..writeInt(FileFormatBoxes.channelDefinitionBox)
+      ..writeShort(components);
+    for (var channel = 0; channel < colourChannels; channel++) {
+      writer
+        ..writeShort(channel)
+        ..writeShort(0)
+        ..writeShort(channel + 1);
+    }
+    writer
+      ..writeShort(components - 1)
+      ..writeShort(1)
+      ..writeShort(0);
   }
 
   writer

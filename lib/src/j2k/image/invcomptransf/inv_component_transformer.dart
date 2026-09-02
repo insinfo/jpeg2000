@@ -103,7 +103,8 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
     final tileIdx = getTileIdx();
     final transform =
         compTransfSpec.getSpec(tileIdx, component) ?? InvCompTransf.none;
-    if (_componentDebugCountdown[component] > 0) {
+    if (component < _componentDebugCountdown.length &&
+        _componentDebugCountdown[component] > 0) {
       _componentDebugCountdown[component]--;
       _log(
           'InvCompTransf: tile=$tileIdx component=$component transform=$transform');
@@ -196,7 +197,8 @@ class InvCompTransfImgDataSrc extends ImgDataAdapter implements BlkImgDataSrc {
         final int r = g + crVal;
         final int b = g + cbVal;
 
-        if (_componentDebugCountdown[component] > 0) {
+        if (component < _componentDebugCountdown.length &&
+            _componentDebugCountdown[component] > 0) {
           if (_componentDebugCountdown[component] == 5) {
             _log(
               'RCT geometry c=$component y.off=${y.offset} y.scan=${y.scanw} '

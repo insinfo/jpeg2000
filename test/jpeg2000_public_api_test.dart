@@ -17,7 +17,7 @@ void main() {
       expect(decoded.width, 4);
       expect(decoded.height, 4);
       expect(decoded.components, 1);
-      expect(decoded.format, Jpeg2000PixelFormat.gray8);
+      expect(decoded.format, Jpeg2000PixelFormat.gray);
       expect(decoded.pixels, samples);
 
       final decodedAsync = await decodeJpeg2000Source(codestream);
@@ -40,7 +40,7 @@ void main() {
       expect(decoded.width, 4);
       expect(decoded.height, 4);
       expect(decoded.components, 3);
-      expect(decoded.format, Jpeg2000PixelFormat.rgb8);
+      expect(decoded.format, Jpeg2000PixelFormat.rgb);
       expect(decoded.pixels, samples);
     });
 
