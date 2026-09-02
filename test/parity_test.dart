@@ -2,8 +2,8 @@
 library;
 
 import 'dart:io';
-import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/decoder/decoder.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
 import 'package:test/test.dart';
 
 void main() {

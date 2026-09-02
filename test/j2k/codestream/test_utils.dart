@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/codestream/markers.dart';
+import 'package:j2k/src/j2k/codestream/markers.dart';
 
 /// Shared helpers for constructing synthetic codestream marker payloads in tests.
 Uint8List buildCodMarkerPayload({

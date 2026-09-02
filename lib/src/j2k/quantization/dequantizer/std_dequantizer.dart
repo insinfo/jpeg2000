@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/dequantizer.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/dequantizer.dart';
 
 import '../../image/data_blk.dart';
 import '../../image/data_blk_float.dart';

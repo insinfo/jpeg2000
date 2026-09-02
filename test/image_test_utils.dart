@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/decoder/decoder.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
 
 class PortableImage {
   final int width;

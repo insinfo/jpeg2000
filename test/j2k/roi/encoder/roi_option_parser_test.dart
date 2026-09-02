@@ -4,8 +4,8 @@ library;
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/image/input/img_reader_pgm.dart';
-import 'package:jpeg2000/src/j2k/roi/encoder/roi_option_parser.dart';
+import 'package:j2k/src/j2k/image/input/img_reader_pgm.dart';
+import 'package:j2k/src/j2k/roi/encoder/roi_option_parser.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 
-import 'package:jpeg2000/src/j2k/codestream/c_blk_coord_info.dart';
+import 'package:j2k/src/j2k/codestream/c_blk_coord_info.dart';
 
 import '../../codestream/header_info.dart';
 import '../markers.dart';

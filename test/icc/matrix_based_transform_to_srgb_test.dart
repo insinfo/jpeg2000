@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/icc/restricted_icc_profile.dart';
-import 'package:jpeg2000/src/icc/lut/matrix_based_transform_to_srgb.dart';
-import 'package:jpeg2000/src/icc/tags/icc_curve_type.dart';
-import 'package:jpeg2000/src/icc/tags/icc_tag.dart';
-import 'package:jpeg2000/src/icc/tags/icc_xyz_type.dart';
+import 'package:j2k/src/icc/restricted_icc_profile.dart';
+import 'package:j2k/src/icc/lut/matrix_based_transform_to_srgb.dart';
+import 'package:j2k/src/icc/tags/icc_curve_type.dart';
+import 'package:j2k/src/icc/tags/icc_tag.dart';
+import 'package:j2k/src/icc/tags/icc_xyz_type.dart';
 import 'package:test/test.dart';
 
 void main() {

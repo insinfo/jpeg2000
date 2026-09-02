@@ -1,4 +1,4 @@
-import 'package:jpeg2000/src/j2k/codestream/c_blk_coord_info.dart';
+import 'package:j2k/src/j2k/codestream/c_blk_coord_info.dart';
 
 /// Holds precinct coordinates and code-block references for each subband.
 class PrecInfo {

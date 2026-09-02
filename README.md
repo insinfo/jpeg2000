@@ -1,11 +1,11 @@
-# jpeg2000
+# j2k
 
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
 
-Pure Dart JPEG 2000 codec. It decodes JP2 files and raw J2K codestreams to
-8-bit pixels, encodes binary PGM/PPM input, and runs unchanged on the Dart VM,
-dart2js and dart2wasm: the public API is byte-oriented and never imports
-`dart:io`.
+Pure Dart JPEG 2000 codec, published as `package:j2k`. It decodes JP2 files
+and raw J2K codestreams to 8- or 16-bit pixels, encodes pixel buffers and
+PGM/PPM, and runs unchanged on the Dart VM, dart2js and dart2wasm: the public
+API is byte-oriented and never imports `dart:io`.
 
 The decoder is a port of the JJ2000 reference implementation and is bit-exact
 against it on the bundled conformance subset. See
@@ -35,7 +35,7 @@ against it on the bundled conformance subset. See
 ## Installation
 
 ```bash
-dart pub add jpeg2000
+dart pub add j2k
 ```
 
 ## Decoding
@@ -43,7 +43,7 @@ dart pub add jpeg2000
 ```dart
 import 'dart:typed_data';
 
-import 'package:jpeg2000/jpeg2000.dart';
+import 'package:j2k/j2k.dart';
 
 Jpeg2000Image decode(Uint8List jp2OrJ2kBytes) {
   final image = decodeJpeg2000(
@@ -166,7 +166,7 @@ the VM they also accept a `dart:io` `File` or a path; in browsers they accept a
 `package:web` `Blob` or `File`.
 
 ```dart
-import 'package:jpeg2000/jpeg2000.dart';
+import 'package:j2k/j2k.dart';
 import 'package:web/web.dart' as web;
 
 Future<void> decodeBrowserFile(web.File file) async {
@@ -178,13 +178,13 @@ Future<void> decodeBrowserFile(web.File file) async {
 ## Command line
 
 ```bash
-dart run jpeg2000:decode -i input.jp2 -o output.ppm   # also .pgm, .pgx, .bmp
-dart run jpeg2000:encode -i input.ppm -o output.j2k -lossless on
-dart run jpeg2000:encode -i input.ppm -o output.jp2 -lossless on -file_format on
-dart run jpeg2000:encode -i input.ppm -o output.j2k -rate 1.0
+dart run j2k:decode -i input.jp2 -o output.ppm   # also .pgm, .pgx, .bmp
+dart run j2k:encode -i input.ppm -o output.j2k -lossless on
+dart run j2k:encode -i input.ppm -o output.jp2 -lossless on -file_format on
+dart run j2k:encode -i input.ppm -o output.j2k -rate 1.0
 ```
 
-After `dart pub global activate jpeg2000` the tools are available as
+After `dart pub global activate j2k` the tools are available as
 `jp2dec` and `jp2enc`.
 
 ## Limitations
@@ -218,7 +218,7 @@ node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benc
 ```
 
 `test/architecture/public_facade_imports_test.dart` walks the import graph
-from `lib/jpeg2000.dart` the way pub.dev does and fails if `dart:io` becomes
+from `lib/j2k.dart` the way pub.dev does and fails if `dart:io` becomes
 reachable, which would cost the package its Web and Wasm support.
 
 Fixtures live in `test/fixtures` (synthetic JP2/J2K files with decoded

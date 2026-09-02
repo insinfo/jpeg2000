@@ -10,14 +10,14 @@ import 'package:test/test.dart';
 /// pub.dev derives platform support from the static import graph: a single
 /// reachable `dart:io` import removes the Web tag and fails the Wasm check,
 /// even when the code is never executed there. This test walks the graph from
-/// `lib/jpeg2000.dart` the way the browser compilers see it (default branch of
+/// `lib/j2k.dart` the way the browser compilers see it (default branch of
 /// every conditional import, plus the `dart.library.js_interop` branch) and
 /// fails if it reaches `dart:io` or any other VM-only library.
 void main() {
-  test('lib/jpeg2000.dart never reaches dart:io on the browser branch', () {
+  test('lib/j2k.dart never reaches dart:io on the browser branch', () {
     final packageRoot = Directory.current.uri;
     final libRoot = packageRoot.resolve('lib/');
-    final entry = libRoot.resolve('jpeg2000.dart');
+    final entry = libRoot.resolve('j2k.dart');
 
     final visited = <Uri>{};
     final pending = <(Uri, List<Uri>)>[(entry, <Uri>[])];
@@ -44,11 +44,11 @@ void main() {
             continue;
           }
           if (uri.startsWith('package:')) {
-            if (!uri.startsWith('package:jpeg2000/')) {
+            if (!uri.startsWith('package:j2k/')) {
               continue;
             }
             pending.add((
-              libRoot.resolve(uri.substring('package:jpeg2000/'.length)),
+              libRoot.resolve(uri.substring('package:j2k/'.length)),
               nextChain,
             ));
             continue;

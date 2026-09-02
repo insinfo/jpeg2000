@@ -1,4 +1,4 @@
-// import 'package:jpeg2000/src/j2k/util/int32_utils.dart';
+// import 'package:j2k/src/j2k/util/int32_utils.dart';
 
 void main() {
   // print('=== MQ Register Behavior Test ===\n');

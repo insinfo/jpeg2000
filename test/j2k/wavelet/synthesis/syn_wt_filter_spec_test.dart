@@ -1,10 +1,10 @@
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/module_spec.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_spec.dart';
+import 'package:j2k/src/j2k/module_spec.dart';
+import 'package:j2k/src/j2k/image/data_blk.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_spec.dart';
 
 void main() {
   group('SynWTFilterSpec', () {

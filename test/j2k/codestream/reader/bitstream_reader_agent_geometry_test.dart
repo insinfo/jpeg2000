@@ -1,12 +1,12 @@
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/bitstream_reader_agent.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/header_decoder.dart';
-import 'package:jpeg2000/src/j2k/decoder/decoder_specs.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/dec_lyrd_c_blk.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
+import 'package:j2k/src/j2k/codestream/header_info.dart';
+import 'package:j2k/src/j2k/codestream/reader/bitstream_reader_agent.dart';
+import 'package:j2k/src/j2k/codestream/reader/header_decoder.dart';
+import 'package:j2k/src/j2k/decoder/decoder_specs.dart';
+import 'package:j2k/src/j2k/entropy/decoder/dec_lyrd_c_blk.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 void main() {
   group('BitstreamReaderAgent geometry helpers', () {

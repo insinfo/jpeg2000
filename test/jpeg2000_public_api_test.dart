@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/jpeg2000.dart';
+import 'package:j2k/j2k.dart';
 import 'package:test/test.dart';
 
 void main() {

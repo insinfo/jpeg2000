@@ -7,11 +7,11 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/image/blk_img_data_src.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
-import 'package:jpeg2000/src/j2k/image/output/img_writer_ppm.dart';
+import 'package:j2k/src/j2k/image/blk_img_data_src.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/image/data_blk.dart';
+import 'package:j2k/src/j2k/image/data_blk_int.dart';
+import 'package:j2k/src/j2k/image/output/img_writer_ppm.dart';
 
 void main() {
   group('ImgWriterPpm', () {

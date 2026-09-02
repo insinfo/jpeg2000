@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/decoder/decoder_specs.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/c_blk_quant_data_src_dec.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/std_dequantizer.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/std_dequantizer_params.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
+import 'package:j2k/src/j2k/decoder/decoder_specs.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/image/data_blk.dart';
+import 'package:j2k/src/j2k/image/data_blk_int.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/c_blk_quant_data_src_dec.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/std_dequantizer.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/std_dequantizer_params.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 void main() {
   group('StdDequantizer', () {

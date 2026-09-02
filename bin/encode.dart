@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:jpeg2000/src/j2k/encoder/encoder.dart';
-import 'package:jpeg2000/src/j2k/util/facility_manager.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
-import 'package:jpeg2000/src/j2k/util/stream_msg_logger.dart';
+import 'package:j2k/src/j2k/encoder/encoder.dart';
+import 'package:j2k/src/j2k/util/facility_manager.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/util/stream_msg_logger.dart';
 
 /// Runs the JJ2000 encoder from the command line.
 ///

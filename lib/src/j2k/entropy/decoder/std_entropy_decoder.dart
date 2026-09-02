@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/util/decoder_debug_config.dart';
+import 'package:j2k/src/j2k/util/decoder_debug_config.dart';
 
 import '../../decoder/decoder_specs.dart';
 import '../../image/data_blk.dart';

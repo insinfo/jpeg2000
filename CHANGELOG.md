@@ -1,6 +1,8 @@
 ## 0.9.0
 
-First release.
+First release, published as `j2k` because the name `jpeg2000` was already
+taken on pub.dev. The API is the same: `decodeJpeg2000`, `probeJpeg2000`,
+`encodeJpeg2000Pixels`, `encodeJpeg2000`.
 
 - JP2 and raw J2K decoder ported from JJ2000: codestream parsing, EBCOT/MQ
   entropy decoding, ROI de-scaling, dequantization, 5x3 and 9x7 inverse

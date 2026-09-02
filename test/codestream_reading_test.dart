@@ -2,12 +2,12 @@
 library;
 
 import 'dart:io';
-import 'package:jpeg2000/src/j2k/io/be_buffered_random_access_file.dart';
+import 'package:j2k/src/j2k/io/be_buffered_random_access_file.dart';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/header_decoder.dart';
-import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
+import 'package:j2k/src/j2k/codestream/reader/header_decoder.dart';
+import 'package:j2k/src/j2k/codestream/header_info.dart';
 
-import 'package:jpeg2000/src/j2k/fileformat/file_format_reader.dart';
+import 'package:j2k/src/j2k/fileformat/file_format_reader.dart';
 
 void main() {
   group('Codestream Reading Tests', () {

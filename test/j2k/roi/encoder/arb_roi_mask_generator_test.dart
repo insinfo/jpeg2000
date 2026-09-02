@@ -4,18 +4,18 @@ library;
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/image/data_blk.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/quantization/quantizer/quantizer.dart';
-import 'package:jpeg2000/src/j2k/roi/encoder/arb_roi_mask_generator.dart';
-import 'package:jpeg2000/src/j2k/roi/encoder/roi.dart';
-import 'package:jpeg2000/src/j2k/wavelet/analysis/c_blk_wt_data.dart';
-import 'package:jpeg2000/src/j2k/wavelet/analysis/c_blk_wt_data_src.dart';
-import 'package:jpeg2000/src/j2k/wavelet/analysis/subband_an.dart';
+import 'package:j2k/src/j2k/image/data_blk.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/quantization/quantizer/quantizer.dart';
+import 'package:j2k/src/j2k/roi/encoder/arb_roi_mask_generator.dart';
+import 'package:j2k/src/j2k/roi/encoder/roi.dart';
+import 'package:j2k/src/j2k/wavelet/analysis/c_blk_wt_data.dart';
+import 'package:j2k/src/j2k/wavelet/analysis/c_blk_wt_data_src.dart';
+import 'package:j2k/src/j2k/wavelet/analysis/subband_an.dart';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
-import 'package:jpeg2000/src/j2k/image/input/img_reader_pgm.dart';
+import 'package:j2k/src/j2k/image/data_blk_int.dart';
+import 'package:j2k/src/j2k/image/input/img_reader_pgm.dart';
 
 void main() {
   group('ArbROIMaskGenerator', () {

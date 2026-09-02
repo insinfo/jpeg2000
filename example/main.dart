@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/jpeg2000.dart';
+import 'package:j2k/j2k.dart';
 
 /// Decodes a JP2/J2K file given on the command line, then round-trips a
 /// small synthetic image through the encoder.

@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/byte_to_bit_input.dart';
-import 'package:jpeg2000/src/j2k/entropy/decoder/byte_input_buffer.dart';
+import 'package:j2k/src/j2k/entropy/decoder/byte_to_bit_input.dart';
+import 'package:j2k/src/j2k/entropy/decoder/byte_input_buffer.dart';
 
 void main() {
   group('ByteToBitInput', () {

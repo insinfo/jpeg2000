@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:jpeg2000/src/j2k/decoder/decoder.dart';
-import 'package:jpeg2000/src/j2k/util/facility_manager.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
-import 'package:jpeg2000/src/j2k/util/stream_msg_logger.dart';
-import 'package:jpeg2000/src/j2k/util/string_format_exception.dart';
+import 'package:j2k/src/j2k/decoder/decoder.dart';
+import 'package:j2k/src/j2k/util/facility_manager.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/util/stream_msg_logger.dart';
+import 'package:j2k/src/j2k/util/string_format_exception.dart';
 
 void main(List<String> args) {
   FacilityManager.registerMsgLogger(StreamMsgLogger.stdout());

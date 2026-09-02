@@ -1,23 +1,23 @@
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/codestream/progression_type.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/c_blk_info.dart';
+import 'package:j2k/src/j2k/codestream/progression_type.dart';
+import 'package:j2k/src/j2k/codestream/reader/c_blk_info.dart';
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/bitstream_reader_agent.dart';
-import 'package:jpeg2000/src/j2k/codestream/reader/header_decoder.dart';
-import 'package:jpeg2000/src/j2k/decoder/decoder_specs.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/std_dequantizer_params.dart';
+import 'package:j2k/src/j2k/codestream/header_info.dart';
+import 'package:j2k/src/j2k/codestream/reader/bitstream_reader_agent.dart';
+import 'package:j2k/src/j2k/codestream/reader/header_decoder.dart';
+import 'package:j2k/src/j2k/decoder/decoder_specs.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/std_dequantizer_params.dart';
 
-import 'package:jpeg2000/src/j2k/util/is_random_access_io.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
-import 'package:jpeg2000/src/j2k/util/string_format_exception.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
-import 'package:jpeg2000/src/j2k/wavelet/wavelet_filter.dart';
+import 'package:j2k/src/j2k/util/is_random_access_io.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/util/string_format_exception.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/subband_syn.dart';
+import 'package:j2k/src/j2k/wavelet/wavelet_filter.dart';
 
 void main() {
   group('FileBitstreamReaderAgent multi tile-part handling', () {

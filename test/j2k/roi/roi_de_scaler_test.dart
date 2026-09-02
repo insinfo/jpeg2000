@@ -2,17 +2,17 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/image/blk_img_data_src.dart';
-import 'package:jpeg2000/src/j2k/image/coord.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk_float.dart';
-import 'package:jpeg2000/src/j2k/image/data_blk_int.dart';
-import 'package:jpeg2000/src/j2k/quantization/dequantizer/c_blk_quant_data_src_dec.dart';
-import 'package:jpeg2000/src/j2k/roi/max_shift_spec.dart';
-import 'package:jpeg2000/src/j2k/roi/rect_roi_spec.dart';
-import 'package:jpeg2000/src/j2k/roi/rectangular_roi.dart';
-import 'package:jpeg2000/src/j2k/roi/roi_de_scaler.dart';
-import 'package:jpeg2000/src/j2k/wavelet/synthesis/subband_syn.dart';
+import 'package:j2k/src/j2k/image/blk_img_data_src.dart';
+import 'package:j2k/src/j2k/image/coord.dart';
+import 'package:j2k/src/j2k/image/data_blk.dart';
+import 'package:j2k/src/j2k/image/data_blk_float.dart';
+import 'package:j2k/src/j2k/image/data_blk_int.dart';
+import 'package:j2k/src/j2k/quantization/dequantizer/c_blk_quant_data_src_dec.dart';
+import 'package:j2k/src/j2k/roi/max_shift_spec.dart';
+import 'package:j2k/src/j2k/roi/rect_roi_spec.dart';
+import 'package:j2k/src/j2k/roi/rectangular_roi.dart';
+import 'package:j2k/src/j2k/roi/roi_de_scaler.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/subband_syn.dart';
 
 void main() {
   group('ROIDeScaler', () {

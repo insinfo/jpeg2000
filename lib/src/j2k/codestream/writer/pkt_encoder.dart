@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:jpeg2000/src/j2k/codestream/c_blk_coord_info.dart';
+import 'package:j2k/src/j2k/codestream/c_blk_coord_info.dart';
 
 import '../../entropy/encoder/coded_c_blk_data_src_enc.dart';
 import '../../encoder/encoder_specs.dart';

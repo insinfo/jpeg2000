@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:jpeg2000/src/j2k/util/decoder_debug_config.dart';
+import 'package:j2k/src/j2k/util/decoder_debug_config.dart';
 
 import '../codestream/header_info.dart';
 import '../codestream/reader/bitstream_reader_agent.dart';

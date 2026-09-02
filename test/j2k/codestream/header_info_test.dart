@@ -1,8 +1,8 @@
-import 'package:jpeg2000/src/j2k/codestream/header_info.dart';
-import 'package:jpeg2000/src/j2k/codestream/markers.dart';
-import 'package:jpeg2000/src/j2k/roi/max_shift_spec.dart';
-import 'package:jpeg2000/src/j2k/roi/rect_roi_spec.dart';
-import 'package:jpeg2000/src/j2k/roi/rectangular_roi.dart';
+import 'package:j2k/src/j2k/codestream/header_info.dart';
+import 'package:j2k/src/j2k/codestream/markers.dart';
+import 'package:j2k/src/j2k/roi/max_shift_spec.dart';
+import 'package:j2k/src/j2k/roi/rect_roi_spec.dart';
+import 'package:j2k/src/j2k/roi/rectangular_roi.dart';
 import 'package:test/test.dart';
 
 void main() {

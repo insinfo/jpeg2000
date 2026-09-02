@@ -1,8 +1,8 @@
 import 'package:test/test.dart';
 
-import 'package:jpeg2000/src/j2k/module_spec.dart';
-import 'package:jpeg2000/src/j2k/quantization/quant_step_size_spec.dart';
-import 'package:jpeg2000/src/j2k/util/parameter_list.dart';
+import 'package:j2k/src/j2k/module_spec.dart';
+import 'package:j2k/src/j2k/quantization/quant_step_size_spec.dart';
+import 'package:j2k/src/j2k/util/parameter_list.dart';
 
 void main() {
   group('QuantStepSizeSpec', () {
