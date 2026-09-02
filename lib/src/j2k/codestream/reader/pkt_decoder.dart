@@ -380,16 +380,25 @@ class PktDecoder {
 
       for (var m = 0; m < rows.length; m++) {
         final row = rows[m];
-        final lblockRowCandidate = m < lblockRows.length ? lblockRows[m] : null;
-        if (row.isEmpty || lblockRowCandidate == null) {
+        if (row.isEmpty) {
           continue;
         }
-        final lblockRow = lblockRowCandidate;
 
         for (var n = 0; n < row.length; n++) {
           final coord = row[n];
           if (coord == null) continue;
           final coordIdx = coord.idx;
+          // (m, n) is the code-block's position inside this precinct, which
+          // is what the precinct's tag trees index. The Lblock state lives
+          // per code-block of the whole subband, so it is indexed by the
+          // subband-wide coordinates, as JJ2000 does with `lblock[c][r][s]
+          // [cbc.y][cbc.x]`. Using `m` here made every precinct in a column
+          // share the Lblock of the first one, and the first packet of a
+          // lower precinct that changed it desynchronised the header.
+          if (coordIdx.y >= lblockRows.length) {
+            continue;
+          }
+          final lblockRow = lblockRows[coordIdx.y];
           if (coordIdx.x >= lblockRow.length) {
             continue;
           }

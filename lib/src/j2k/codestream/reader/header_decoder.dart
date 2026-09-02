@@ -1049,9 +1049,16 @@ class HeaderDecoder {
       final defaultSize = Markers.precinctPartitionDefSize;
       return _wrapPrecinctLists(<int>[defaultSize], <int>[defaultSize]);
     }
+    // The COD/COC bytes run from resolution 0 upwards, while
+    // PrecinctSizeSpec.getPPX indexes its lists from the highest resolution
+    // down (`mrl - rl`), the layout the encoder option parser produces and
+    // the one JJ2000's decoder builds by inserting each byte at the front.
+    // Reading them in codestream order without reversing gave every
+    // resolution the size of its mirror image, which only shows when the
+    // sizes differ between levels.
     final widths = <int>[];
     final heights = <int>[];
-    for (final packed in packedPrecincts) {
+    for (final packed in packedPrecincts.reversed) {
       widths.add(1 << (packed & 0x0f));
       heights.add(1 << ((packed >> 4) & 0x0f));
     }

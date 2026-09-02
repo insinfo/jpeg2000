@@ -784,8 +784,10 @@ void main() {
 
       final precincts = specs.pss.getTileDef(1);
       expect(precincts, isNotNull);
-      expect(precincts![0], equals(<int>[1, 2, 4, 8]));
-      expect(precincts[1], equals(<int>[1, 2, 4, 8]));
+      // Stored highest resolution first, the order getPPX(rl) indexes with
+      // `mrl - rl`; the COD bytes run the other way.
+      expect(precincts![0], equals(<int>[8, 4, 2, 1]));
+      expect(precincts[1], equals(<int>[8, 4, 2, 1]));
 
       expect(specs.qts.getTileDef(1), equals('derived'));
       expect(specs.gbs.getTileDef(1), equals(3));
@@ -1059,8 +1061,10 @@ void main() {
 
       final precincts = specs.pss.getTileDef(0);
       expect(precincts, isNotNull);
-      expect(precincts![0], equals(<int>[1, 2, 4, 8]));
-      expect(precincts[1], equals(<int>[1, 2, 4, 8]));
+      // Stored highest resolution first, the order getPPX(rl) indexes with
+      // `mrl - rl`; the COD bytes run the other way.
+      expect(precincts![0], equals(<int>[8, 4, 2, 1]));
+      expect(precincts[1], equals(<int>[8, 4, 2, 1]));
 
       expect(specs.qts.getTileDef(0), equals('derived'));
       expect(specs.gbs.getTileDef(0), equals(3));
