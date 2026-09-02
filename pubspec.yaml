@@ -3,7 +3,7 @@ description: >-
   Pure Dart JPEG 2000 codec: decodes JP2 and J2K to 8-bit pixels with alpha,
   encodes PGM/PPM losslessly or by rate, and runs on the VM, dart2js and
   dart2wasm.
-version: 1.0.0
+version: 0.9.0
 repository: https://github.com/insinfo/jpeg2000
 issue_tracker: https://github.com/insinfo/jpeg2000/issues
 topics:
