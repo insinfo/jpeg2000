@@ -3,6 +3,7 @@
 [![pub package](https://img.shields.io/pub/v/j2k.svg)](https://pub.dev/packages/j2k)
 [![pub points](https://img.shields.io/pub/points/j2k)](https://pub.dev/packages/j2k/score)
 [![Dart CI](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml/badge.svg)](https://github.com/insinfo/jpeg2000/actions/workflows/dart.yml)
+[![AI Assisted](https://img.shields.io/badge/AI-Assisted-purple.svg)](https://github.com/insinfo/jpeg2000#how-this-package-was-built)
 
 Pure Dart JPEG 2000 codec, published as `package:j2k`. It decodes JP2 files
 and raw J2K codestreams to 8- or 16-bit pixels, encodes pixel buffers and
@@ -16,9 +17,12 @@ against it on the bundled conformance subset. See
 ## Features
 
 - **Decoder:** codestream parsing, EBCOT/MQ entropy decoding, ROI de-scaling,
-  dequantization, reversible 5x3 and irreversible 9x7 inverse wavelets, inverse
-  RCT/ICT, and JP2 colour handling: enumerated sRGB/greyscale/sYCC, restricted
-  ICC profiles, palettes, and channel definitions (alpha).
+  dequantization, reversible 5x3 and irreversible 9x7 inverse wavelets,
+  arbitrary lifting kernels signalled by the ATK marker, inverse RCT/ICT, and
+  JP2 colour handling: enumerated sRGB/greyscale/sYCC, restricted ICC
+  profiles, palettes, and channel definitions (alpha).
+- **Subsampled components:** 4:2:0 and 4:2:2 chroma is resampled, in JP2 files
+  and in raw codestreams alike, for factors from 1 to 255.
 - **Output:** gray, gray+alpha, RGB, RGBA or raw multi-component samples,
   tightly packed and interleaved, 8 bits per sample by default or 16 on
   request.
@@ -29,6 +33,9 @@ against it on the bundled conformance subset. See
 - **Typed errors:** a sealed `Jpeg2000Exception` hierarchy separates "not a
   JPEG 2000 file", "truncated", "corrupted", "unsupported feature" and "over
   budget".
+- **Parallel decode:** `decodeJpeg2000Parallel` spreads the work over worker
+  isolates on the VM, 2.6x to 3.8x faster above 0.2 megapixel, with the
+  sequential path as the default and as the web fallback.
 - **Encoder:** interleaved pixel buffers (1 to 16 bits per sample, with or
   without alpha) or binary PGM/PPM bytes to raw J2K or JP2, lossless or
   rate-controlled, with optional tiling.
@@ -85,7 +92,7 @@ Decode options:
 | `applyComponentTransform` | `true` | apply the inverse RCT/ICT signalled in the codestream |
 | `outputBitDepth` | `8` | `8` or `16`; deeper sources are shifted down, shallower ones rescaled to the full range |
 | `rate` / `bytes` | none | stop after this many bits per pixel or bytes (progressive preview) |
-| `resolution` | none | discard this many highest resolution levels |
+| `resolution` | none | resolution level to reconstruct: `0` is the coarsest, `NL` the full image |
 | `maxPixels` / `maxDimension` | none | throw `Jpeg2000BudgetException` before allocating |
 | `onWarning` | none | receive non-fatal diagnostics; nothing is ever printed |
 
@@ -120,6 +127,25 @@ try {
   // Larger than options.maxPixels / maxDimension: e.budget, e.limit, e.actual.
 }
 ```
+
+## Decoding in parallel
+
+On the Dart VM, `decodeJpeg2000Parallel` splits the decode across worker
+isolates: by tile, or by code block when there are fewer tiles than workers.
+Its output is bit-identical to `decodeJpeg2000` — the workers drive the same
+entropy decoder, not a second implementation of it.
+
+```dart
+final image = await decodeJpeg2000Parallel(
+  bytes,
+  parallel: const Jpeg2000ParallelOptions(concurrency: 4),
+);
+```
+
+Small images stay on the sequential path: below `minParallelPixels` (36864
+samples by default) starting the workers costs more than it saves. In dart2js
+and dart2wasm builds, where isolates are not available, the call falls back to
+the sequential decode, so the same code compiles and runs everywhere.
 
 ## Encoding
 
@@ -189,19 +215,53 @@ dart run j2k:encode -i input.ppm -o output.j2k -rate 1.0
 After `dart pub global activate j2k` the tools are available as
 `jp2dec` and `jp2enc`.
 
-## Limitations
+## What is not implemented
 
-- Output is 8 or 16 bits per sample; other source depths are rescaled (the
-  original depth is reported in `sourceBitsPerComponent`).
-- Raw codestreams with subsampled components and no JP2 colour metadata throw
-  `Jpeg2000UnsupportedException`; JP2 files resample through the colour
-  pipeline.
-- Custom (non 5x3 / 9x7) wavelet kernels, progression orders outside the five
-  standard ones, and Part 2 (JPX) extensions are not supported.
-- The encoder takes unsigned samples only; signed components and
-  per-component depths are not exposed.
-- Decoding is single-threaded and, for now, several times slower than native
-  codecs; see [doc/BENCHMARKS.md](https://github.com/insinfo/jpeg2000/blob/main/doc/BENCHMARKS.md).
+This codec implements **Part 1** of the standard (ISO/IEC 15444-1, ITU-T
+T.800), which is what JP2 files and the JPEG 2000 images embedded in PDF use.
+Read this section before adopting the package: the gaps are real, not
+hypothetical, and a file that needs one of them throws
+`Jpeg2000UnsupportedException` rather than decoding badly.
+
+### Part 2 / JPX is largely open work
+
+Only one piece of Part 2 (ISO/IEC 15444-2) exists here: wavelet kernels
+signalled through the ATK marker, synthesised by the generic lifting procedure
+of Annex G. Everything else in Part 2 is missing, and closing it is a large
+project rather than a set of small patches:
+
+- **Arbitrary decomposition** (DFS and ADS markers): decomposition structures
+  other than the dyadic Mallat tree of Part 1.
+- **Multiple component transform** (MCT, MCC, MIC markers): the array-based
+  and wavelet-based transforms across components, used for multispectral and
+  hyperspectral imagery.
+- **Extended precision**: coefficient types beyond the Part 1 range, including
+  the 128-bit ATK coefficient type, which is rejected explicitly.
+- **Variable DC level shift**: the per-component shift of Part 2, as opposed
+  to the fixed one of Part 1.
+- **Arbitrary ROI shapes**: Part 1 MAXSHIFT de-scaling is implemented; the
+  arbitrary region shapes of Part 2 are not.
+- The **arbitrary filter category of Annex H**, which uses a different
+  synthesis procedure from the lifting one, is rejected with the clause cited
+  in the message.
+
+The JPX container boxes that carry this metadata are not parsed either. A JPX
+file that stays within Part 1 coding will decode; one that uses the extensions
+above will not.
+
+### Also missing
+
+- **HTJ2000** (Part 15, the high-throughput block coder) is not implemented.
+- **JPIP** (Part 9, interactive streaming) is out of scope; the API takes
+  complete byte buffers.
+- **Motion JPEG 2000** (Part 3) is out of scope.
+- The **encoder is Part 1 only**: unsigned samples through the public API, the
+  two standard kernels, no ATK output.
+- Output is 8 or 16 bits per sample; other source depths are rescaled, with
+  the original depth reported in `sourceBitsPerComponent`.
+- Progression orders outside the five standard ones are rejected.
+- Decoding is several times slower than a native codec even in parallel; see
+  [doc/BENCHMARKS.md](https://github.com/insinfo/jpeg2000/blob/main/doc/BENCHMARKS.md).
   Decode large images off the UI thread.
 
 ## Development
@@ -211,12 +271,11 @@ Run the same checks as CI:
 ```bash
 dart format --output=none --set-exit-if-changed lib test bin benchmark example
 dart analyze
-dart test -j 1
+dart test
 dart test -p chrome test/jpeg2000_public_api_test.dart
+dart doc --output build/apidoc
+dart pub publish --dry-run
 dart run benchmark/codec_benchmark.dart
-dart compile js -O2 -o build/codec_benchmark.js benchmark/codec_benchmark.dart
-dart compile wasm -o build/codec_benchmark.wasm benchmark/codec_benchmark.dart
-node benchmark/run_wasm_benchmark.mjs build/codec_benchmark.mjs build/codec_benchmark.wasm
 ```
 
 `test/architecture/public_facade_imports_test.dart` walks the import graph
@@ -227,6 +286,21 @@ Fixtures live in `test/fixtures` (synthetic JP2/J2K files with decoded
 references, a conformance subset with bit-exact references, and small MQ and
 entropy fixtures). They are not published with the package.
 
+Where the port deliberately differs from the JJ2000 reference, the reason is
+recorded in
+[doc/DIVERGENCIAS_JJ2000.md](https://github.com/insinfo/jpeg2000/blob/main/doc/DIVERGENCIAS_JJ2000.md),
+so that a divergence is not "fixed" back as if it were a regression.
+
+## How this package was built
+
+Parts of the code, the tests and the documentation in this repository were
+written with the help of LLM tools. Everything goes through the test suite
+(428 tests, including bit-exact comparison against JJ2000 and OpenJPEG
+references) and through `dart analyze` with `package:lints/recommended`
+before it lands, and CI runs the same checks on every push. Whoever depends
+on this package has a right to know how it was produced; judge it by the
+tests and by the code.
+
 ## Origin and licenses
 
 The Dart code is released under the MIT license (see `LICENSE`).
@@ -234,5 +308,12 @@ The Dart code is released under the MIT license (see `LICENSE`).
 It is a port of **JJ2000**, the Java reference implementation of JPEG 2000
 Part 1 written by EPFL, Ericsson and Canon Research Centre France. The JJ2000
 license requires its copyright notice to accompany every copy or derivative
-work; it is reproduced in `LICENSE-JJ2000.txt` and applies to the ported
-algorithms alongside the MIT terms.
+work; it is reproduced in `LICENSE-JJ2000.txt`, ships inside the published
+package, and applies to the ported algorithms alongside the MIT terms. The
+same notice is also available at runtime as `JJ2KInfo.copyright`.
+
+JJ2000's own terms carry two conditions worth reading before you adopt the
+package: they grant no license for products that do not conform to the JPEG
+2000 standard, and they warn that implementing the standard may infringe
+existing patents. They are not a copyleft license and do not require you to
+release your own source.
