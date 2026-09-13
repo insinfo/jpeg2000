@@ -424,7 +424,10 @@ class HeaderDecoder {
   SynWTFilter _instantiateWaveletFilter(int filterId) {
     if (filterId >= (1 << 7)) {
       throw UnsupportedError(
-        'Custom wavelet filters (id=$filterId) are not supported yet',
+        'Wavelet filter id=$filterId is a custom (user-defined) kernel of '
+        'JPEG 2000 Part 2, ISO/IEC 15444-2; this package implements Part 1 '
+        '(ISO/IEC 15444-1), whose Table A.20 defines only id=0 (9-7 '
+        'irreversible) and id=1 (5-3 reversible)',
       );
     }
     switch (filterId) {
@@ -434,7 +437,9 @@ class HeaderDecoder {
         return SynWTFilterIntLift5x3();
       default:
         throw StateError(
-          'Wavelet filter id=$filterId is not JPEG 2000 Part 1 compliant',
+          'Wavelet filter id=$filterId is reserved by Table A.20 of T.800; '
+          'JPEG 2000 Part 1 defines only id=0 (9-7 irreversible) and id=1 '
+          '(5-3 reversible)',
         );
     }
   }
@@ -981,7 +986,12 @@ class HeaderDecoder {
 
   static void _validateProgressionOrder(int order, String markerLabel) {
     if (order < 0 || order > 4) {
-      throw StateError('Unsupported progression order in $markerLabel: $order');
+      // Table A.16 of T.800 defines exactly five orders, and Part 1 has no
+      // others, so a value outside 0..4 is a corrupted marker segment.
+      throw StateError(
+        'Invalid progression order $order in $markerLabel: JPEG 2000 Part 1 '
+        'defines 0=LRCP, 1=RLCP, 2=RPCL, 3=PCRL and 4=CPRL',
+      );
     }
   }
 
@@ -1315,6 +1325,11 @@ class HeaderDecoder {
 
       final ppoc = view.getUint8(offset);
       offset += 1;
+      _validateProgressionOrder(
+        ppoc,
+        'POC marker (tile=$tileIdx tile-part=$tilePartIdx '
+        'change=${idx - existingChanges})',
+      );
 
       segments[idx][0] = rspoc;
       segments[idx][1] = cspoc;

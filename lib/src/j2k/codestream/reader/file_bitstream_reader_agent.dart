@@ -1492,8 +1492,14 @@ class FileBitstreamReaderAgent extends BitstreamReaderAgent {
         return _decodeCprl(segment, layerStarts, maxLevels, maxResolutions,
             numLayers, remainingBytes, grid, precinctGrid);
       default:
-        throw UnsupportedError(
-            'Progression order ${segment.progression} is not supported yet');
+        // The five orders above are all of ISO/IEC 15444-1 (T.800 Table A.16),
+        // so anything else is a corrupted SGcod or Ppoc value, not a feature
+        // that is still missing.
+        throw StateError(
+          'Progression order ${segment.progression} is not one of the five '
+          'defined by JPEG 2000 Part 1 (0=LRCP, 1=RLCP, 2=RPCL, 3=PCRL, '
+          '4=CPRL)',
+        );
     }
   }
 

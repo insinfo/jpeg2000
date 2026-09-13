@@ -171,6 +171,20 @@ class StdEntropyDecoder extends EntropyDecoder {
   final bool _verboseErrors;
   final int _mQuit;
 
+  /// Whether bit-stream error detection and concealment is on.
+  ///
+  /// These three settings are parsed from the codestream options when the
+  /// decoder is built. They are readable so that a decoder created elsewhere
+  /// — on a worker isolate, for instance — can be configured identically
+  /// without parsing the options a second time.
+  bool get errorDetectionEnabled => _doErrorDetection;
+
+  /// Whether detected bit-stream errors are logged.
+  bool get verboseErrorsEnabled => _verboseErrors;
+
+  /// Coding pass after which decoding stops, or -1 to decode every pass.
+  int get mqQuitPasses => _mQuit;
+
   ByteToBitInput? _bin;
   MQDecoder? _mq;
   ByteInputBuffer? _mqInput;

@@ -12,11 +12,13 @@ import '../j2k/codestream/writer/pkt_encoder.dart';
 import '../j2k/decoder/decoder_specs.dart';
 import '../j2k/encoder/encoder_specs.dart';
 import '../j2k/entropy/decoder/entropy_decoder.dart';
+import '../j2k/entropy/decoder/prefetched_entropy_decoder.dart';
 import '../j2k/entropy/encoder/entropy_coder.dart';
 import '../j2k/entropy/encoder/post_comp_rate_allocator.dart';
 import '../j2k/fileformat/file_format_boxes.dart';
 import '../j2k/fileformat/file_format_reader.dart';
 import '../j2k/image/blk_img_data_src.dart';
+import '../j2k/image/component_upsampler.dart';
 import '../j2k/image/data_blk_int.dart';
 import '../j2k/image/forwcomptransf/forw_comp_transf.dart';
 import '../j2k/image/img_data_converter.dart';
@@ -24,6 +26,7 @@ import '../j2k/image/input/img_reader.dart';
 import '../j2k/image/invcomptransf/inv_component_transformer.dart';
 import '../j2k/image/tiler.dart';
 import '../j2k/io/exceptions.dart';
+import '../j2k/platform/parallel/parallel.dart';
 import '../j2k/platform/platform.dart' as platform;
 import '../j2k/quantization/quantizer/quantizer.dart';
 import '../j2k/roi/encoder/roi_scaler.dart';
@@ -42,6 +45,8 @@ import '../jpeg2000_exceptions.dart';
 import 'interleaved_memory_reader.dart';
 import 'memory_codestream_writer.dart';
 import 'pnm_parser.dart';
+
+part 'jpeg2000_codec_parallel.dart';
 
 /// Channel layout of [Jpeg2000Image.pixels].
 ///
@@ -479,8 +484,7 @@ Uint8List encodeJpeg2000(
   return _encodeWithReader(reader, options, hasAlpha: false);
 }
 
-/// Encodes interleaved, unsigned, tightly packed [samples] to raw J2K or JP2
-/// bytes.
+/// Encodes interleaved, tightly packed [samples] to raw J2K or JP2 bytes.
 ///
 /// Sample `(x, y)` of component `c` is `samples[(y * width + x) * components
 /// + c]`. Use a [Uint8List] for up to 8 bits per sample and a [Uint16List]
@@ -489,12 +493,21 @@ Uint8List encodeJpeg2000(
 /// channel definition box so decoders return it as alpha again. The
 /// multiple-component transform applies to the first three components when
 /// there are at least three.
+///
+/// [bitsPerComponent] gives each component its own depth instead of the
+/// single [bitsPerSample]; [signedComponents] marks components whose samples
+/// are already centred on zero, which the codestream records in the sign bit
+/// of `Ssiz` (ISO/IEC 15444-1 A.5.1). Signed samples must arrive in a list
+/// that can hold negative values — an [Int8List], an [Int16List] or a plain
+/// `List<int>`.
 Uint8List encodeJpeg2000Pixels(
   List<int> samples, {
   required int width,
   required int height,
   required int components,
   int bitsPerSample = 8,
+  List<int>? bitsPerComponent,
+  List<bool>? signedComponents,
   bool? hasAlpha,
   Jpeg2000EncodeOptions options = const Jpeg2000EncodeOptions(),
 }) {
@@ -504,6 +517,8 @@ Uint8List encodeJpeg2000Pixels(
     height: height,
     components: components,
     bitsPerSample: bitsPerSample,
+    bitsPerComponent: bitsPerComponent,
+    signedComponents: signedComponents,
   );
   final alpha = hasAlpha ?? (components == 2 || components == 4);
   if (alpha && components != 2 && components != 4) {
@@ -543,12 +558,18 @@ Uint8List _encodeWithReader(
       reader.getNomRangeBits,
       growable: false,
     );
+    final signedComponents = List<bool>.generate(
+      reader.getNumComps(),
+      reader.isOrigSigned,
+      growable: false,
+    );
     return _wrapJp2(
       codestream,
       width: reader.getImgWidth(),
       height: reader.getImgHeight(),
       components: reader.getNumComps(),
       bitsPerComponent: bitsPerComponent,
+      signedComponents: signedComponents,
       hasAlpha: hasAlpha,
     );
   } finally {
@@ -834,6 +855,7 @@ BlkImgDataSrc _buildDecodePipeline({
   required DecoderSpecs decoderSpecs,
   required ColorSpace? colorSpace,
   required bool applyComponentTransform,
+  EntropyDecoder Function(BitstreamReaderAgent reader)? entropyDecoderFactory,
 }) {
   final bitstreamReader = BitstreamReaderAgent.createInstance(
     input,
@@ -844,10 +866,14 @@ BlkImgDataSrc _buildDecodePipeline({
     headerInfo,
   );
 
-  final entropyDecoder = headerDecoder.createEntropyDecoder(
-    bitstreamReader,
-    _subsetParametersByPrefix(params, EntropyDecoder.optionPrefix),
-  );
+  // [entropyDecoderFactory] is the seam the parallel decoder hangs on: it
+  // swaps in a decoder whose code-blocks were decoded ahead of time on worker
+  // isolates. Null, the default, keeps the ordinary sequential decoder.
+  final entropyDecoder = entropyDecoderFactory?.call(bitstreamReader) ??
+      headerDecoder.createEntropyDecoder(
+        bitstreamReader,
+        _subsetParametersByPrefix(params, EntropyDecoder.optionPrefix),
+      );
   final roiDeScaler = headerDecoder.createROIDeScaler(
     entropyDecoder,
     _subsetParametersByPrefix(params, ROIDeScaler.optionPrefix),
@@ -896,6 +922,13 @@ BlkImgDataSrc _buildDecodePipeline({
       colorSpace,
     );
     pipelineSource = mapped ?? colorSource;
+  } else if (ComponentUpsampler.isNeeded(pipelineSource)) {
+    // A raw codestream carries no JP2 boxes, so the colour pipeline above —
+    // and with it the resampling stage — never runs. Subsampled chroma is
+    // common in the `/JPXDecode` streams embedded in PDF, which are raw by
+    // design because the colour space comes from the PDF image dictionary, so
+    // the components are brought back to the reference grid here.
+    pipelineSource = ComponentUpsampler(pipelineSource);
   }
 
   _ensureWaveletFilters(decoderSpecs);
@@ -1062,13 +1095,17 @@ Jpeg2000Image _collectImage(
   final width = source.getImgWidth();
   final height = source.getImgHeight();
 
+  // Every subsampled component has been brought back to the reference grid by
+  // the resampling stage of the pipeline, so all components must now report
+  // the full image size. A mismatch here means the pipeline was built wrong.
   for (final component in channels) {
     if (source.getCompImgWidth(component) != width ||
         source.getCompImgHeight(component) != height) {
-      throw Jpeg2000UnsupportedException(
-        'Component $component is subsampled and the file carries no JP2 '
-        'colour metadata to resample it; subsampled raw codestreams are not '
-        'supported yet.',
+      throw Jpeg2000CorruptedException(
+        'Component $component reports '
+        '${source.getCompImgWidth(component)}x'
+        '${source.getCompImgHeight(component)} samples after resampling but '
+        'the image is ${width}x$height.',
       );
     }
   }
@@ -1209,6 +1246,10 @@ Jpeg2000Image _collectImage(
   );
 }
 
+/// Stand-ins for the output buffer the current decode does not use.
+final Uint8List _emptyBytes = Uint8List(0);
+final Uint16List _emptyWords = Uint16List(0);
+
 /// Writes one decoded plane into channel [slot] of the interleaved output.
 ///
 /// [data] is read from [dataOffset] with stride [scanw]; samples are shifted
@@ -1239,6 +1280,12 @@ void _writePlane(
   final maxValue = (1 << bitDepth) - 1;
   final outputMax = (1 << outputBitDepth) - 1;
   final wide = pixels16 != null;
+  // Exactly one of the two buffers exists, but the unused one is replaced by
+  // an empty list instead of being reached through `!`: dart2js hoists the
+  // receiver check of an asserted store out of the enclosing loop, which then
+  // dereferences the null buffer even on the paths that never touch it.
+  final target8 = pixels8 ?? _emptyBytes;
+  final target16 = pixels16 ?? _emptyWords;
   for (var row = 0; row < tileHeight; row++) {
     var sourceIndex = dataOffset + row * scanw;
     var targetIndex = ((row + tOffy) * width + tOffx) * outputComponents + slot;
@@ -1254,7 +1301,7 @@ void _writePlane(
           } else if (sample > maxValue) {
             sample = maxValue;
           }
-          pixels8[targetIndex] = sample;
+          target8[targetIndex] = sample;
           sourceIndex++;
           targetIndex += outputComponents;
         }
@@ -1266,7 +1313,7 @@ void _writePlane(
           } else if (sample > maxValue) {
             sample = maxValue;
           }
-          pixels8[targetIndex] = sample;
+          target8[targetIndex] = sample;
           sourceIndex++;
           targetIndex += outputComponents;
         }
@@ -1281,7 +1328,7 @@ void _writePlane(
           } else if (sample > maxValue) {
             sample = maxValue;
           }
-          pixels16![targetIndex] = sample;
+          target16[targetIndex] = sample;
           sourceIndex++;
           targetIndex += outputComponents;
         }
@@ -1300,9 +1347,9 @@ void _writePlane(
         }
         sample >>= downShift;
         if (wide) {
-          pixels16[targetIndex] = sample;
+          target16[targetIndex] = sample;
         } else {
-          pixels8![targetIndex] = sample;
+          target8[targetIndex] = sample;
         }
         sourceIndex++;
         targetIndex += outputComponents;
@@ -1323,9 +1370,9 @@ void _writePlane(
         }
         sample = (sample * outputMax + half) ~/ maxValue;
         if (wide) {
-          pixels16[targetIndex] = sample;
+          target16[targetIndex] = sample;
         } else {
-          pixels8![targetIndex] = sample;
+          target8[targetIndex] = sample;
         }
         sourceIndex++;
         targetIndex += outputComponents;
@@ -1450,6 +1497,13 @@ Uint8List _encodeReader(
   }
 
   final imgSource = reader as BlkImgDataSrc;
+  if (params.getParameter('Mct') == null &&
+      !_componentTransformIsAllowed(imgSource)) {
+    // Left to itself the encoder turns the RCT or ICT on for any image with
+    // three or more components; the standard allows it only when those three
+    // agree (see [_componentTransformIsAllowed]).
+    params.put('Mct', 'off');
+  }
   final imageTiler = Tiler(imgSource, 0, 0, 0, 0, tileWidth, tileHeight);
   final encoderSpecs = EncoderSpecs(
     imageTiler.getNumTiles(),
@@ -1559,6 +1613,29 @@ ParameterList _buildEncodeParameters(Jpeg2000EncodeOptions options) {
     params.put(entry.key, entry.value);
   }
   return params;
+}
+
+/// Whether the multiple component transformation may be used on [source].
+///
+/// The RCT and the ICT act on components 0, 1 and 2, and ISO/IEC 15444-1 G.2
+/// and G.3 require those three to have the same bit depth and the same
+/// separation on the reference grid. An image whose first three components
+/// disagree has to be coded without the transform.
+bool _componentTransformIsAllowed(BlkImgDataSrc source) {
+  if (source.getNumComps() < 3) {
+    return true;
+  }
+  final bits = source.getNomRangeBits(0);
+  final subsX = source.getCompSubsX(0);
+  final subsY = source.getCompSubsY(0);
+  for (var component = 1; component < 3; component++) {
+    if (source.getNomRangeBits(component) != bits ||
+        source.getCompSubsX(component) != subsX ||
+        source.getCompSubsY(component) != subsY) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void _putDefaults(ParameterList target, List<List<Object?>>? parameterInfo) {
@@ -1720,10 +1797,18 @@ Uint8List _wrapJp2(
   required int height,
   required int components,
   required List<int> bitsPerComponent,
+  required List<bool> signedComponents,
   required bool hasAlpha,
 }) {
   final writer = _ByteWriter();
-  final bitsVary = !_hasUniformBits(bitsPerComponent);
+  // The single BPC byte of the image header box can only describe components
+  // that agree on both depth and sign; otherwise it is 0xFF and the bits per
+  // component box carries one byte each (ISO/IEC 15444-1 I.5.3.1 and I.5.3.2).
+  final bitsVary = !_hasUniformBits(bitsPerComponent) ||
+      signedComponents.any((s) => s != signedComponents.first);
+  int bpcByte(int component) =>
+      (signedComponents[component] ? 0x80 : 0x00) |
+      (bitsPerComponent[component] - 1);
   final colourChannels = hasAlpha ? components - 1 : components;
   const colourSpecificationBoxLength = 15;
   const fileTypeBoxLength = 20;
@@ -1752,7 +1837,7 @@ Uint8List _wrapJp2(
     ..writeInt(height)
     ..writeInt(width)
     ..writeShort(components)
-    ..writeByte(bitsVary ? 0xff : bitsPerComponent.first - 1)
+    ..writeByte(bitsVary ? 0xff : bpcByte(0))
     ..writeByte(FileFormatBoxes.imbC)
     ..writeByte(FileFormatBoxes.imbUnkC)
     ..writeByte(FileFormatBoxes.imbIpr)
@@ -1769,8 +1854,8 @@ Uint8List _wrapJp2(
     writer
       ..writeInt(bitsPerComponentBoxBaseLength + components)
       ..writeInt(FileFormatBoxes.bitsPerComponentBox);
-    for (final value in bitsPerComponent) {
-      writer.writeByte(value - 1);
+    for (var component = 0; component < components; component++) {
+      writer.writeByte(bpcByte(component));
     }
   }
 

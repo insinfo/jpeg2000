@@ -105,6 +105,40 @@ void main() {
       expect(pocInfo.cepoc, equals(<int>[5]));
       expect(pocInfo.ppoc, equals(<int>[3]));
     });
+
+    test('rejects a Ppoc outside the five progression orders', () {
+      // Table A.16 of T.800 defines 0..4; anything else is a corrupted POC.
+      final specs = DecoderSpecs.basic(1, 3);
+      final info = HeaderInfo();
+      final decoder = HeaderDecoder.placeholder(
+        decSpec: specs,
+        headerInfo: info,
+        numComps: 3,
+      );
+
+      final payload = Uint8List.fromList(<int>[
+        0x00,
+        0x09,
+        0x00,
+        0x00,
+        0x00,
+        0x02,
+        0x01,
+        0x03,
+        0x07,
+      ]);
+
+      expect(
+        () => decoder.parsePocMarker(payload, isMainHeader: true, tileIdx: 0),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('7'), contains('POC marker')),
+          ),
+        ),
+      );
+    });
   });
 
   group('HeaderDecoder.parseCodMarker', () {
@@ -241,6 +275,74 @@ void main() {
       final hFilters = specs.wfs.getHFilters(0, 0);
       expect(hFilters, hasLength(1));
       expect(hFilters[0], isA<SynWTFilterIntLift5x3>());
+    });
+
+    test('says a custom wavelet kernel belongs to Part 2', () {
+      // T.800 Table A.20 defines only 0 and 1; the ids with the high bit set
+      // are the user-defined kernels of ISO/IEC 15444-2, out of scope here.
+      final specs = DecoderSpecs.basic(1, 1);
+      final info = HeaderInfo();
+      final decoder = HeaderDecoder.placeholder(
+        decSpec: specs,
+        headerInfo: info,
+        numComps: 1,
+      );
+
+      final payload = buildCodMarkerPayload(
+        scod: 0x00,
+        sgcodPo: 0x00,
+        sgcodNl: 1,
+        sgcodMct: 0x00,
+        spcodNdl: 2,
+        spcodCw: 0x04,
+        spcodCh: 0x04,
+        spcodCs: 0x00,
+        spcodT: 0x80,
+      );
+
+      expect(
+        () => decoder.parseCodMarker(payload, isMainHeader: true, tileIdx: 0),
+        throwsA(
+          isA<UnsupportedError>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('Part 2'), contains('15444-2')),
+          ),
+        ),
+      );
+    });
+
+    test('rejects a wavelet filter id reserved by Table A.20', () {
+      final specs = DecoderSpecs.basic(1, 1);
+      final info = HeaderInfo();
+      final decoder = HeaderDecoder.placeholder(
+        decSpec: specs,
+        headerInfo: info,
+        numComps: 1,
+      );
+
+      final payload = buildCodMarkerPayload(
+        scod: 0x00,
+        sgcodPo: 0x00,
+        sgcodNl: 1,
+        sgcodMct: 0x00,
+        spcodNdl: 2,
+        spcodCw: 0x04,
+        spcodCh: 0x04,
+        spcodCs: 0x00,
+        spcodT: 0x02,
+      );
+
+      expect(
+        () => decoder.parseCodMarker(payload, isMainHeader: true, tileIdx: 0),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('reserved'),
+          ),
+        ),
+      );
     });
 
     test('locks code-block partition origin after first COD', () {

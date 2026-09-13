@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:j2k/j2k.dart';
 
-void main(List<String> args) {
+Future<void> main(List<String> args) async {
   final options = _BenchmarkOptions.parse(args);
   final size = options.size;
   final gray = _pnm(
@@ -29,6 +29,13 @@ void main(List<String> args) {
     'benchmark size=${options.size} iterations=${options.iterations} '
     'warmup=${options.warmup}',
   );
+  final parallelEngages =
+      size * size >= Jpeg2000ParallelOptions.defaultMinParallelPixels;
+  print(
+    'parallel decode ${parallelEngages ? "engages" : "stays sequential"} at '
+    '${size * size} samples '
+    '(threshold ${Jpeg2000ParallelOptions.defaultMinParallelPixels})',
+  );
 
   final grayCodestream = _time(
     'encode gray PGM -> J2K',
@@ -39,6 +46,11 @@ void main(List<String> args) {
     'decode gray J2K',
     options,
     () => decodeJpeg2000(grayCodestream),
+  );
+  await _timeAsync(
+    'decode gray J2K (parallel)',
+    options,
+    () => decodeJpeg2000Parallel(grayCodestream, parallel: _parallel),
   );
 
   final rgbCodestream = _time(
@@ -51,9 +63,46 @@ void main(List<String> args) {
     options,
     () => decodeJpeg2000(rgbCodestream),
   );
+  await _timeAsync(
+    'decode RGB J2K (parallel)',
+    options,
+    () => decodeJpeg2000Parallel(rgbCodestream, parallel: _parallel),
+  );
 
   print('gray bytes=${grayCodestream.length}');
   print('rgb bytes=${rgbCodestream.length}');
+}
+
+/// The production defaults, on purpose.
+///
+/// Forcing the workers on would flatter the small sizes into looking slower
+/// than the codec ever is: below
+/// [Jpeg2000ParallelOptions.defaultMinParallelPixels] samples a real decode
+/// stays sequential, and then the two decode lines below should read the same.
+/// Above it, the difference between them is the gain a caller actually gets.
+///
+/// Worker isolates need more warm-up than the sequential path, so compare the
+/// two only with several warm-up rounds: try --warmup=5 --iterations=20.
+const _parallel = Jpeg2000ParallelOptions();
+
+Future<T> _timeAsync<T>(
+  String label,
+  _BenchmarkOptions options,
+  Future<T> Function() run,
+) async {
+  T? result;
+  for (var i = 0; i < options.warmup; i++) {
+    result = await run();
+  }
+
+  final stopwatch = Stopwatch()..start();
+  for (var i = 0; i < options.iterations; i++) {
+    result = await run();
+  }
+  stopwatch.stop();
+  final averageMicros = stopwatch.elapsedMicroseconds / options.iterations;
+  print('$label: ${averageMicros.toStringAsFixed(1)} us/op');
+  return result as T;
 }
 
 T _time<T>(String label, _BenchmarkOptions options, T Function() run) {
