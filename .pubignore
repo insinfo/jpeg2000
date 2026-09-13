@@ -7,9 +7,16 @@ pubspec.lock
 downloads/
 referencias/
 
-# Development-only material: 11 MB of fixtures, the benchmark harnesses in
-# three languages, the CI definition and the decoder investigation diary.
+# Development-only material. The consumer needs lib/, bin/ (the `jp2dec` and
+# `jp2enc` executables declared in pubspec.yaml), example/, and the three
+# top-level documents; nothing below is reachable from `package:j2k/j2k.dart`.
+#
+# test/ alone is 11 MB of fixtures. The long-form documents stay in the
+# repository and are linked from the README by absolute GitHub URL, so
+# dropping them here costs the reader nothing.
 test/
+tool/
+doc/
 benchmark/
 .github/
 DEBUG_FINDINGS.md

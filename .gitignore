@@ -10,5 +10,14 @@ pubspec.lock
 
 downloads/
 
+# Reference implementations kept locally for comparison (JJ2000/jai-imageio,
+# OpenJPEG, go-jpeg2000, JDeli). Third-party code, never redistributed here.
 referencias/
 
+# Default output of `dart doc`; the checked-in documents in doc/ stay.
+doc/api/
+
+# Editors
+.idea/
+.vscode/
+*.iml
