@@ -807,7 +807,10 @@ Future<Jpeg2000Image> _decodeByCodeBlocks(
       _translateDecodeFailure(options.onWarning, error, stackTrace);
     }
 
-    return _guardDecode(options.onWarning, () {
+    // `await` antes de devolver: dentro de um `try` com `finally`, devolver
+    // sem esperar deixa o `finally` fechar a entrada enquanto o corpo ainda
+    // pode estar correndo, e um erro dele escapa de qualquer `catch` em volta.
+    return await _guardDecode(options.onWarning, () {
       installCodeBlockBatches(prefetcher, batches, decoded);
       return _collectImage(
         built.pipeline,
