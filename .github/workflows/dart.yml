@@ -35,6 +35,22 @@ jobs:
       - name: Test public API on Chrome
         run: dart test -p chrome test/jpeg2000_public_api_test.dart
 
+      # `dart doc` exits zero even when it reports warnings, so the summary
+      # line is what decides here: anything other than zero of each fails.
+      - name: Documentation
+        run: |
+          set -o pipefail
+          mkdir -p build
+          dart doc --output build/apidoc 2>&1 | tee build/dartdoc.log
+          if ! grep -q 'Found 0 warnings and 0 errors' build/dartdoc.log; then
+            echo '::error::dart doc reported warnings or errors'
+            grep -E 'warning|error' build/dartdoc.log || true
+            exit 1
+          fi
+
+      - name: Package validation
+        run: dart pub publish --dry-run
+
       - name: Benchmark smoke on VM
         run: dart run benchmark/codec_benchmark.dart
 
