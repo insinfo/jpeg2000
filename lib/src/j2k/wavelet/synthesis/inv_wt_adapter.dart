@@ -31,6 +31,29 @@ abstract class InvWTAdapter implements InvWT {
     this.resLevel = resLevel;
   }
 
+  /// Resolution level actually reconstructed for [component] of [tile].
+  ///
+  /// The synthesis subband tree is always built to the full decomposition
+  /// depth of the tile-component, so its `resLvl` is *not* the level the
+  /// inverse transform stops at when fewer levels are asked for. Discarding
+  /// `maxImgRes - resLevel` levels leaves level
+  /// `resLevel - maxImgRes + resLvl` of this component, which is exactly the
+  /// threshold `InvWTFull` uses to decide which subbands to synthesise, so
+  /// every geometry query below has to be answered at that level too.
+  /// ISO/IEC 15444-1 (ITU-T T.800) B.5 fixes the coordinates of a resolution
+  /// level as `ceil(tcx0 / 2^(NL - r))`, which is what the multi-resolution
+  /// source computes when given the level.
+  int reconstructedResLevel(int tile, int component) =>
+      _clampResLevel(mresSrc.getSynSubbandTree(tile, component).resLvl);
+
+  int _clampResLevel(int treeResLevel) {
+    final level = resLevel - maxImgRes + treeResLevel;
+    if (level < 0) {
+      return 0;
+    }
+    return level > treeResLevel ? treeResLevel : level;
+  }
+
   @override
   int getTileWidth() {
     final tileIdx = getTileIdx();
@@ -42,7 +65,7 @@ abstract class InvWTAdapter implements InvWT {
         minRl = rl;
       }
     }
-    return mresSrc.getTileWidth(minRl);
+    return mresSrc.getTileWidth(_clampResLevel(minRl));
   }
 
   @override
@@ -56,7 +79,7 @@ abstract class InvWTAdapter implements InvWT {
         minRl = rl;
       }
     }
-    return mresSrc.getTileHeight(minRl);
+    return mresSrc.getTileHeight(_clampResLevel(minRl));
   }
 
   @override
@@ -81,26 +104,22 @@ abstract class InvWTAdapter implements InvWT {
   int getCompSubsY(int component) => mresSrc.getCompSubsY(component);
 
   @override
-  int getTileCompWidth(int tile, int component) {
-    final rl = mresSrc.getSynSubbandTree(tile, component).resLvl;
-    return mresSrc.getTileCompWidth(tile, component, rl);
-  }
+  int getTileCompWidth(int tile, int component) => mresSrc.getTileCompWidth(
+      tile, component, reconstructedResLevel(tile, component));
 
   @override
-  int getTileCompHeight(int tile, int component) {
-    final rl = mresSrc.getSynSubbandTree(tile, component).resLvl;
-    return mresSrc.getTileCompHeight(tile, component, rl);
-  }
+  int getTileCompHeight(int tile, int component) => mresSrc.getTileCompHeight(
+      tile, component, reconstructedResLevel(tile, component));
 
   @override
   int getCompImgWidth(int component) {
-    final rl = decSpec.dls.getMinInComp(component);
+    final rl = _clampResLevel(decSpec.dls.getMinInComp(component));
     return mresSrc.getCompImgWidth(component, rl);
   }
 
   @override
   int getCompImgHeight(int component) {
-    final rl = decSpec.dls.getMinInComp(component);
+    final rl = _clampResLevel(decSpec.dls.getMinInComp(component));
     return mresSrc.getCompImgHeight(component, rl);
   }
 
@@ -122,15 +141,15 @@ abstract class InvWTAdapter implements InvWT {
   @override
   int getCompULX(int component) {
     final tileIdx = getTileIdx();
-    final rl = mresSrc.getSynSubbandTree(tileIdx, component).resLvl;
-    return mresSrc.getResULX(component, rl);
+    return mresSrc.getResULX(
+        component, reconstructedResLevel(tileIdx, component));
   }
 
   @override
   int getCompULY(int component) {
     final tileIdx = getTileIdx();
-    final rl = mresSrc.getSynSubbandTree(tileIdx, component).resLvl;
-    return mresSrc.getResULY(component, rl);
+    return mresSrc.getResULY(
+        component, reconstructedResLevel(tileIdx, component));
   }
 
   @override

@@ -281,7 +281,15 @@ class Jpeg2000DecodeOptions {
   /// Mutually exclusive with [rate]. Null decodes everything.
   final int? bytes;
 
-  /// Number of highest resolution levels to discard. Null keeps them all.
+  /// Resolution level to reconstruct; null decodes the image in full.
+  ///
+  /// Level 0 is the coarsest (the LL band alone) and the highest level is the
+  /// full image, so an image coded with `NL` decomposition levels offers
+  /// levels `0` to `NL`. A level above the maximum is clamped to it with a
+  /// warning, not an error. Following ISO/IEC 15444-1 (ITU-T T.800) B.5, the
+  /// result of level `r` measures `ceil(Xsiz / 2^(NL - r)) -
+  /// ceil(XOsiz / 2^(NL - r))` by `ceil(Ysiz / 2^(NL - r)) -
+  /// ceil(YOsiz / 2^(NL - r))` samples.
   final int? resolution;
 
   /// Parse packet headers even when rate limiting truncates the stream.

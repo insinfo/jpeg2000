@@ -63,6 +63,10 @@ class Markers {
   static const int eph = 0xff92;
   static const int ephLength = 2;
 
+  // ISO/IEC 15444-2 (Part 2) extension markers
+  /// Arbitrary transformation kernels (ISO/IEC 15444-2 A.3.5).
+  static const int atk = 0xff79;
+
   // Informational markers
   static const int crg = 0xff63;
   static const int com = 0xff64;

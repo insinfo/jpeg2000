@@ -173,35 +173,30 @@ void main() {
       );
     });
 
-    test('mirrors the sequential path for a reduced resolution level',
+    test('mirrors the sequential path at every reduced resolution level',
         () async {
-      final codestream = tiled(rgbSource(256, 256), tile: 128);
-      const options = Jpeg2000DecodeOptions(resolution: 1);
-      // `resolution` is currently broken in the synchronous decoder itself:
-      // it sizes the output buffer at the reduced image width but places the
-      // tiles with reference-grid offsets, so it throws before producing a
-      // pixel. What this test pins down is that the parallel path adds no
-      // divergence of its own — it must succeed exactly when the sequential
-      // one does, and with the same bytes. It keeps its meaning once the
-      // underlying bug is fixed.
-      Object? sequentialError;
-      Jpeg2000Image? sequential;
-      try {
-        sequential = decodeJpeg2000(codestream, options: options);
-      } catch (error) {
-        sequentialError = error;
+      // The tiled codestream takes the per-tile worker path and the single
+      // tile one the per-code-block path, so both parallel strategies are
+      // checked against the sequential decoder at every level.
+      for (final codestream in <Uint8List>[
+        tiled(rgbSource(256, 256), tile: 128),
+        encodeJpeg2000(
+          rgbSource(256, 256),
+          options: const Jpeg2000EncodeOptions(
+            lossless: true,
+            wrapInJp2: true,
+          ),
+        ),
+      ]) {
+        for (var level = 0; level <= 5; level++) {
+          final options = Jpeg2000DecodeOptions(resolution: level);
+          final sequential = decodeJpeg2000(codestream, options: options);
+          expectIdentical(
+            await decodeJpeg2000Parallel(codestream, options: options),
+            sequential,
+          );
+        }
       }
-      if (sequentialError != null) {
-        await expectLater(
-          decodeJpeg2000Parallel(codestream, options: options),
-          throwsA(isA<Jpeg2000Exception>()),
-        );
-        return;
-      }
-      expectIdentical(
-        await decodeJpeg2000Parallel(codestream, options: options),
-        sequential!,
-      );
     });
 
     test('matches with a byte budget that truncates the stream', () async {

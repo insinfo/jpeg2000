@@ -5,12 +5,15 @@ import 'package:test/test.dart';
 
 import 'package:j2k/src/j2k/codestream/header_info.dart';
 import 'package:j2k/src/j2k/codestream/markers.dart';
+import 'package:j2k/src/j2k/codestream/reader/atk_marker.dart';
 import 'package:j2k/src/j2k/codestream/reader/header_decoder.dart';
 import 'package:j2k/src/j2k/decoder/decoder_specs.dart';
 import 'package:j2k/src/j2k/image/coord.dart';
 import 'package:j2k/src/j2k/roi/rectangular_roi.dart';
+import 'package:j2k/src/j2k/wavelet/atk_kernel.dart';
 import 'package:j2k/src/j2k/wavelet/filter_types.dart';
 import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
+import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_generic_lift.dart';
 import 'package:j2k/src/j2k/wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
 
 import '../test_utils.dart';
@@ -277,69 +280,121 @@ void main() {
       expect(hFilters[0], isA<SynWTFilterIntLift5x3>());
     });
 
-    test('says a custom wavelet kernel belongs to Part 2', () {
-      // T.800 Table A.20 defines only 0 and 1; the ids with the high bit set
-      // are the user-defined kernels of ISO/IEC 15444-2, out of scope here.
-      final specs = DecoderSpecs.basic(1, 1);
-      final info = HeaderInfo();
-      final decoder = HeaderDecoder.placeholder(
-        decSpec: specs,
-        headerInfo: info,
-        numComps: 1,
-      );
-
-      final payload = buildCodMarkerPayload(
-        scod: 0x00,
-        sgcodPo: 0x00,
-        sgcodNl: 1,
-        sgcodMct: 0x00,
-        spcodNdl: 2,
-        spcodCw: 0x04,
-        spcodCh: 0x04,
-        spcodCs: 0x00,
-        spcodT: 0x80,
-      );
-
-      expect(
-        () => decoder.parseCodMarker(payload, isMainHeader: true, tileIdx: 0),
-        throwsA(
-          isA<UnsupportedError>().having(
-            (e) => e.message,
-            'message',
-            allOf(contains('Part 2'), contains('15444-2')),
-          ),
+    /// Builds a main header made of SOC, SIZ, COD and QCD, ending on SOT.
+    Uint8List mainHeaderWithTransform(
+      int transform, {
+      Uint8List? atkPayload,
+    }) {
+      final builder = BytesBuilder();
+      addMarker(builder, Markers.soc);
+      addMarkerSegment(
+        builder,
+        Markers.siz,
+        buildSizMarkerPayload(
+          xsize: 64,
+          ysize: 64,
+          tileWidth: 64,
+          tileHeight: 64,
+          numComps: 1,
+          subsamplingX: const <int>[1],
+          subsamplingY: const <int>[1],
+          bitDepths: const <int>[0x07],
         ),
       );
+      addMarkerSegment(
+        builder,
+        Markers.cod,
+        buildCodMarkerPayload(
+          scod: 0x00,
+          sgcodPo: 0x00,
+          sgcodNl: 1,
+          sgcodMct: 0x00,
+          spcodNdl: 2,
+          spcodCw: 0x04,
+          spcodCh: 0x04,
+          spcodCs: 0x00,
+          spcodT: transform,
+        ),
+      );
+      if (atkPayload != null) {
+        // Deliberately after the COD that refers to it: ISO/IEC 15444-2 A.3.5
+        // puts no ordering constraint on the ATK marker segment.
+        addMarkerSegment(builder, Markers.atk, atkPayload);
+      }
+      addMarkerSegment(
+        builder,
+        Markers.qcd,
+        buildQcdMarkerPayload(
+          sqcd: (2 << Markers.sqcxGbShift) | Markers.sqcxNoQuantization,
+          stepBytes: const <int>[0x40, 0x48, 0x48, 0x50, 0x48, 0x48, 0x50],
+        ),
+      );
+      addMarker(builder, Markers.sot);
+      builder.add(
+        buildSotMarkerPayload(
+          tileIdx: 0,
+          tilePartIdx: 0,
+          tilePartLength: 0,
+          numTileParts: 1,
+        ),
+      );
+      return builder.toBytes();
+    }
+
+    test('takes a custom wavelet kernel from its ATK marker segment', () {
+      // ISO/IEC 15444-2 Table A.10 assigns transformation values 2 to 255 to
+      // the ATK marker segments of A.3.5. Kernel 0x80 here is the 5-3 written
+      // as lifting steps (T.801 Table G.2), so the codestream is legal Part 2
+      // and the filter it installs is the generic lifting one.
+      final data = mainHeaderWithTransform(
+        0x80,
+        atkPayload: AtkMarker.build(const AtkKernel(
+          index: 0x80,
+          coefficientType: 0,
+          wholeSampleSymmetric: true,
+          reversible: true,
+          initialParity: 0,
+          constantExtension: false,
+          scale: 1,
+          steps: <AtkLiftingStep>[
+            AtkLiftingStep(
+              coefficients: <double>[-1],
+              exponent: 1,
+              residue: 1,
+            ),
+            AtkLiftingStep(
+              coefficients: <double>[1],
+              exponent: 2,
+              residue: 2,
+            ),
+          ],
+        )),
+      );
+
+      final decoder = HeaderDecoder.readMainHeader(
+        input: ISRandomAccessIO(data),
+        headerInfo: HeaderInfo(),
+      );
+
+      final filters = decoder.decSpec.wfs.getHFilters(0, 0);
+      expect(filters, hasLength(1));
+      final filter = filters[0];
+      expect(filter, isA<SynWTFilterGenericIntLift>());
+      expect((filter as SynWTFilterGenericIntLift).kernel.index, 0x80);
+      expect(filter.isReversible(), isTrue);
     });
 
-    test('rejects a wavelet filter id reserved by Table A.20', () {
-      final specs = DecoderSpecs.basic(1, 1);
-      final info = HeaderInfo();
-      final decoder = HeaderDecoder.placeholder(
-        decSpec: specs,
-        headerInfo: info,
-        numComps: 1,
-      );
-
-      final payload = buildCodMarkerPayload(
-        scod: 0x00,
-        sgcodPo: 0x00,
-        sgcodNl: 1,
-        sgcodMct: 0x00,
-        spcodNdl: 2,
-        spcodCw: 0x04,
-        spcodCh: 0x04,
-        spcodCs: 0x00,
-        spcodT: 0x02,
-      );
-
+    test('rejects a wavelet kernel index no ATK marker segment defines', () {
       expect(
-        () => decoder.parseCodMarker(payload, isMainHeader: true, tileIdx: 0),
+        () => HeaderDecoder.readMainHeader(
+          input: ISRandomAccessIO(mainHeaderWithTransform(0x02)),
+          headerInfo: HeaderInfo(),
+        ),
         throwsA(
           isA<StateError>().having(
             (e) => e.message,
             'message',
-            contains('reserved'),
+            allOf(contains('ATK'), contains('15444-2')),
           ),
         ),
       );

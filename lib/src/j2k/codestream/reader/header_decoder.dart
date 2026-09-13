@@ -26,10 +26,13 @@ import '../../util/parameter_list.dart';
 import '../../util/string_format_exception.dart';
 import '../header_info.dart';
 import '../markers.dart';
+import '../../wavelet/atk_kernel.dart';
 import '../../wavelet/filter_types.dart';
 import '../../wavelet/synthesis/syn_wt_filter.dart';
 import '../../wavelet/synthesis/syn_wt_filter_float_lift9x7.dart';
+import '../../wavelet/synthesis/syn_wt_filter_generic_lift.dart';
 import '../../wavelet/synthesis/syn_wt_filter_int_lift5x3.dart';
+import 'atk_marker.dart';
 
 class _TilePartInfo {
   int? length;
@@ -238,6 +241,18 @@ class HeaderDecoder {
           }
           target.parseCrgMarker(payload);
           break;
+        case Markers.atk:
+          final payload = _readMarkerPayload(input);
+          final target = decoder;
+          if (target == null) {
+            throw StateError('ATK marker encountered before SIZ');
+          }
+          target.parseAtkMarker(
+            payload,
+            isMainHeader: true,
+            tileIdx: 0,
+          );
+          break;
         case Markers.sot:
           final target = decoder;
           if (target == null) {
@@ -256,6 +271,9 @@ class HeaderDecoder {
     if (result == null) {
       throw StateError('Main header parsing did not produce a HeaderDecoder');
     }
+    // Every marker segment of the main header has been read, so a COD or COC
+    // that named an ATK kernel defined further down can be honoured now.
+    result._resolvePendingHeaderFixups();
     result._codestreamStart = codestreamStart;
     result._mainHeaderLength = input.getPos() - codestreamStart;
     return result;
@@ -412,8 +430,11 @@ class HeaderDecoder {
     _cbULYDefined = true;
   }
 
-  List<List<SynWTFilter>> _buildWaveletFilterSpec(int filterId) {
-    final filter = _instantiateWaveletFilter(filterId);
+  List<List<SynWTFilter>> _buildWaveletFilterSpec(
+    int filterId, {
+    required int? tileIdx,
+  }) {
+    final filter = _instantiateWaveletFilter(filterId, tileIdx: tileIdx);
     final filters = List<SynWTFilter>.unmodifiable(<SynWTFilter>[filter]);
     return List<List<SynWTFilter>>.unmodifiable(<List<SynWTFilter>>[
       filters,
@@ -421,26 +442,99 @@ class HeaderDecoder {
     ]);
   }
 
-  SynWTFilter _instantiateWaveletFilter(int filterId) {
-    if (filterId >= (1 << 7)) {
-      throw UnsupportedError(
-        'Wavelet filter id=$filterId is a custom (user-defined) kernel of '
-        'JPEG 2000 Part 2, ISO/IEC 15444-2; this package implements Part 1 '
-        '(ISO/IEC 15444-1), whose Table A.20 defines only id=0 (9-7 '
-        'irreversible) and id=1 (5-3 reversible)',
-      );
+  /// Installs the filter pair a `SPcod`/`SPcoc` transformation field asks for.
+  ///
+  /// Index 0 and 1 are the two kernels of ISO/IEC 15444-1 and resolve at once.
+  /// Anything from 2 upwards names an ATK marker segment (ISO/IEC 15444-2
+  /// Table A.10), which the standard allows to appear anywhere in the same
+  /// header — including after the COD that refers to it — so the installation
+  /// is queued and run once the header has been read to its end.
+  void _installWaveletFilterSpec(
+    int filterId, {
+    required int? tileIdx,
+    required void Function(List<List<SynWTFilter>> filters) install,
+  }) {
+    if (filterId < 2) {
+      install(_buildWaveletFilterSpec(filterId, tileIdx: tileIdx));
+      return;
     }
+    _pendingHeaderFixups.add(
+      () => install(_buildWaveletFilterSpec(filterId, tileIdx: tileIdx)),
+    );
+  }
+
+  SynWTFilter _instantiateWaveletFilter(int filterId, {int? tileIdx}) {
     switch (filterId) {
       case FilterTypes.w9x7:
         return SynWTFilterFloatLift9x7();
       case FilterTypes.w5x3:
         return SynWTFilterIntLift5x3();
       default:
-        throw StateError(
-          'Wavelet filter id=$filterId is reserved by Table A.20 of T.800; '
-          'JPEG 2000 Part 1 defines only id=0 (9-7 irreversible) and id=1 '
-          '(5-3 reversible)',
+        return SynWTFilterGenericLift.create(
+          _requireAtkKernel(filterId, tileIdx: tileIdx),
         );
+    }
+  }
+
+  /// Kernels read from ATK marker segments of the main header, by `Iatk`.
+  final Map<int, AtkKernel> _mainAtkKernels = <int, AtkKernel>{};
+
+  /// Kernels read from the first tile-part header of each tile, by tile and
+  /// then by `Iatk`.
+  final Map<int, Map<int, AtkKernel>> _tileAtkKernels =
+      <int, Map<int, AtkKernel>>{};
+
+  /// Work deferred to the end of the header being parsed.
+  final List<void Function()> _pendingHeaderFixups = <void Function()>[];
+
+  /// The kernel [index] names, or a failure explaining what is missing.
+  ///
+  /// ISO/IEC 15444-2 A.3.5: a definition in the first tile-part header of a
+  /// tile is used in preference to one with the same index in the main header.
+  AtkKernel _requireAtkKernel(int index, {required int? tileIdx}) {
+    final fromTile = tileIdx == null ? null : _tileAtkKernels[tileIdx]?[index];
+    final kernel = fromTile ?? _mainAtkKernels[index];
+    if (kernel == null) {
+      throw StateError(
+        'The coding style asks for wavelet kernel $index but no ATK marker '
+        'segment defines it. ISO/IEC 15444-1 Table A.20 assigns only 0 (9-7 '
+        'irreversible) and 1 (5-3 reversible); 2 to 255 need an ATK marker '
+        'segment of ISO/IEC 15444-2 A.3.5.',
+      );
+    }
+    return kernel;
+  }
+
+  /// Reads an ATK marker segment (ISO/IEC 15444-2 A.3.5) and files the kernel
+  /// under its index, for the main header or for one tile.
+  void parseAtkMarker(
+    Uint8List markerPayload, {
+    required bool isMainHeader,
+    required int tileIdx,
+  }) {
+    final kernel = AtkMarker.parse(markerPayload);
+    if (isMainHeader) {
+      _mainAtkKernels[kernel.index] = kernel;
+    } else {
+      (_tileAtkKernels[tileIdx] ??= <int, AtkKernel>{})[kernel.index] = kernel;
+    }
+    FacilityManager.getMsgLogger().printmsg(
+      MsgLogger.info,
+      'Parsed ATK marker (${isMainHeader ? 'main' : 'tile=$tileIdx'}): '
+      '$kernel',
+    );
+  }
+
+  /// Runs whatever the current header deferred, now that all of its marker
+  /// segments have been read.
+  void _resolvePendingHeaderFixups() {
+    if (_pendingHeaderFixups.isEmpty) {
+      return;
+    }
+    final pending = List<void Function()>.of(_pendingHeaderFixups);
+    _pendingHeaderFixups.clear();
+    for (final fixup in pending) {
+      fixup();
     }
   }
 
@@ -525,12 +619,17 @@ class HeaderDecoder {
       tileIdx: tileIdx,
     );
 
-    final waveletFilters = _buildWaveletFilterSpec(spcodT);
-    if (isMainHeader) {
-      decSpec.wfs.setDefault(waveletFilters);
-    } else {
-      decSpec.wfs.setTileDef(tileIdx, waveletFilters);
-    }
+    _installWaveletFilterSpec(
+      spcodT,
+      tileIdx: isMainHeader ? null : tileIdx,
+      install: (filters) {
+        if (isMainHeader) {
+          decSpec.wfs.setDefault(filters);
+        } else {
+          decSpec.wfs.setTileDef(tileIdx, filters);
+        }
+      },
+    );
 
     if (isMainHeader) {
       decSpec.nls.setDefault(sgcodNl);
@@ -572,11 +671,26 @@ class HeaderDecoder {
       precinctPartitionFlag = true;
     }
 
-    final componentTransform = _selectComponentTransform(sgcodMct, spcodT);
-    if (isMainHeader) {
-      decSpec.cts.setDefault(componentTransform);
+    void installComponentTransform() {
+      final componentTransform = _selectComponentTransform(
+        sgcodMct,
+        spcodT,
+        tileIdx: isMainHeader ? null : tileIdx,
+      );
+      if (isMainHeader) {
+        decSpec.cts.setDefault(componentTransform);
+      } else {
+        decSpec.cts.setTileDef(tileIdx, componentTransform);
+      }
+    }
+
+    if (spcodT < 2) {
+      installComponentTransform();
     } else {
-      decSpec.cts.setTileDef(tileIdx, componentTransform);
+      // Whether the reversible or the irreversible component transformation
+      // applies follows the reversibility of the wavelet kernel, which for an
+      // ATK index is only known once the ATK marker segment has been read.
+      _pendingHeaderFixups.add(installComponentTransform);
     }
   }
 
@@ -647,6 +761,13 @@ class HeaderDecoder {
         case Markers.com:
           parseComMarker(_readMarkerPayload(input));
           break;
+        case Markers.atk:
+          parseAtkMarker(
+            _readMarkerPayload(input),
+            isMainHeader: false,
+            tileIdx: sot.isot,
+          );
+          break;
         case Markers.sod:
           headerDone = true;
           input.seek(input.getPos() - 2);
@@ -660,6 +781,11 @@ class HeaderDecoder {
           break;
       }
     }
+
+    // A tile-part ATK marker segment may follow the COD or COC that uses it,
+    // and it overrides a main-header segment with the same index
+    // (ISO/IEC 15444-2 A.3.5), so the filters are built only now.
+    _resolvePendingHeaderFixups();
   }
 
   HeaderInfoSOT parseNextTilePart(
@@ -813,13 +939,21 @@ class HeaderDecoder {
       decSpec.cblks.setCompDef(component, cblkSizes);
       decSpec.dls.setCompDef(component, spcocNdl);
       decSpec.ecopts.setCompDef(component, spcocCs);
-      decSpec.wfs.setCompDef(component, _buildWaveletFilterSpec(spcocT));
+      _installWaveletFilterSpec(
+        spcocT,
+        tileIdx: null,
+        install: (filters) => decSpec.wfs.setCompDef(component, filters),
+      );
     } else {
       decSpec.cblks.setTileCompVal(tileIdx, component, cblkSizes);
       decSpec.dls.setTileCompVal(tileIdx, component, spcocNdl);
       decSpec.ecopts.setTileCompVal(tileIdx, component, spcocCs);
-      decSpec.wfs
-          .setTileCompVal(tileIdx, component, _buildWaveletFilterSpec(spcocT));
+      _installWaveletFilterSpec(
+        spcocT,
+        tileIdx: tileIdx,
+        install: (filters) =>
+            decSpec.wfs.setTileCompVal(tileIdx, component, filters),
+      );
     }
 
     final precinctValue = _buildPrecinctValue(precinctSpec);
@@ -969,9 +1103,14 @@ class HeaderDecoder {
     );
   }
 
-  int _selectComponentTransform(int sgcodMct, int spcodT) {
+  int _selectComponentTransform(int sgcodMct, int spcodT, {int? tileIdx}) {
     if (sgcodMct == 0) {
       return InvCompTransf.none;
+    }
+    if (spcodT >= 2) {
+      return _requireAtkKernel(spcodT, tileIdx: tileIdx).reversible
+          ? InvCompTransf.invRct
+          : InvCompTransf.invIct;
     }
     return spcodT == FilterTypes.w5x3
         ? InvCompTransf.invRct
