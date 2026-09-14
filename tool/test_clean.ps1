@@ -96,6 +96,19 @@ if (-not $CleanOnly) {
   $exitCode = $LASTEXITCODE
 }
 
+# `dart_test.kernel.<hash>` is content-addressed, so a run REUSES a directory
+# created long ago and only reads from it: old creation time, old write time,
+# and in use right now. Age cannot tell that apart. So while any `dart test` is
+# running -- here or in another checkout -- nothing is removed at all. Deleting
+# a live kernel directory breaks that run with
+# `Failed to load ... dart_test.kernel.<hash>`, which is how this was found.
+$live = @(Get-CimInstance Win32_Process -Filter "Name='dart.exe'" -ErrorAction SilentlyContinue |
+          Where-Object { $_.CommandLine -match 'test' })
+if ($live.Count -gt 0) {
+  Write-Host "TEMP: $($live.Count) test run(s) still active, skipping cleanup." -ForegroundColor DarkYellow
+  $StaleMinutes = 0
+}
+
 $toRemove = @()
 if ($StaleMinutes -gt 0) {
   $cutoff = (Get-Date).AddMinutes(-$StaleMinutes)
