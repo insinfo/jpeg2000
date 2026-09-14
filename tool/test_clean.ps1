@@ -14,10 +14,17 @@
   gets a profile directory under TEMP, and a crashed or killed browser never
   removes it. Those are small individually and arrive by the hundred.
 
-  The script snapshots TEMP before the run, runs the tests, and then deletes
-  only entries that (a) match a known leftover pattern, and (b) did not exist
-  before the run, or are older than -StaleMinutes. Anything the user put in
-  TEMP, and anything a concurrent run is still using, is left alone.
+  The script runs the tests and then deletes entries that match a known
+  leftover pattern AND have not been touched for -StaleMinutes. Anything the
+  user put in TEMP is left alone, and so is anything a concurrent run is using:
+  a live kernel directory is young, so age is what separates a leftover from
+  work in progress.
+
+  It deliberately does NOT delete "whatever appeared during this run". A run
+  that finishes normally leaves nothing behind, so there is nothing to collect;
+  what appears during a run may well belong to a *concurrent* run, and deleting
+  it breaks that one with `Failed to load ... dart_test.kernel.<hash>`. That
+  happened, which is why the rule is age and only age.
 
   The exit code is the test runner's, so this is a drop-in replacement for
   `dart test` in scripts and in CI.
@@ -26,8 +33,9 @@
   Arguments forwarded to `dart test`. Defaults to none, i.e. the whole suite.
 
 .PARAMETER StaleMinutes
-  Also remove matching leftovers older than this, from runs that died without
-  cleaning up. Default 120. Use 0 to only remove what this run created.
+  Only remove leftovers untouched for this many minutes. Default 30. A live
+  run keeps writing to its own directories, so this is what keeps a concurrent
+  run safe. Setting it to 0 disables cleaning entirely.
 
 .PARAMETER CleanOnly
   Clean and exit without running tests.
@@ -36,11 +44,12 @@
   pwsh tool/test_clean.ps1
   pwsh tool/test_clean.ps1 -TestArgs '-j1','test/render'
   pwsh tool/test_clean.ps1 -CleanOnly
+  pwsh tool/test_clean.ps1 -CleanOnly -StaleMinutes 5   # more aggressive
 #>
 [CmdletBinding()]
 param(
   [string[]] $TestArgs = @(),
-  [int] $StaleMinutes = 120,
+  [int] $StaleMinutes = 30,
   [switch] $CleanOnly
 )
 
@@ -80,9 +89,6 @@ function Measure-SizeGB($items) {
   return [math]::Round(($bytes / 1GB), 2)
 }
 
-$before = @{}
-foreach ($i in (Get-Leftovers)) { $before[$i.FullName] = $true }
-
 $exitCode = 0
 if (-not $CleanOnly) {
   Write-Host "dart test $($TestArgs -join ' ')" -ForegroundColor Cyan
@@ -90,12 +96,16 @@ if (-not $CleanOnly) {
   $exitCode = $LASTEXITCODE
 }
 
-$cutoff = (Get-Date).AddMinutes(-$StaleMinutes)
 $toRemove = @()
-foreach ($i in (Get-Leftovers)) {
-  $isNew = -not $before.ContainsKey($i.FullName)
-  $isStale = ($StaleMinutes -gt 0) -and ($i.CreationTime -lt $cutoff)
-  if ($isNew -or $isStale) { $toRemove += $i }
+if ($StaleMinutes -gt 0) {
+  $cutoff = (Get-Date).AddMinutes(-$StaleMinutes)
+  foreach ($i in (Get-Leftovers)) {
+    # Both timestamps: a directory whose contents are still being written has a
+    # recent LastWriteTime even when it was created long ago.
+    $lastTouch = $i.LastWriteTime
+    if ($i.CreationTime -gt $lastTouch) { $lastTouch = $i.CreationTime }
+    if ($lastTouch -lt $cutoff) { $toRemove += $i }
+  }
 }
 
 if ($toRemove.Count -eq 0) {
